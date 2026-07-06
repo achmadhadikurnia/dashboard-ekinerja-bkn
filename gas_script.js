@@ -105,12 +105,41 @@ function generateMasterPegawai() {
     }
   }
 
+  // ===============================================
+  // SIMPAN NILAI BULANAN LAMA AGAR TIDAK HILANG
+  // ===============================================
+  const daftarBulan = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
+  const oldBulanMap = {};
+  
+  if (sheetPegawai.getLastRow() > 1) {
+    const oldData = sheetPegawai.getDataRange().getDisplayValues();
+    const oldHeader = oldData[0].map(h => h.toString().toLowerCase().trim());
+    
+    let oldIdxNip = oldHeader.indexOf('nip_baru');
+    if (oldIdxNip === -1) oldIdxNip = oldHeader.indexOf('nip');
+    if (oldIdxNip === -1) oldIdxNip = oldHeader.indexOf('id');
+    
+    if (oldIdxNip !== -1) {
+      for (let i = 1; i < oldData.length; i++) {
+        const oldRow = oldData[i];
+        const nipLama = oldRow[oldIdxNip] ? oldRow[oldIdxNip].toString().trim() : "";
+        if (nipLama) {
+          const oldScores = {};
+          daftarBulan.forEach(b => {
+             const idxB = oldHeader.indexOf(b);
+             oldScores[b] = idxB !== -1 ? oldRow[idxB] : "";
+          });
+          oldBulanMap[nipLama] = oldScores;
+        }
+      }
+    }
+  }
+
   // Siapkan Data untuk Dicetak ke Sheet Pegawai
   const outputData = [];
 
   // 1. Buat Header (Copy dari header SKP, ditambah kolom Jan-Des supaya rapi)
   const headerOutput = [...headerSkp];
-  const daftarBulan = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
   daftarBulan.forEach(b => headerOutput.push(b)); // Tambahkan nama bulan di ujung kanan
 
   outputData.push(headerOutput);
@@ -120,8 +149,14 @@ function generateMasterPegawai() {
   daftarNip.forEach(nip => {
     const barisPegawai = [...masterPegawaiMap[nip]]; // Copy baris asli dari skp
 
-    // Tambahkan kekosongan ("") untuk kolom jan-des agar panjang array sama dengan header
-    daftarBulan.forEach(() => barisPegawai.push(""));
+    // Cek apakah NIP ini punya nilai lama, jika ada gunakan, jika tidak biarkan kosong ("")
+    daftarBulan.forEach(b => {
+      let val = "";
+      if (oldBulanMap[nip] && oldBulanMap[nip][b]) {
+        val = oldBulanMap[nip][b];
+      }
+      barisPegawai.push(val);
+    });
 
     outputData.push(barisPegawai);
   });
