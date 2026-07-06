@@ -1013,11 +1013,24 @@
           styles: { fontSize: 7, cellPadding: 2 },
           headStyles: { fillColor: [15, 23, 42] },
           columnStyles: {
-            0: { cellWidth: 20 }, // No
-            1: { cellWidth: 75 }, // NIP
-            2: { cellWidth: 80 }, // Nama
-            3: { cellWidth: 95 }, // Jabatan
-            4: { cellWidth: 100 } // OPD
+            0: { cellWidth: 20, halign: 'center' }, // No
+            1: { cellWidth: 75, halign: 'center' }, // NIP
+            2: { cellWidth: 120 }, // Nama
+            3: { cellWidth: 100 }, // Jabatan
+            4: { cellWidth: 135 }, // OPD
+            5: { cellWidth: 25, halign: 'center' }, // Jan
+            6: { cellWidth: 25, halign: 'center' }, // Feb
+            7: { cellWidth: 25, halign: 'center' }, // Mar
+            8: { cellWidth: 25, halign: 'center' }, // Apr
+            9: { cellWidth: 25, halign: 'center' }, // Mei
+            10: { cellWidth: 25, halign: 'center' }, // Jun
+            11: { cellWidth: 25, halign: 'center' }, // Jul
+            12: { cellWidth: 25, halign: 'center' }, // Agu
+            13: { cellWidth: 25, halign: 'center' }, // Sep
+            14: { cellWidth: 25, halign: 'center' }, // Okt
+            15: { cellWidth: 25, halign: 'center' }, // Nov
+            16: { cellWidth: 25, halign: 'center' }, // Des
+            17: { cellWidth: 40, halign: 'center' }  // Tahunan
           },
           margin: { top: 30, right: 15, bottom: 20, left: 15 },
           didParseCell: function(data) {
