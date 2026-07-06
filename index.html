@@ -654,12 +654,27 @@
       });
 
       // 3. Render Table OPD
-      const currentRealMonth = new Date().getMonth();
+      const currentRealYear = new Date().getFullYear();
+      let reportYear = currentRealYear;
+      
+      // Ekstrak tahun dari judul laporan (jika ada, misal: "Tahun 2026")
+      const yearMatch = globalReportTitle.match(/20\d{2}/);
+      if (yearMatch) {
+        reportYear = parseInt(yearMatch[0]);
+      }
+
       let targetHighlights = [];
-      if (currentRealMonth === 11) { // Desember
-        targetHighlights = [10, 11, 12]; // Nov, Des, Tahunan
-      } else if (currentRealMonth > 0) {
-        targetHighlights = [currentRealMonth - 1]; // Dinilai bulan berikutnya
+      
+      if (currentRealYear > reportYear) {
+        // Jika sudah masuk tahun berikutnya, sorot HANYA kolom Tahunan
+        targetHighlights = [12];
+      } else {
+        const currentRealMonth = new Date().getMonth();
+        if (currentRealMonth === 11) { // Desember
+          targetHighlights = [10, 11, 12]; // Nov, Des, Tahunan
+        } else if (currentRealMonth > 0) {
+          targetHighlights = [currentRealMonth - 1]; // Dinilai bulan berikutnya
+        }
       }
       
       targetHighlights.forEach(idx => {
