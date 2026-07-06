@@ -638,9 +638,18 @@
       });
 
       // 3. Render Table OPD
-      const currentMonthIdx = new Date().getMonth();
-      const opdTh = document.getElementById(`opd-th-${currentMonthIdx}`);
-      if (opdTh) opdTh.classList.add('highlight-col');
+      const currentRealMonth = new Date().getMonth();
+      let targetHighlights = [];
+      if (currentRealMonth === 11) { // Desember
+        targetHighlights = [10, 11, 12]; // Nov, Des, Tahunan
+      } else if (currentRealMonth > 0) {
+        targetHighlights = [currentRealMonth - 1]; // Dinilai bulan berikutnya
+      }
+      
+      targetHighlights.forEach(idx => {
+        const opdTh = document.getElementById(`opd-th-${idx}`);
+        if (opdTh) opdTh.classList.add('highlight-col');
+      });
       
       const tbody = document.querySelector('#opdTable tbody');
       let tableHTML = '';
@@ -652,7 +661,7 @@
           let mClass = (val >= row.totalPegawai && row.totalPegawai > 0) ? 'val-green' : 'val-red';
           if (row.totalPegawai === 0) mClass = 'val-muted';
           
-          let hlClass = (idx === currentMonthIdx) ? ' highlight-col' : '';
+          let hlClass = targetHighlights.includes(idx) ? ' highlight-col' : '';
           
           tdBulan += `<td class="${mClass}${hlClass}">${formatNumber(val)}</td>`;
         });
