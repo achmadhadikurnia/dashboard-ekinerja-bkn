@@ -671,13 +671,34 @@ function getDashboardData() {
     }
   });
   
+  // ===============================================
+  // BACA METADATA DARI SHEET SKP (A1: Judul, A2: Instansi)
+  // ===============================================
+  let reportTitle = "Ekinerja BKN";
+  let reportInstansi = "";
+  const sheetSkp = ss.getSheetByName('skp');
+  if (sheetSkp) {
+    const a1 = sheetSkp.getRange("A1").getDisplayValue().trim();
+    if (a1) reportTitle = a1;
+    
+    let a2 = sheetSkp.getRange("A2").getDisplayValue().trim();
+    if (a2.toLowerCase().startsWith("instansi ")) {
+      a2 = a2.substring(9).trim();
+    }
+    reportInstansi = a2;
+  }
+  
   return {
     status: 'success',
     data: {
       opdData: rows,
       grandTotal: grandTotal,
       pegawaiData: pegawaiData,
-      timestamps: timestamps
+      timestamps: timestamps,
+      metadata: {
+        title: reportTitle,
+        instansi: reportInstansi
+      }
     }
   };
 }

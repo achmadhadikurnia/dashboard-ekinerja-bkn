@@ -348,7 +348,8 @@
 
   <div class="container">
     <header>
-      <h1>Ekinerja BKN</h1>
+      <p class="subtitle" id="headerInstansi" style="margin-bottom: 0.2rem; color: #60a5fa; font-weight: 500; font-size: 1.2rem; display: none;"></p>
+      <h1 id="headerTitle">Ekinerja BKN</h1>
       <p class="subtitle">Dashboard Monitoring SKP & Penilaian Kinerja Pegawai</p>
     </header>
 
@@ -560,6 +561,8 @@
     }
 
     let globalTimestamps = [];
+    let globalReportTitle = "Ekinerja BKN";
+    let globalReportInstansi = "";
 
     function renderDashboard(data) {
       // Hide Loading, Show Dashboard
@@ -567,6 +570,19 @@
       document.getElementById('dashboard-content').style.display = 'block';
 
       globalTimestamps = data.timestamps || [];
+      
+      if (data.metadata) {
+        if (data.metadata.title) {
+          globalReportTitle = data.metadata.title;
+          document.getElementById('headerTitle').innerText = globalReportTitle;
+        }
+        if (data.metadata.instansi) {
+          globalReportInstansi = data.metadata.instansi;
+          const instEl = document.getElementById('headerInstansi');
+          instEl.innerText = globalReportInstansi;
+          instEl.style.display = 'block';
+        }
+      }
 
       const gt = data.grandTotal;
       const pct = gt.totalPegawai > 0 ? Math.round((gt.skpDisetujui / gt.totalPegawai) * 100) : 0;
@@ -899,12 +915,24 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('l', 'pt', 'a4'); // Landscape, points, A4
         
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        const titleText = "Laporan Penilaian Kinerja";
         const pageWidth = doc.internal.pageSize.getWidth();
+        let currentY = 30;
+
+        if (globalReportInstansi) {
+          doc.setFontSize(14);
+          doc.setFont('helvetica', 'bold');
+          const upperInstansi = globalReportInstansi.toUpperCase();
+          const instWidth = doc.getTextWidth(upperInstansi);
+          doc.text(upperInstansi, (pageWidth - instWidth) / 2, currentY);
+          currentY += 20;
+        }
+        
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        const titleText = globalReportTitle;
         const titleWidth = doc.getTextWidth(titleText);
-        doc.text(titleText, (pageWidth - titleWidth) / 2, 30);
+        doc.text(titleText, (pageWidth - titleWidth) / 2, currentY);
+        currentY += 25;
         
         doc.setFontSize(10);
         const selOpd = document.getElementById('filterOpd');
@@ -916,32 +944,37 @@
         const textPegawai = document.getElementById('searchPegawai').value || "Semua Pegawai";
         
         const activeBulanVal = document.getElementById('filterBulan').value;
-        let tableStartY = 110;
-
-        const printMeta = (label, value, yPos) => {
-          doc.setFont('helvetica', 'normal');
-          doc.text(label, 20, yPos);
-          const lblW = doc.getTextWidth(label);
-          doc.setFont('helvetica', 'bold');
-          doc.text(value, 20 + lblW, yPos);
+        const activeOpdVal = selOpd.value;
+        const activeStatusVal = selStatus.value;
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        
+        const printCenter = (text) => {
+           const w = doc.getTextWidth(text);
+           doc.text(text, (pageWidth - w) / 2, currentY);
+           currentY += 14;
         };
-        
-        printMeta('OPD: ', textOpd, 50);
-        printMeta('Periode: ', textBulan, 65);
-        printMeta('Status: ', textStatus, 80);
-        printMeta('Pegawai: ', textPegawai, 95);
-        
+
+        if (activeOpdVal !== 'semua') {
+           printCenter(textOpd);
+        }
+        if (activeStatusVal !== 'semua') {
+           printCenter('Status Penilaian: ' + textStatus);
+        }
         if (activeBulanVal !== 'semua') {
-          const idxBulan = parseInt(activeBulanVal);
-          if (globalTimestamps[idxBulan]) {
-            // Mengubah format "Data ditarik pada: ..." jika ada
-            let tstamp = globalTimestamps[idxBulan].replace('Data ditarik pada: ', '').trim();
-            printMeta('Update: ', tstamp, 110);
-            tableStartY = 125;
-          }
+           let txtBulan = 'Periode Bulan ' + textBulan;
+           const idxBulan = parseInt(activeBulanVal);
+           if (globalTimestamps[idxBulan]) {
+             let tstamp = globalTimestamps[idxBulan].replace('Data ditarik pada: ', '').trim();
+             txtBulan += ' (Update: ' + tstamp + ')';
+           }
+           printCenter(txtBulan);
         }
         
-        // Reset font normal untuk bagian lainnya jika perlu
+        let tableStartY = currentY + 10;
+        
+        // Reset font normal untuk tabel
         doc.setFont('helvetica', 'normal');
         
         // Buat Header
@@ -986,7 +1019,7 @@
             3: { cellWidth: 95 }, // Jabatan
             4: { cellWidth: 100 } // OPD
           },
-          margin: { top: tableStartY, right: 15, bottom: 20, left: 15 },
+          margin: { top: 30, right: 15, bottom: 20, left: 15 },
           didParseCell: function(data) {
             if (targetColIdx !== -1 && data.column.index === targetColIdx) {
               if (data.section === 'head') {
