@@ -221,18 +221,18 @@
     }
 
     th, td {
-      padding: 0.75rem 0.5rem;
+      padding: 0.5rem 0.3rem;
       border-bottom: 1px solid var(--glass-border);
       font-size: 0.85rem;
       text-align: center; /* Rata tengah untuk semua angka */
     }
 
-    /* Kolom OPD (kolom ke-2) harus rata kiri dan bisa turun baris (wrap) */
-    th:nth-child(2), td:nth-child(2) {
+    /* Kolom OPD (kolom ke-2) pada tabel OPD harus rata kiri dan bisa turun baris (wrap) */
+    #opdTable th:nth-child(2), #opdTable td:nth-child(2) {
       text-align: left;
     }
 
-    td:nth-child(2) {
+    #opdTable td:nth-child(2) {
       white-space: normal; 
       min-width: 200px;
       line-height: 1.4;
@@ -426,23 +426,24 @@
           <table id="pegawaiTable">
             <thead>
               <tr>
-                <th>No.</th>
-                <th>NIP</th>
+                <th width="1%">No.</th>
+                <th width="1%">NIP</th>
                 <th>Nama</th>
                 <th>Jabatan</th>
-                <th id="th-0">Jan</th>
-                <th id="th-1">Feb</th>
-                <th id="th-2">Mar</th>
-                <th id="th-3">Apr</th>
-                <th id="th-4">Mei</th>
-                <th id="th-5">Jun</th>
-                <th id="th-6">Jul</th>
-                <th id="th-7">Agu</th>
-                <th id="th-8">Sep</th>
-                <th id="th-9">Okt</th>
-                <th id="th-10">Nov</th>
-                <th id="th-11">Des</th>
-                <th id="th-12">Tahunan</th>
+                <th>OPD</th>
+                <th id="th-0" width="1%">Jan</th>
+                <th id="th-1" width="1%">Feb</th>
+                <th id="th-2" width="1%">Mar</th>
+                <th id="th-3" width="1%">Apr</th>
+                <th id="th-4" width="1%">Mei</th>
+                <th id="th-5" width="1%">Jun</th>
+                <th id="th-6" width="1%">Jul</th>
+                <th id="th-7" width="1%">Agu</th>
+                <th id="th-8" width="1%">Sep</th>
+                <th id="th-9" width="1%">Okt</th>
+                <th id="th-10" width="1%">Nov</th>
+                <th id="th-11" width="1%">Des</th>
+                <th id="th-12" width="1%">Tahunan</th>
               </tr>
             </thead>
             <tbody>
@@ -801,9 +802,10 @@
           pHTML += `
             <tr>
               <td>${pNo++}</td>
-              <td style="white-space: nowrap; text-align: left; font-size: 0.8rem;">${p.nip}</td>
-              <td style="white-space: normal; text-align: left; min-width: 120px; font-size: 0.8rem;"><strong>${p.nama}</strong></td>
-              <td style="white-space: normal; text-align: left; min-width: 120px; font-size: 0.8rem;">${p.jabatan}</td>
+              <td style="white-space: nowrap; text-align: left; font-size: 0.75rem;">${p.nip}</td>
+              <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 120px; font-size: 0.75rem;"><strong>${p.nama}</strong></td>
+              <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 140px; font-size: 0.75rem;">${p.jabatan}</td>
+              <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 150px; font-size: 0.7rem;">${p.opd}</td>
               ${pBulan}
             </tr>
           `;
