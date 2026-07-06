@@ -211,7 +211,16 @@
 
     /* Table Section */
     .table-responsive {
-      overflow-x: auto;
+      /* Dihapus agar sticky header menempel pada layar browser, bukan membuat scroll di dalam tabel */
+    }
+
+    /* Membuat Header Sticky */
+    thead th {
+      position: sticky;
+      top: 0;
+      background-color: #1e293b; /* Warna latar solid agak gelap agar teks di bawahnya tertutup */
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Sedikit bayangan pembatas */
     }
 
     table {
@@ -251,6 +260,11 @@
       background-color: rgba(59, 130, 246, 0.25) !important;
       border-left: 2px solid var(--accent-1) !important;
       border-right: 2px solid var(--accent-1) !important;
+    }
+
+    /* Khusus untuk Header, gunakan warna solid agar tidak transparan saat scroll */
+    thead th.highlight-col {
+      background-color: #1e3a8a !important;
     }
 
     /* Pagination */
@@ -773,6 +787,16 @@
         let pNo = startIdx + 1;
         
         const activeBulan = document.getElementById('filterBulan').value;
+        
+        // Update header highlight pada tabel pegawai
+        for (let i = 0; i <= 12; i++) {
+          const th = document.getElementById(`th-${i}`);
+          if (th) th.classList.remove('highlight-col');
+        }
+        if (activeBulan !== 'semua') {
+          const activeTh = document.getElementById(`th-${activeBulan}`);
+          if (activeTh) activeTh.classList.add('highlight-col');
+        }
         
         pageData.forEach(p => {
           let pBulan = '';
