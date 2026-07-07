@@ -3,24 +3,53 @@
  *
  * Tahap 1: Ekstrak data dari sheet 'skp'
  * Tahap 2: Buang yang is_plt_plh != 0
- * Tahap 3: Jika ada NIP dobel (mutasi), ambil data dengan 'created_at' paling baru
+ * Tahap 3: Jika ada NIP dobel (mutasi), ambil data dengan 'periode_akhir' paling baru
  * Tahap 4: Cetak ke sheet 'pegawai'
  */
 
 // ==========================================
-// PENGATURAN LISENSI APLIKASI
+// PENGATURAN LISENSI APLIKASI (SERIAL NUMBER)
 // ==========================================
-const TAHUN_LISENSI = 2025; // Ubah nilai ini untuk memperbarui lisensi (contoh: 2025)
+const LICENSE_SALT = "BKN-Ekinerja-Report-AchmadHadiKurnia";
+
+/**
+ * Menghasilkan hash 8 karakter dari MD5
+ */
+function _getHash(tahun) {
+  const raw = tahun.toString() + LICENSE_SALT;
+  const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, raw);
+  let hexString = '';
+  for (let i = 0; i < digest.length; i++) {
+    let byteStr = (digest[i] & 0xFF).toString(16);
+    if (byteStr.length == 1) byteStr = '0' + byteStr;
+    hexString += byteStr;
+  }
+  return hexString.substring(0, 8).toUpperCase();
+}
+
+/**
+ * Fungsi khusus untuk Admin memproduksi Serial Number (Jalankan langsung dari Editor Script)
+ */
+function generateSerialNumberAdmin() {
+  const tahunTarget = 2026; // Ganti tahun ini jika ingin generate untuk tahun lain
+  const hash = _getHash(tahunTarget);
+  const serialNumber = "EKN-" + tahunTarget + "-" + hash;
+
+  Logger.log("====================================");
+  Logger.log("SERIAL NUMBER UNTUK TAHUN " + tahunTarget);
+  Logger.log(serialNumber);
+  Logger.log("====================================");
+}
 
 /**
  * Membuat pesan peringatan lisensi yang seragam
  */
 function _getPesanLisensi(tahunLaporan, isHtml) {
-  const intro = 'Masa berlaku lisensi aplikasi untuk tahun ' + TAHUN_LISENSI + ' telah habis.';
+  const intro = 'Masa berlaku lisensi (Serial Number) aplikasi ini tidak valid atau telah habis.';
   const detect = 'Aplikasi mendeteksi penggunaan data untuk laporan tahun ' + tahunLaporan + '.';
   const lock = 'Akses monitoring dasbor dan fitur penarikan data dari backend telah dikunci.';
-  const contact = 'Silakan hubungi pengembang untuk memperbarui lisensi tahunan:';
-  
+  const contact = 'Silakan hubungi pengembang untuk mendapatkan Serial Number baru:';
+
   if (isHtml) {
     return intro + '<br><br>' + detect + ' ' + lock + '<br><br>' + contact +
            '<div class="contact-info">' +
@@ -37,23 +66,91 @@ function _getPesanLisensi(tahunLaporan, isHtml) {
 }
 
 /**
- * Memeriksa apakah data laporan melebihi batas lisensi tahunan
+ * Mengambil tahun yang valid dari Serial Number di sheet pengaturan.
+ * Jika tidak valid, mengembalikan 0.
+ */
+function _getValidTahunLisensi() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetPengaturan = ss.getSheetByName('pengaturan');
+
+  if (!sheetPengaturan) return 0;
+
+  const snRaw = sheetPengaturan.getRange('B1').getValue().toString().trim();
+  const snParts = snRaw.split('-');
+
+  if (snParts.length === 3 && snParts[0] === 'EKN') {
+    const tahunSn = parseInt(snParts[1]);
+    const hashSn = snParts[2];
+
+    if (_getHash(tahunSn) === hashSn) {
+      return tahunSn;
+    }
+  }
+
+  return 0;
+}
+
+/**
+ * Fungsi untuk mendeteksi mengapa validasi gagal (Khusus Debugging)
+ */
+function testValidasiAdmin() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetPengaturan = ss.getSheetByName('pengaturan');
+  
+  if (!sheetPengaturan) {
+    Logger.log("ERROR: Sheet dengan nama persis 'pengaturan' (huruf kecil semua) TIDAK DITEMUKAN.");
+    return;
+  }
+  
+  const snRaw = sheetPengaturan.getRange('B1').getValue().toString().trim();
+  Logger.log("Isi Sel B1: '" + snRaw + "'");
+  
+  const snParts = snRaw.split('-');
+  Logger.log("Hasil Pemisahan: " + JSON.stringify(snParts));
+  
+  if (snParts.length === 3 && snParts[0] === 'EKN') {
+    const tahunSn = parseInt(snParts[1]);
+    const hashSn = snParts[2];
+    
+    const hashHarapan = _getHash(tahunSn);
+    Logger.log("Tahun dari SN: " + tahunSn);
+    Logger.log("Hash dari SN: '" + hashSn + "'");
+    Logger.log("Hash Harapan (Hitungan Script): '" + hashHarapan + "'");
+    
+    if (hashHarapan === hashSn) {
+      Logger.log("STATUS: VALID! Lisensi berlaku untuk tahun " + tahunSn);
+    } else {
+      Logger.log("STATUS: TIDAK VALID! Hash tidak cocok.");
+    }
+  } else {
+    Logger.log("STATUS: Format Serial Number Salah. Pastikan formatnya EKN-TAHUN-HASH");
+  }
+}
+
+/**
+ * Memeriksa apakah data laporan melebihi batas lisensi tahunan dari Serial Number
  */
 function cekLisensi(sheetSkp, ui) {
-  if (!sheetSkp) return true; 
+  if (!sheetSkp) return true;
   let judulLaporan = sheetSkp.getRange('A1').getValue().toString().trim();
   const yearMatch = judulLaporan.match(/20\d{2}/);
   let tahunLaporan = new Date().getFullYear();
-  
+
   if (yearMatch) {
     tahunLaporan = parseInt(yearMatch[0]);
   }
-  
-  if (tahunLaporan > TAHUN_LISENSI) {
+
+  const validTahunLisensi = _getValidTahunLisensi();
+
+  // Jika tahun laporan yang sedang diproses melebihi tahun lisensi yang valid, maka tolak
+  if (tahunLaporan > validTahunLisensi) {
     const msg = _getPesanLisensi(tahunLaporan, false);
-    if(ui) ui.alert('⚠️ Peringatan Lisensi', msg, ui.ButtonSet.OK);
-    return false; // Lisensi habis
+    if (ui) {
+      ui.alert('⚠️ Peringatan Lisensi', msg, ui.ButtonSet.OK);
+    }
+    return false; // Lisensi habis / tidak valid
   }
+
   return true; // Lisensi aman
 }
 
@@ -68,7 +165,7 @@ function generateMasterPegawai() {
     if(ui) ui.alert('Error: Pastikan sheet "skp" dan "pegawai" ada di file ini.');
     return;
   }
-  
+
   // Cek Lisensi
   if (!cekLisensi(sheetSkp, ui)) return;
 
@@ -108,13 +205,13 @@ function generateMasterPegawai() {
   // ===============================================
   const sheetPengecualian = ss.getSheetByName('pengecualian');
   const blacklistNip = new Set();
-  
+
   if (sheetPengecualian) {
     const dataPengecualian = sheetPengecualian.getDataRange().getDisplayValues();
     if (dataPengecualian.length > 0) {
       const headerPengecualian = dataPengecualian[0].map(h => h.toString().toLowerCase().trim());
       const idxNipPengecualian = headerPengecualian.indexOf('nip');
-      
+
       if (idxNipPengecualian !== -1) {
         for (let i = 1; i < dataPengecualian.length; i++) {
           const nip = dataPengecualian[i][idxNipPengecualian];
@@ -134,7 +231,7 @@ function generateMasterPegawai() {
 
     // ATURAN 1: Pastikan NIP ada dan BUKAN PLT/PLH (is_plt_plh harus 0)
     if (nipStr && (isPlt === 0 || isPlt === '0')) {
-      
+
       // ATURAN 1b: Pastikan NIP tidak ada di daftar pengecualian (pensiun/mutasi)
       if (blacklistNip.has(nipStr)) {
         continue;
@@ -163,15 +260,15 @@ function generateMasterPegawai() {
   // ===============================================
   const daftarBulan = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
   const oldBulanMap = {};
-  
+
   if (sheetPegawai.getLastRow() > 1) {
     const oldData = sheetPegawai.getDataRange().getDisplayValues();
     const oldHeader = oldData[0].map(h => h.toString().toLowerCase().trim());
-    
+
     let oldIdxNip = oldHeader.indexOf('nip_baru');
     if (oldIdxNip === -1) oldIdxNip = oldHeader.indexOf('nip');
     if (oldIdxNip === -1) oldIdxNip = oldHeader.indexOf('id');
-    
+
     if (oldIdxNip !== -1) {
       for (let i = 1; i < oldData.length; i++) {
         const oldRow = oldData[i];
@@ -234,20 +331,20 @@ function generateMasterPegawai() {
 function hapusPengecualian() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const ui = SpreadsheetApp.getUi();
-  
+
   const sheetPegawai = ss.getSheetByName('pegawai');
   const sheetPengecualian = ss.getSheetByName('pengecualian');
-  
+
   if (!sheetPegawai) {
     if(ui) ui.alert('Sheet "pegawai" tidak ditemukan.');
     return;
   }
-  
+
   // Cek Lisensi
   const sheetSkp = ss.getSheetByName('skp');
   if (!cekLisensi(sheetSkp, ui)) return;
-  
-  
+
+
   // 1. Ambil daftar NIP pengecualian
   const blacklistNip = new Set();
   if (sheetPengecualian) {
@@ -255,7 +352,7 @@ function hapusPengecualian() {
     if (dataPengecualian.length > 0) {
       const headerPengecualian = dataPengecualian[0].map(h => h.toString().toLowerCase().trim());
       const idxNipPengecualian = headerPengecualian.indexOf('nip');
-      
+
       if (idxNipPengecualian !== -1) {
         for (let i = 1; i < dataPengecualian.length; i++) {
           const nip = dataPengecualian[i][idxNipPengecualian];
@@ -264,54 +361,54 @@ function hapusPengecualian() {
       }
     }
   }
-  
+
   if (blacklistNip.size === 0) {
     if(ui) ui.alert('Tidak ada NIP di daftar pengecualian (atau sheet tidak ditemukan).');
     return;
   }
-  
+
   // 2. Baca sheet pegawai
   const dataPegawai = sheetPegawai.getDataRange().getValues();
   if (dataPegawai.length <= 1) return;
-  
+
   const headerPegawai = dataPegawai[0].map(h => h.toString().trim().toLowerCase());
-  
+
   let idxId = headerPegawai.indexOf('nip_baru');
   if (idxId === -1) idxId = headerPegawai.indexOf('nip');
   if (idxId === -1) idxId = headerPegawai.indexOf('id');
-  
+
   if (idxId === -1) {
     if(ui) ui.alert('Kolom NIP tidak ditemukan di sheet pegawai.');
     return;
   }
-  
+
   // 3. Filter data
   const outputData = [dataPegawai[0]]; // Masukkan header
   let countDihapus = 0;
-  
+
   for (let i = 1; i < dataPegawai.length; i++) {
     const nip = dataPegawai[i][idxId];
     const nipStr = nip ? nip.toString().trim() : "";
-    
+
     if (blacklistNip.has(nipStr)) {
       countDihapus++;
     } else {
       outputData.push(dataPegawai[i]);
     }
   }
-  
+
   if (countDihapus === 0) {
     if(ui) ui.alert('Tidak ada pegawai di sheet "pegawai" yang cocok dengan daftar pengecualian.');
     return;
   }
-  
+
   // 4. Tulis ulang
   sheetPegawai.clearContents();
   sheetPegawai.getRange(1, 1, outputData.length, outputData[0].length).setValues(outputData);
-  
+
   // 5. Update Rekap OPD
   _generateLaporanOPD(false);
-  
+
   if(ui) ui.alert('Selesai! Sebanyak ' + countDihapus + ' pegawai telah dihapus dari sheet "pegawai". Nilai bulanan tetap aman dan Rekap OPD sudah diperbarui otomatis.');
 }
 
@@ -336,10 +433,10 @@ function onOpen() {
   subMenu.addItem('Bulan November', 'syncNov');
   subMenu.addItem('Bulan Desember', 'syncDes');
   subMenu.addItem('Tahunan', 'syncTahunan');
-  
+
   subMenu.addSeparator();
   subMenu.addItem('Generate Laporan OPD', 'generateLaporanOPDManual');
-  
+
   ui.createMenu('Report Kinerja')
     .addItem('1. Ambil Data Pegawai', 'generateMasterPegawai')
     .addItem('2. Hapus Pegawai Pengecualian', 'hapusPengecualian')
@@ -377,7 +474,7 @@ function _updateNilaiBulan(targetBulan) {
     ui.alert('Error: Sheet "pegawai" tidak ditemukan!');
     return;
   }
-  
+
   // Cek Lisensi
   const sheetSkp = ss.getSheetByName('skp');
   if (!cekLisensi(sheetSkp, ui)) return;
@@ -408,7 +505,7 @@ function _updateNilaiBulan(targetBulan) {
     return;
   }
 
-  const headerBulan = dataBulanRaw[barisHeaderBulan]; 
+  const headerBulan = dataBulanRaw[barisHeaderBulan];
   const idxIdBulan = headerBulan.indexOf('id');
   const idxHasilAkhir = headerBulan.indexOf('hasil_akhir');
 
@@ -417,9 +514,9 @@ function _updateNilaiBulan(targetBulan) {
     const row = dataBulanRaw[i];
     const idStr = row[idxIdBulan] ? row[idxIdBulan].toString().trim() : null;
     let hasilAkhir = row[idxHasilAkhir] ? row[idxHasilAkhir].toString().trim() : "";
-    
+
     if (hasilAkhir === "-") hasilAkhir = "";
-    
+
     if (idStr) {
       mapNilai[idStr] = hasilAkhir;
     }
@@ -436,7 +533,7 @@ function _updateNilaiBulan(targetBulan) {
   const headerPegawai = dataPegawai[0];
   const idxId = headerPegawai.indexOf('id');
   const posisiKolomBulan = headerPegawai.indexOf(targetBulan);
-  
+
   if(idxId === -1) {
     ui.alert('Error: Kolom "id" tidak ditemukan di sheet pegawai.');
     return;
@@ -450,13 +547,13 @@ function _updateNilaiBulan(targetBulan) {
   let jumlahUpdate = 0;
   for (let i = 1; i < dataPegawai.length; i++) {
     const idPegawai = dataPegawai[i][idxId] ? dataPegawai[i][idxId].toString().trim() : null;
-    
+
     if (idPegawai) {
       if (mapNilai[idPegawai] !== undefined && mapNilai[idPegawai] !== "") {
-        dataPegawai[i][posisiKolomBulan] = mapNilai[idPegawai]; 
+        dataPegawai[i][posisiKolomBulan] = mapNilai[idPegawai];
         jumlahUpdate++;
       } else {
-        dataPegawai[i][posisiKolomBulan] = ""; 
+        dataPegawai[i][posisiKolomBulan] = "";
       }
     }
   }
@@ -483,7 +580,7 @@ function _generateLaporanOPD(showUi = true) {
     if(ui && showUi) ui.alert('Error: Sheet "pegawai" belum ada. Ekstrak data pegawai terlebih dahulu.');
     return;
   }
-  
+
   // Cek Lisensi
   const sheetSkp = ss.getSheetByName('skp');
   if (!cekLisensi(sheetSkp, ui)) return;
@@ -556,17 +653,17 @@ function _generateLaporanOPD(showUi = true) {
   outputData.push(headerOpd);
 
   const daftarNamaOpd = Object.keys(mapOpd).sort(); // Urutkan sesuai abjad
-  
+
   let no = 1;
   let grandTotalPegawai = 0;
   let grandTotalDisetujui = 0;
   const grandTotalBulan = {};
   daftarBulan.forEach(b => grandTotalBulan[b] = 0);
-  
+
   daftarNamaOpd.forEach(opd => {
     grandTotalPegawai += mapOpd[opd].total;
     grandTotalDisetujui += mapOpd[opd].skpDisetujui;
-    
+
     const rowOutput = [no++, opd, mapOpd[opd].total, mapOpd[opd].skpDisetujui];
     daftarBulan.forEach(b => {
       rowOutput.push(mapOpd[opd][b]);
@@ -574,7 +671,7 @@ function _generateLaporanOPD(showUi = true) {
     });
     outputData.push(rowOutput);
   });
-  
+
   // Tambahkan Baris "JUMLAH TOTAL"
   const rowTotal = ["", "JUMLAH TOTAL", grandTotalPegawai, grandTotalDisetujui];
   daftarBulan.forEach(b => {
@@ -618,19 +715,19 @@ function getDashboardData() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheetOpd = ss.getSheetByName('opd');
   const sheetPegawai = ss.getSheetByName('pegawai');
-  
+
   if (!sheetOpd) {
     return { status: 'error', message: 'Sheet "opd" belum ada. Harap tarik data pegawai terlebih dahulu.' };
   }
-  
+
   const data = sheetOpd.getDataRange().getDisplayValues();
   if (data.length <= 1) {
     return { status: 'error', message: 'Sheet "opd" kosong.' };
   }
-  
+
   const rows = [];
   let grandTotalRow = null;
-  
+
   // Baca semua baris kecuali header
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
@@ -638,7 +735,7 @@ function getDashboardData() {
       grandTotalRow = row;
       continue;
     }
-    
+
     // Parse angka agar jadi Number bukan String
     rows.push({
       opd: row[1],
@@ -661,14 +758,14 @@ function getDashboardData() {
       ]
     });
   }
-  
+
   // Siapkan data Grand Total
   const grandTotal = {
     totalPegawai: grandTotalRow ? parseInt(grandTotalRow[2].toString().replace(/\D/g, '')) || 0 : 0,
     skpDisetujui: grandTotalRow ? parseInt(grandTotalRow[3].toString().replace(/\D/g, '')) || 0 : 0,
     bulanan: []
   };
-  
+
   if (grandTotalRow) {
     for (let m = 4; m <= 16; m++) {
       grandTotal.bulanan.push(parseInt(grandTotalRow[m]?.toString().replace(/\D/g, '')) || 0);
@@ -676,7 +773,7 @@ function getDashboardData() {
   } else {
     grandTotal.bulanan = [0,0,0,0,0,0,0,0,0,0,0,0,0];
   }
-  
+
   // ===============================================
   // BACA DATA PEGAWAI
   // ===============================================
@@ -687,31 +784,31 @@ function getDashboardData() {
       const headerPegawai = rawPegawai[0];
       const idxNip = headerPegawai.indexOf('nip');
       const idxNama = headerPegawai.indexOf('nama');
-      
+
       // Deteksi dinamis untuk nama kolom jabatan
       let idxJabatan = headerPegawai.indexOf('jabatan');
       if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('skp_jabatan');
       if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('jabatan_akhir');
       if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('nama_jabatan');
-      
+
       let idxOpd = headerPegawai.indexOf('skp_unor_induk');
-      
+
       const daftarBulan = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
       const idxBulanPegawai = {};
       daftarBulan.forEach(b => {
         idxBulanPegawai[b] = headerPegawai.indexOf(b);
       });
-      
+
       if (idxNip !== -1 && idxNama !== -1) {
         for (let i = 1; i < rawPegawai.length; i++) {
           const pRow = rawPegawai[i];
           const bData = [];
-          
+
           daftarBulan.forEach(b => {
              const realVal = idxBulanPegawai[b] !== -1 ? pRow[idxBulanPegawai[b]].toString().trim() : "";
              bData.push(realVal);
           });
-          
+
           pegawaiData.push({
             nip: pRow[idxNip] ? pRow[idxNip].toString().trim() : "",
             nama: pRow[idxNama] ? pRow[idxNama].toString().trim() : "",
@@ -728,7 +825,7 @@ function getDashboardData() {
   // ===============================================
   const timestamps = [];
   const daftarBulanStr = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
-  
+
   daftarBulanStr.forEach(b => {
     const s = ss.getSheetByName(b);
     if (s) {
@@ -738,7 +835,7 @@ function getDashboardData() {
       timestamps.push("");
     }
   });
-  
+
   // ===============================================
   // BACA METADATA DARI SHEET SKP (A1: Judul, A2: Instansi)
   // ===============================================
@@ -746,29 +843,30 @@ function getDashboardData() {
   let reportInstansi = "";
   let licenseWarning = "";
   const sheetSkp = ss.getSheetByName('skp');
-  
+
   if (sheetSkp) {
     const a1 = sheetSkp.getRange("A1").getDisplayValue().trim();
     if (a1) reportTitle = a1;
-    
+
     let a2 = sheetSkp.getRange("A2").getDisplayValue().trim();
     if (a2.toLowerCase().startsWith("instansi ")) {
       a2 = a2.substring(9).trim();
     }
     reportInstansi = a2;
-    
+
     // Pengecekan Lisensi untuk ditampilkan di Dashboard
     const yearMatch = reportTitle.match(/20\d{2}/);
     let tahunLaporan = new Date().getFullYear();
     if (yearMatch) {
       tahunLaporan = parseInt(yearMatch[0]);
     }
-    
-    if (tahunLaporan > TAHUN_LISENSI) {
+
+    const validTahunLisensi = _getValidTahunLisensi();
+    if (tahunLaporan > validTahunLisensi) {
       licenseWarning = _getPesanLisensi(tahunLaporan, true);
     }
   }
-  
+
   return {
     status: 'success',
     data: {
