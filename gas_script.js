@@ -919,3 +919,221 @@ function getPegawaiData() {
     data: pegawaiData
   };
 }
+
+// ==========================================
+// PENGECUALIAN CRUD
+// ==========================================
+
+function getPengecualianData() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Pengecualian');
+  if (!sheet) return { status: 'error', message: 'Sheet Pengecualian tidak ditemukan' };
+  
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return { status: 'success', data: [] };
+  
+  const headers = data[0].map(h => h.toString().toLowerCase().trim().replace(/\./g, ''));
+  const idxNip = headers.indexOf('nip');
+  const idxNama = headers.indexOf('nama');
+  const idxJab = headers.indexOf('jabatan');
+  const idxUnit = headers.indexOf('unit kerja');
+  const idxOpd = headers.indexOf('opd');
+  const idxKet = headers.indexOf('keterangan');
+  
+  const result = [];
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (idxNip !== -1 && row[idxNip]) {
+      result.push({
+        nip: row[idxNip].toString().trim(),
+        nama: idxNama !== -1 ? row[idxNama].toString().trim() : '',
+        jabatan: idxJab !== -1 ? row[idxJab].toString().trim() : '',
+        unit_kerja: idxUnit !== -1 ? row[idxUnit].toString().trim() : '',
+        opd: idxOpd !== -1 ? row[idxOpd].toString().trim() : '',
+        keterangan: idxKet !== -1 ? row[idxKet].toString().trim() : ''
+      });
+    }
+  }
+  return { status: 'success', data: result };
+}
+
+function savePengecualianData(payload) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName('Pengecualian');
+  if (!sheet) return { status: 'error', message: 'Sheet Pengecualian tidak ditemukan' };
+  
+  const data = sheet.getDataRange().getValues();
+  const headers = data.length > 0 ? data[0].map(h => h.toString().toLowerCase().trim().replace(/\./g, '')) : [];
+  
+  const idxNip = headers.indexOf('nip');
+  if(idxNip === -1) return { status: 'error', message: 'Kolom NIP tidak ditemukan di sheet Pengecualian' };
+  
+  // Update if exists
+  let foundRow = -1;
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][idxNip] && data[i][idxNip].toString().trim() === payload.nip) {
+      foundRow = i + 1;
+      break;
+    }
+  }
+  
+  const idxNama = headers.indexOf('nama');
+  const idxJab = headers.indexOf('jabatan');
+  const idxUnit = headers.indexOf('unit kerja');
+  const idxOpd = headers.indexOf('opd');
+  const idxKet = headers.indexOf('keterangan');
+  
+  if (foundRow !== -1) {
+    if (idxNama !== -1) sheet.getRange(foundRow, idxNama + 1).setValue(payload.nama);
+    if (idxJab !== -1) sheet.getRange(foundRow, idxJab + 1).setValue(payload.jabatan);
+    if (idxUnit !== -1) sheet.getRange(foundRow, idxUnit + 1).setValue(payload.unit_kerja);
+    if (idxOpd !== -1) sheet.getRange(foundRow, idxOpd + 1).setValue(payload.opd);
+    if (idxKet !== -1) sheet.getRange(foundRow, idxKet + 1).setValue(payload.keterangan);
+    return { status: 'success', message: 'Data pengecualian berhasil diperbarui' };
+  } else {
+    // Insert new
+    const newRow = new Array(headers.length).fill('');
+    const idxNo = headers.indexOf('no');
+    if(idxNo !== -1) newRow[idxNo] = data.length; // No (data.length - 1 + 1)
+    newRow[idxNip] = payload.nip;
+    if (idxNama !== -1) newRow[idxNama] = payload.nama;
+    if (idxJab !== -1) newRow[idxJab] = payload.jabatan;
+    if (idxUnit !== -1) newRow[idxUnit] = payload.unit_kerja;
+    if (idxOpd !== -1) newRow[idxOpd] = payload.opd;
+    if (idxKet !== -1) newRow[idxKet] = payload.keterangan;
+    sheet.appendRow(newRow);
+    return { status: 'success', message: 'Data pengecualian berhasil ditambahkan' };
+  }
+}
+
+
+function deletePengecualianData(nip) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Pengecualian');
+  if (!sheet) return { status: 'error', message: 'Sheet Pengecualian tidak ditemukan' };
+  
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return { status: 'error', message: 'Data kosong' };
+  
+  const headers = data[0].map(h => h.toString().toLowerCase().trim().replace(/\./g, ''));
+  const idxNip = headers.indexOf('nip');
+  
+  let foundRow = -1;
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][idxNip] && data[i][idxNip].toString().trim() === nip) {
+      foundRow = i + 1;
+      break;
+    }
+  }
+  
+  if (foundRow !== -1) {
+    sheet.deleteRow(foundRow);
+    
+    // Renumber No
+    const idxNo = headers.indexOf('no');
+    if (idxNo !== -1 && sheet.getLastRow() > 1) {
+      const newNoRange = sheet.getRange(2, idxNo + 1, sheet.getLastRow() - 1, 1);
+      const nos = [];
+      for(let i=1; i<=newNoRange.getNumRows(); i++) nos.push([i]);
+      newNoRange.setValues(nos);
+    }
+    
+    return {
+      status: 'success',
+      message: 'Berhasil menghapus NIP ' + nip
+    };
+
+  } else {
+    return {
+      status: 'error',
+      message: 'NIP tidak ditemukan di daftar pengecualian'
+    };
+  }
+}
+
+/**
+ * Mencari data pegawai langsung dari Sheet SKP berdasarkan NIP.
+ * Digunakan saat input Pengecualian dan NIP tidak ditemukan di Sheet Pegawai (misal karena filter is_plt_plh dll).
+ */
+function getPegawaiFromSkp(nip) {
+  if (!nip) return { status: 'error', message: 'NIP kosong.' };
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetSkp = ss.getSheetByName('skp');
+  
+  if (!sheetSkp) {
+    return { status: 'error', message: 'Sheet "skp" tidak ditemukan.' };
+  }
+
+  const dataSkpRaw = sheetSkp.getDataRange().getDisplayValues();
+
+  let barisHeaderSkp = -1;
+  for (let i = 0; i < 20; i++) {
+    if (dataSkpRaw[i] && dataSkpRaw[i].indexOf('nip') !== -1) {
+      barisHeaderSkp = i;
+      break;
+    }
+  }
+
+  if (barisHeaderSkp === -1) {
+    return { status: 'error', message: 'Kolom "nip" tidak ditemukan di sheet "skp".' };
+  }
+
+  const headerSkp = dataSkpRaw[barisHeaderSkp].map(h => h.toString().toLowerCase().trim());
+  const idxNip = headerSkp.indexOf('nip');
+  const idxNama = headerSkp.indexOf('nama');
+  const idxPeriodeAkhir = headerSkp.indexOf('periode_akhir');
+
+  let idxJabatan = headerSkp.indexOf('jabatan');
+  if (idxJabatan === -1) idxJabatan = headerSkp.indexOf('skp_jabatan');
+  if (idxJabatan === -1) idxJabatan = headerSkp.indexOf('jabatan_akhir');
+  if (idxJabatan === -1) idxJabatan = headerSkp.indexOf('nama_jabatan');
+
+  let idxUnitKerja = headerSkp.indexOf('unit_kerja');
+  if (idxUnitKerja === -1) idxUnitKerja = headerSkp.indexOf('skp_unor');
+  if (idxUnitKerja === -1) idxUnitKerja = headerSkp.indexOf('skp_unor_nama');
+  if (idxUnitKerja === -1) idxUnitKerja = headerSkp.indexOf('unor_nama');
+
+  let idxOpd = headerSkp.indexOf('skp_unor_induk');
+
+  if (idxNip === -1) {
+    return { status: 'error', message: 'Kolom "nip" tidak ditemukan.' };
+  }
+
+  let bestRow = null;
+  let maxTime = 0;
+
+  for (let i = barisHeaderSkp + 1; i < dataSkpRaw.length; i++) {
+    const row = dataSkpRaw[i];
+    const nipStr = row[idxNip] ? row[idxNip].toString().trim() : null;
+
+    if (nipStr === nip.toString().trim()) {
+      const tglPeriodeAkhir = (idxPeriodeAkhir !== -1 && row[idxPeriodeAkhir]) 
+        ? new Date(row[idxPeriodeAkhir]).getTime() 
+        : 0;
+      
+      if (!bestRow || tglPeriodeAkhir > maxTime) {
+        bestRow = row;
+        maxTime = tglPeriodeAkhir;
+      }
+    }
+  }
+
+  if (bestRow) {
+    return {
+      status: 'success',
+      data: {
+        nip: bestRow[idxNip] || '',
+        nama: idxNama !== -1 ? bestRow[idxNama] : '-',
+        jabatan: idxJabatan !== -1 ? bestRow[idxJabatan] : '-',
+        unit_kerja: idxUnitKerja !== -1 ? bestRow[idxUnitKerja] : '-',
+        opd: idxOpd !== -1 ? bestRow[idxOpd] : '-'
+      }
+    };
+  } else {
+    return {
+      status: 'not_found',
+      message: 'Pegawai tidak ditemukan di sheet SKP.'
+    };
+  }
+}

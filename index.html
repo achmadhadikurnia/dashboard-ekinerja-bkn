@@ -331,6 +331,11 @@
       text-align: left;
     }
 
+    /* Rata kiri khusus tabel pengecualian (semua kolom selain No.) */
+    #pengecualianTable th:not(:first-child), #pengecualianTable td:not(:first-child) {
+      text-align: left;
+    }
+
     /* Agar kolom teks panjang bisa turun ke baris baru dan tidak membuat tabel terlalu lebar */
     #pegawaiTable td:nth-child(3),
     #pegawaiTable td:nth-child(4),
@@ -636,6 +641,63 @@
           </table>
         </div>
       </div>
+
+      <!-- Pengecualian Card -->
+      <div class="glass-panel" style="margin-top: 2rem; margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 1rem; padding-bottom: 0.5rem;">
+          <h2 class="section-title" style="margin: 0; padding: 0; border: none;">Daftar Pegawai Pengecualian</h2>
+          <button id="btnAddPengecualian" class="btn-pagination" style="background: #3b82f6; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4); transition: opacity 0.2s;">+ Tambah Data</button>
+        </div>
+
+        <div id="pengecualian-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem; color: #94a3b8;">
+          <div class="spinner" style="margin-bottom: 1rem; width: 35px; height: 35px; border-width: 3px;"></div>
+          <p>Sedang memuat data pengecualian...</p>
+        </div>
+
+        <div id="pengecualian-content" class="table-responsive" style="display: none;">
+          <div class="filter-container" style="flex-wrap: nowrap; overflow-x: auto; padding-bottom: 5px; margin-bottom: 1rem;">
+            <input type="text" id="searchPengecualian" class="search-box" style="flex: 1; min-width: 150px; margin-bottom: 0;" placeholder="🔍 Cari Nama / NIP...">
+          </div>
+          <table id="pengecualianTable">
+            <thead>
+              <tr>
+                <th width="1%" style="text-align: right;">No.</th>
+                <th width="1%">NIP</th>
+                <th>Nama</th>
+                <th>Jabatan</th>
+                <th>Unit Kerja</th>
+                <th>OPD</th>
+                <th width="1%">Keterangan</th>
+                <th width="1%">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="pengecualianBody">
+              <tr><td colspan="8" style="text-align:center;">Memuat data...</td></tr>
+            </tbody>
+          </table>
+
+          <!-- Pagination UI Pengecualian -->
+          <div class="pagination-container" style="margin-top: 1rem;">
+            <div class="pagination-info">
+              <label for="itemsPerPagePeng">Tampilkan:</label>
+              <select id="itemsPerPagePeng" class="search-box select-box" style="width: 80px; padding: 0.4rem; margin: 0 0.5rem; display: inline-block;">
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+              baris per halaman
+            </div>
+            <div class="pagination-controls">
+              <button id="btnPrevPagePeng" class="btn-pagination" disabled>&larr; Prev</button>
+              <span id="pageInfoPeng" class="pagination-info" style="margin: 0 0.5rem;">
+                Hal <input type="number" id="inputPagePeng" class="search-box" style="width: 60px; padding: 0.2rem; text-align: center; margin: 0; display: inline-block; -moz-appearance: textfield;" min="1" value="1"> dari <span id="totalPagesInfoPeng">1</span>
+              </span>
+              <button id="btnNextPagePeng" class="btn-pagination" disabled>Next &rarr;</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -644,6 +706,55 @@
     <div class="modal-box">
       <h3>⚠️ Peringatan Lisensi</h3>
       <div id="licenseMsg"></div>
+    </div>
+  </div>
+
+  <!-- Modal Pengecualian -->
+  <div id="pengecualianModal" class="modal-overlay" style="display: none;">
+    <div class="modal-box" style="max-width: 500px; padding: 2rem; text-align: left;">
+      <h3 id="pengecualianModalTitle" style="margin-top: 0; color: #1e293b; font-size: 1.25rem;">Tambah Pengecualian</h3>
+
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #475569;">NIP</label>
+        <input type="text" id="pengNip" class="search-box" style="width: 100%; box-sizing: border-box;" placeholder="Ketik NIP untuk mencari...">
+        <div id="pengError" style="color: #ef4444; font-size: 0.75rem; margin-top: 0.25rem; display: none;">NIP tidak ditemukan di data pegawai (Sinkronkan data jika perlu).</div>
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #475569;">Nama</label>
+        <input type="text" id="pengNama" class="search-box" style="width: 100%; box-sizing: border-box; background: #f1f5f9; color: #64748b;" disabled>
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #475569;">Jabatan</label>
+        <input type="text" id="pengJab" class="search-box" style="width: 100%; box-sizing: border-box; background: #f1f5f9; color: #64748b;" disabled>
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #475569;">Unit Kerja</label>
+        <input type="text" id="pengUnit" class="search-box" style="width: 100%; box-sizing: border-box; background: #f1f5f9; color: #64748b;" disabled>
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #475569;">OPD</label>
+        <input type="text" id="pengOpd" class="search-box" style="width: 100%; box-sizing: border-box; background: #f1f5f9; color: #64748b;" disabled>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #475569;">Keterangan</label>
+        <select id="pengKet" class="search-box select-box" style="width: 100%; box-sizing: border-box; background: #f1f5f9; color: #64748b;" disabled>
+          <option value="">-- Pilih Keterangan --</option>
+          <option value="Pensiun">Pensiun</option>
+          <option value="Meninggal">Meninggal</option>
+          <option value="Mutasi">Mutasi</option>
+          <option value="Hukdis">Hukdis</option>
+        </select>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+        <button id="btnBatalPengecualian" class="btn-pagination" style="background: transparent; color: #475569; border: 1px solid #cbd5e1; cursor: pointer;">Batal</button>
+        <button id="btnSimpanPengecualian" class="btn-pagination" style="background: #94a3b8; color: white; border: none; cursor: not-allowed;" disabled>Simpan</button>
+      </div>
     </div>
   </div>
 
@@ -689,6 +800,8 @@
         return;
       }
       renderPegawaiData(response.data);
+      // Load Pengecualian setelah data pegawai selesai dimuat (untuk keperluan pencarian NIP)
+      loadPengecualianData();
     }
 
     function onFailure(error) {
@@ -1252,6 +1365,344 @@
         doc.save(fileName);
       });
     }
+
+    // ==========================================
+    // LOGIKA PENGECUALIAN
+    // ==========================================
+
+    let globalPengecualianData = [];
+    let globalFilteredPengecualianData = [];
+    let currentPengPage = 1;
+    let isPengecualianEventSetup = false;
+
+    function loadPengecualianData() {
+      document.getElementById('pengecualian-loading').style.display = 'flex';
+      document.getElementById('pengecualian-content').style.display = 'none';
+
+      const btnAdd = document.getElementById('btnAddPengecualian');
+      btnAdd.disabled = true;
+      btnAdd.style.cursor = 'not-allowed';
+      btnAdd.style.opacity = '0.5';
+
+      google.script.run
+        .withSuccessHandler(onPengecualianSuccess)
+        .withFailureHandler((err) => {
+          document.getElementById('pengecualian-loading').style.display = 'none';
+          document.getElementById('pengecualian-content').style.display = 'block';
+          document.getElementById('pengecualianBody').innerHTML = '<tr><td colspan="8" style="text-align:center; color:#ef4444;">Gagal memuat data: ' + err.message + '</td></tr>';
+
+          btnAdd.disabled = false;
+          btnAdd.style.cursor = 'pointer';
+          btnAdd.style.opacity = '1';
+        })
+        .getPengecualianData();
+    }
+
+    function onPengecualianSuccess(response) {
+      document.getElementById('pengecualian-loading').style.display = 'none';
+      document.getElementById('pengecualian-content').style.display = 'block';
+
+      const btnAdd = document.getElementById('btnAddPengecualian');
+      btnAdd.disabled = false;
+      btnAdd.style.cursor = 'pointer';
+      btnAdd.style.opacity = '1';
+
+      const tbody = document.getElementById('pengecualianBody');
+      if (response.status === 'error') {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#ef4444;">' + response.message + '</td></tr>';
+        return;
+      }
+
+      globalPengecualianData = response.data || [];
+      globalFilteredPengecualianData = [...globalPengecualianData];
+      currentPengPage = 1;
+
+      setupPengecualianEvents();
+      applyPengFilters();
+    }
+
+    function applyPengFilters() {
+      const searchVal = document.getElementById('searchPengecualian').value.toLowerCase();
+      globalFilteredPengecualianData = globalPengecualianData.filter(p => {
+        const mNama = p.nama.toLowerCase().includes(searchVal);
+        const mNip = p.nip.toLowerCase().includes(searchVal);
+        return mNama || mNip;
+      });
+      currentPengPage = 1;
+      document.getElementById('inputPagePeng').value = 1;
+      renderPaginatedPengecualianTable();
+    }
+
+    function renderPaginatedPengecualianTable() {
+      const tbody = document.getElementById('pengecualianBody');
+      const itemsPerPageSelect = document.getElementById('itemsPerPagePeng');
+      const btnPrevPage = document.getElementById('btnPrevPagePeng');
+      const btnNextPage = document.getElementById('btnNextPagePeng');
+      let itemsPerPage = parseInt(itemsPerPageSelect.value) || 10;
+
+      const totalItems = globalFilteredPengecualianData.length;
+      if (totalItems === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Data tidak ditemukan</td></tr>';
+        document.getElementById('totalPagesInfoPeng').innerText = '1';
+        btnPrevPage.disabled = true;
+        btnNextPage.disabled = true;
+        return;
+      }
+
+      const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+      if (currentPengPage > totalPages) currentPengPage = totalPages;
+
+      const startIdx = (currentPengPage - 1) * itemsPerPage;
+      const endIdx = startIdx + itemsPerPage;
+      const pageData = globalFilteredPengecualianData.slice(startIdx, endIdx);
+
+      document.getElementById('inputPagePeng').value = currentPengPage;
+      document.getElementById('totalPagesInfoPeng').innerText = totalPages;
+      btnPrevPage.disabled = currentPengPage === 1;
+      btnNextPage.disabled = currentPengPage === totalPages;
+
+      let html = '';
+      let pNo = startIdx + 1;
+      pageData.forEach((item) => {
+        html += `
+          <tr>
+            <td style="text-align: right;">${pNo++}</td>
+            <td style="white-space: nowrap; text-align: left;">${item.nip}</td>
+            <td><strong>${item.nama}</strong></td>
+            <td>${item.jabatan}</td>
+            <td>${item.unit_kerja}</td>
+            <td>${item.opd}</td>
+            <td><span style="background: #e2e8f0; color: #1e293b; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">${item.keterangan}</span></td>
+            <td>
+              <button onclick="hapusPengecualian('${item.nip}')" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Hapus</button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function setupPengecualianEvents() {
+      if (isPengecualianEventSetup) return;
+      isPengecualianEventSetup = true;
+
+      const searchInput = document.getElementById('searchPengecualian');
+      const itemsPerPageSelect = document.getElementById('itemsPerPagePeng');
+      const btnPrevPage = document.getElementById('btnPrevPagePeng');
+      const btnNextPage = document.getElementById('btnNextPagePeng');
+      const inputPage = document.getElementById('inputPagePeng');
+
+      searchInput.addEventListener('input', applyPengFilters);
+      itemsPerPageSelect.addEventListener('change', () => {
+        currentPengPage = 1;
+        renderPaginatedPengecualianTable();
+      });
+
+      btnPrevPage.addEventListener('click', () => {
+        if (currentPengPage > 1) {
+          currentPengPage--;
+          renderPaginatedPengecualianTable();
+        }
+      });
+
+      btnNextPage.addEventListener('click', () => {
+        const totalPages = parseInt(document.getElementById('totalPagesInfoPeng').innerText);
+        if (currentPengPage < totalPages) {
+          currentPengPage++;
+          renderPaginatedPengecualianTable();
+        }
+      });
+
+      inputPage.addEventListener('change', () => {
+        const totalPages = parseInt(document.getElementById('totalPagesInfoPeng').innerText);
+        let val = parseInt(inputPage.value);
+        if (isNaN(val) || val < 1) val = 1;
+        if (val > totalPages) val = totalPages;
+        currentPengPage = val;
+        renderPaginatedPengecualianTable();
+      });
+    }
+
+    // Modal Handlers
+    const modalPengecualian = document.getElementById('pengecualianModal');
+    const btnAddPengecualian = document.getElementById('btnAddPengecualian');
+    const btnBatalPengecualian = document.getElementById('btnBatalPengecualian');
+    const btnSimpanPengecualian = document.getElementById('btnSimpanPengecualian');
+
+    // Form Elements
+    const pengNip = document.getElementById('pengNip');
+    const pengNama = document.getElementById('pengNama');
+    const pengJab = document.getElementById('pengJab');
+    const pengUnit = document.getElementById('pengUnit');
+    const pengOpd = document.getElementById('pengOpd');
+    const pengKet = document.getElementById('pengKet');
+    const pengError = document.getElementById('pengError');
+
+    btnAddPengecualian.addEventListener('click', () => {
+      pengNip.value = '';
+      pengNip.disabled = false;
+      pengNama.value = '';
+      pengJab.value = '';
+      pengUnit.value = '';
+      pengOpd.value = '';
+      pengKet.value = '';
+      pengKet.disabled = true;
+      pengError.style.display = 'none';
+      btnSimpanPengecualian.disabled = true;
+      btnSimpanPengecualian.style.background = '#94a3b8';
+      btnSimpanPengecualian.style.cursor = 'not-allowed';
+
+      document.getElementById('pengecualianModalTitle').innerText = 'Tambah Pengecualian';
+      modalPengecualian.style.display = 'flex';
+    });
+
+    btnBatalPengecualian.addEventListener('click', () => {
+      modalPengecualian.style.display = 'none';
+    });
+
+    let searchTimeout = null;
+
+    function checkPengecualianForm() {
+       if(pengNip.value.trim() !== '' && pengNama.value.trim() !== '' && pengKet.value !== '') {
+           btnSimpanPengecualian.disabled = false;
+           btnSimpanPengecualian.style.background = '#3b82f6';
+           btnSimpanPengecualian.style.cursor = 'pointer';
+       } else {
+           btnSimpanPengecualian.disabled = true;
+           btnSimpanPengecualian.style.background = '#94a3b8';
+           btnSimpanPengecualian.style.cursor = 'not-allowed';
+       }
+    }
+
+    [pengNip, pengNama, pengKet].forEach(el => {
+       el.addEventListener('input', checkPengecualianForm);
+       if(el.tagName === 'SELECT') el.addEventListener('change', checkPengecualianForm);
+    });
+
+    pengNip.addEventListener('input', () => {
+      const nip = pengNip.value.trim();
+      
+      if (nip.length < 5) {
+        pengNama.value = ''; pengJab.value = ''; pengUnit.value = ''; pengOpd.value = '';
+        pengKet.value = ''; pengKet.disabled = true;
+        pengError.style.display = 'none';
+        
+        pengNama.disabled = true; pengJab.disabled = true; pengUnit.disabled = true; pengOpd.disabled = true;
+        
+        btnSimpanPengecualian.disabled = true;
+        btnSimpanPengecualian.style.background = '#94a3b8';
+        btnSimpanPengecualian.style.cursor = 'not-allowed';
+        return;
+      }
+
+      const found = globalPegawaiData.find(p => p.nip === nip);
+      if (found) {
+        pengNama.value = found.nama || '-';
+        pengJab.value = found.jabatan || '-';
+        pengUnit.value = found.unit_kerja || '-';
+        pengOpd.value = found.opd || '-';
+        pengKet.disabled = false;
+        pengError.style.display = 'none';
+
+        pengNama.disabled = true; pengJab.disabled = true; pengUnit.disabled = true; pengOpd.disabled = true;
+
+        checkPengecualianForm();
+      } else {
+        if (nip.length === 18) {
+           pengError.style.display = 'block';
+           pengError.innerText = 'Mencari NIP di database mentah SKP...';
+           pengError.style.color = '#3b82f6';
+           
+           if(searchTimeout) clearTimeout(searchTimeout);
+           searchTimeout = setTimeout(() => {
+             google.script.run
+               .withSuccessHandler((res) => {
+                  if(res.status === 'success' && res.data) {
+                    pengNama.value = res.data.nama || '-';
+                    pengJab.value = res.data.jabatan || '-';
+                    pengUnit.value = res.data.unit_kerja || '-';
+                    pengOpd.value = res.data.opd || '-';
+                    pengKet.disabled = false;
+                    pengError.style.display = 'none';
+
+                    pengNama.disabled = true; pengJab.disabled = true; pengUnit.disabled = true; pengOpd.disabled = true;
+                    checkPengecualianForm();
+                  } else {
+                    pengNama.value = ''; pengJab.value = ''; pengUnit.value = ''; pengOpd.value = '';
+                    pengKet.disabled = false;
+                    pengError.style.display = 'block';
+                    pengError.innerText = 'NIP tidak ditemukan di database. Silakan ketik manual.';
+                    pengError.style.color = '#f59e0b';
+                    
+                    pengNama.disabled = false; pengJab.disabled = false; pengUnit.disabled = false; pengOpd.disabled = false;
+                    checkPengecualianForm();
+                  }
+               })
+               .withFailureHandler((err) => {
+                  pengError.innerText = 'Gagal mencari di server: ' + err.message;
+                  pengError.style.color = '#ef4444';
+               })
+               .getPegawaiFromSkp(nip);
+           }, 500);
+        } else {
+           pengNama.value = ''; pengJab.value = ''; pengUnit.value = ''; pengOpd.value = '';
+           pengKet.value = ''; pengKet.disabled = true;
+           pengError.style.display = 'block';
+           pengError.innerText = 'NIP tidak ditemukan. Ketik 18 digit untuk mencari di SKP.';
+           pengError.style.color = '#ef4444';
+           
+           pengNama.disabled = true; pengJab.disabled = true; pengUnit.disabled = true; pengOpd.disabled = true;
+           checkPengecualianForm();
+        }
+      }
+    });
+
+    btnSimpanPengecualian.addEventListener('click', () => {
+      const payload = {
+        nip: pengNip.value.trim(),
+        nama: pengNama.value,
+        jabatan: pengJab.value,
+        unit_kerja: pengUnit.value,
+        opd: pengOpd.value,
+        keterangan: pengKet.value
+      };
+
+      btnSimpanPengecualian.disabled = true;
+      btnSimpanPengecualian.innerText = 'Menyimpan...';
+
+      google.script.run
+        .withSuccessHandler((res) => {
+          btnSimpanPengecualian.innerText = 'Simpan';
+          if (res.status === 'success') {
+            modalPengecualian.style.display = 'none';
+            loadPengecualianData();
+          } else {
+            alert('Gagal: ' + res.message);
+            btnSimpanPengecualian.disabled = false;
+          }
+        })
+        .withFailureHandler((err) => {
+          btnSimpanPengecualian.innerText = 'Simpan';
+          btnSimpanPengecualian.disabled = false;
+          alert('Error Server: ' + err.message);
+        })
+        .savePengecualianData(payload);
+    });
+
+    window.hapusPengecualian = function(nip) {
+      if(confirm('Yakin ingin menghapus NIP ' + nip + ' dari daftar pengecualian?')) {
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res.status === 'success') {
+              loadPengecualianData();
+            } else {
+              alert('Gagal menghapus: ' + res.message);
+            }
+          })
+          .withFailureHandler((err) => alert('Error: ' + err.message))
+          .deletePengecualianData(nip);
+      }
+    };
   </script>
 </body>
 </html>
