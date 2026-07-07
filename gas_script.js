@@ -877,6 +877,7 @@ function getPegawaiData() {
     if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('nama_jabatan');
 
     let idxOpd = headerPegawai.indexOf('skp_unor_induk');
+    let idxSkpStatus = headerPegawai.indexOf('skp_status');
 
     const daftarBulan = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
     const idxBulanPegawai = {};
@@ -899,6 +900,7 @@ function getPegawaiData() {
           nama: pRow[idxNama] ? pRow[idxNama].toString().trim() : "",
           jabatan: idxJabatan !== -1 && pRow[idxJabatan] ? pRow[idxJabatan].toString().trim() : "-",
           opd: idxOpd !== -1 && pRow[idxOpd] ? pRow[idxOpd].toString().trim() : "-",
+          skp_status: idxSkpStatus !== -1 && pRow[idxSkpStatus] ? pRow[idxSkpStatus].toString().trim() : "-",
           bulanan: bData
         });
       }

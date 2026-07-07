@@ -318,12 +318,22 @@
       line-height: 1.4;
     }
 
-    /* Rata kiri khusus tabel pegawai (No, NIP, Nama, Jabatan) */
-    #pegawaiTable th:nth-child(1), #pegawaiTable td:nth-child(1),
+    /* Rata kiri khusus tabel pegawai (NIP, Nama, Jabatan, OPD) - Kolom 2 s/d 5 */
     #pegawaiTable th:nth-child(2), #pegawaiTable td:nth-child(2),
     #pegawaiTable th:nth-child(3), #pegawaiTable td:nth-child(3),
-    #pegawaiTable th:nth-child(4), #pegawaiTable td:nth-child(4) {
+    #pegawaiTable th:nth-child(4), #pegawaiTable td:nth-child(4),
+    #pegawaiTable th:nth-child(5), #pegawaiTable td:nth-child(5) {
       text-align: left;
+    }
+    
+    /* Kolom No (kolom pertama) rata kanan di semua tabel */
+    th:nth-child(1), td:nth-child(1) {
+      text-align: right !important;
+    }
+    
+    /* Kembalikan rata tengah khusus untuk sel TOTAL (karena colspan) */
+    #opdTable tr.total-row td:nth-child(1) {
+      text-align: center !important;
     }
 
     /* Highlight Kolom Periode Aktif */
@@ -488,10 +498,13 @@
         </div>
         
         <div id="pegawai-content" style="display: none;">
-          <div class="filter-container" style="flex-wrap: wrap;">
-          <input type="text" id="searchPegawai" class="search-box" style="flex: 1; min-width: 250px;" placeholder="🔍 Cari Nama atau NIP Pegawai...">
-          <select id="filterOpd" class="search-box select-box" style="flex: 1; min-width: 200px;">
+          <div class="filter-container" style="flex-wrap: nowrap; overflow-x: auto; padding-bottom: 5px;">
+          <input type="text" id="searchPegawai" class="search-box" style="flex: 1; min-width: 150px;" placeholder="🔍 Cari Nama / NIP...">
+          <select id="filterOpd" class="search-box select-box" style="flex: 1; min-width: 120px;">
             <option value="semua">Semua OPD</option>
+          </select>
+          <select id="filterSkpStatus" class="search-box select-box">
+            <option value="semua">Semua Status SKP</option>
           </select>
           <select id="filterBulan" class="search-box select-box">
             <option value="semua">Semua Bulan</option>
@@ -510,11 +523,11 @@
             <option value="12">Tahunan</option>
           </select>
           <select id="filterStatus" class="search-box select-box">
-            <option value="semua">Semua Status</option>
+            <option value="semua">Semua Status Penilaian</option>
             <option value="sudah">Sudah Dinilai</option>
             <option value="belum">Belum Dinilai</option>
           </select>
-          <button id="btnDownloadPdf" class="btn-pagination" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.3); white-space: nowrap;">📄 Download PDF</button>
+          <button id="btnDownloadPdf" title="Download Daftar Pegawai (PDF)" style="background: transparent; color: #60a5fa; border: none; padding: 0.75rem 1rem; font-size: 1.5rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">⬇️</button>
           
           <div id="timestampInfo" style="display: none; align-items: center; background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 0 1rem; font-size: 0.85rem; min-height: 42px;">
             🕒 <span style="margin-left: 0.5rem; white-space: nowrap;"></span>
@@ -583,21 +596,21 @@
               <tr>
                 <th>No.</th>
                 <th>OPD</th>
-                <th>Jumlah Pegawai</th>
-                <th>SKP Disetujui</th>
-                <th id="opd-th-0">Jan</th>
-                <th id="opd-th-1">Feb</th>
-                <th id="opd-th-2">Mar</th>
-                <th id="opd-th-3">Apr</th>
-                <th id="opd-th-4">Mei</th>
-                <th id="opd-th-5">Jun</th>
-                <th id="opd-th-6">Jul</th>
-                <th id="opd-th-7">Agu</th>
-                <th id="opd-th-8">Sep</th>
-                <th id="opd-th-9">Okt</th>
-                <th id="opd-th-10">Nov</th>
-                <th id="opd-th-11">Des</th>
-                <th id="opd-th-12">Tahunan</th>
+                <th width="1%">Jumlah Pegawai</th>
+                <th width="1%">SKP Disetujui</th>
+                <th id="opd-th-0" width="1%">Jan</th>
+                <th id="opd-th-1" width="1%">Feb</th>
+                <th id="opd-th-2" width="1%">Mar</th>
+                <th id="opd-th-3" width="1%">Apr</th>
+                <th id="opd-th-4" width="1%">Mei</th>
+                <th id="opd-th-5" width="1%">Jun</th>
+                <th id="opd-th-6" width="1%">Jul</th>
+                <th id="opd-th-7" width="1%">Agu</th>
+                <th id="opd-th-8" width="1%">Sep</th>
+                <th id="opd-th-9" width="1%">Okt</th>
+                <th id="opd-th-10" width="1%">Nov</th>
+                <th id="opd-th-11" width="1%">Des</th>
+                <th id="opd-th-12" width="1%">Tahunan</th>
               </tr>
             </thead>
             <tbody>
@@ -883,22 +896,34 @@
       let itemsPerPage = parseInt(itemsPerPageSelect.value) || 10;
       
       const filterOpd = document.getElementById('filterOpd');
-      // Populate dropdown OPD
-      const uniqueOpds = Array.from(new Set(globalPegawaiData.map(p => p.opd).filter(o => o && o !== '-'))).sort();
-      uniqueOpds.forEach(opd => {
+      // Populate dropdown OPD & SKP Status
+      const opdSet = new Set();
+      const skpStatusSet = new Set();
+      globalPegawaiData.forEach(p => {
+         if (p.opd && p.opd !== '-') opdSet.add(p.opd);
+         if (p.skp_status && p.skp_status !== '-') skpStatusSet.add(p.skp_status);
+      });
+      
+      Array.from(opdSet).sort().forEach(opd => {
          const opt = document.createElement('option');
          opt.value = opd;
          opt.innerText = opd;
          filterOpd.appendChild(opt);
       });
       
+      Array.from(skpStatusSet).sort().forEach(status => {
+         const opt = document.createElement('option');
+         opt.value = status;
+         opt.innerText = status;
+         filterSkpStatus.appendChild(opt);
+      });
+      
       const applyFilters = () => {
-        const lowerFilter = searchInput.value.toLowerCase();
-        const opdVal = filterOpd.value;
-        const bulanVal = filterBulan.value;
-        const statusVal = filterStatus.value;
-        
-        let displayData = globalPegawaiData;
+        const searchVal = document.getElementById('searchPegawai').value.toLowerCase();
+        const opdVal = document.getElementById('filterOpd').value;
+        const bulanVal = document.getElementById('filterBulan').value;
+        const statusVal = document.getElementById('filterStatus').value;
+        const skpStatusVal = document.getElementById('filterSkpStatus').value;
         
         // Highlight Header Bulan Aktif
         for(let i=0; i<=12; i++) {
@@ -910,18 +935,13 @@
            if(activeTh) activeTh.classList.add('highlight-col');
         }
         
-        // Filter OPD
-        if (opdVal !== 'semua') {
-          displayData = displayData.filter(p => p.opd === opdVal);
-        }
-        
-        // A. Filter Teks (Nama / NIP)
-        if (lowerFilter) {
-          displayData = displayData.filter(p => 
-            p.nama.toLowerCase().includes(lowerFilter) || 
-            p.nip.toLowerCase().includes(lowerFilter)
-          );
-        }
+        let displayData = globalPegawaiData.filter(p => {
+          const mNama = p.nama.toLowerCase().includes(searchVal);
+          const mNip = p.nip.toLowerCase().includes(searchVal);
+          const mOpd = opdVal === 'semua' || p.opd === opdVal;
+          const mSkpStatus = skpStatusVal === 'semua' || p.skp_status === skpStatusVal;
+          return (mNama || mNip) && mOpd && mSkpStatus;
+        });
         
         // B. Filter Bulan & Status Dinilai
         const tsDiv = document.getElementById('timestampInfo');
@@ -1028,6 +1048,7 @@
       filterOpd.addEventListener('change', applyFilters);
       filterBulan.addEventListener('change', applyFilters);
       filterStatus.addEventListener('change', applyFilters);
+      filterSkpStatus.addEventListener('change', applyFilters);
       
       itemsPerPageSelect.addEventListener('change', (e) => {
         itemsPerPage = parseInt(e.target.value);
