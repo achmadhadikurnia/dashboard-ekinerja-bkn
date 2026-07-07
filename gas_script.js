@@ -7,6 +7,56 @@
  * Tahap 4: Cetak ke sheet 'pegawai'
  */
 
+// ==========================================
+// PENGATURAN LISENSI APLIKASI
+// ==========================================
+const TAHUN_LISENSI = 2025; // Ubah nilai ini untuk memperbarui lisensi (contoh: 2025)
+
+/**
+ * Membuat pesan peringatan lisensi yang seragam
+ */
+function _getPesanLisensi(tahunLaporan, isHtml) {
+  const intro = 'Masa berlaku lisensi aplikasi untuk tahun ' + TAHUN_LISENSI + ' telah habis.';
+  const detect = 'Aplikasi mendeteksi penggunaan data untuk laporan tahun ' + tahunLaporan + '.';
+  const lock = 'Akses monitoring dasbor dan fitur penarikan data dari backend telah dikunci.';
+  const contact = 'Silakan hubungi pengembang untuk memperbarui lisensi tahunan:';
+  
+  if (isHtml) {
+    return intro + '<br><br>' + detect + ' ' + lock + '<br><br>' + contact +
+           '<div class="contact-info">' +
+             '<p style="font-size: 1.1rem; margin-bottom: 0.5rem;">Achmad Hadi Kurnia</p>' +
+             '<p><a href="mailto:imachmadhadikurnia@gmail.com" style="color: #60a5fa; text-decoration: none;">📧 imachmadhadikurnia@gmail.com</a></p>' +
+             '<p><a href="https://wa.me/6287772333305" target="_blank" style="color: #4ade80; text-decoration: none;">💬 WA: +6287772333305</a></p>' +
+           '</div>';
+  } else {
+    return intro + '\n' + detect + '\n' + lock + '\n\n' + contact + '\n\n' +
+           'Achmad Hadi Kurnia\n' +
+           'Email: imachmadhadikurnia@gmail.com\n' +
+           'WA: +6287772333305';
+  }
+}
+
+/**
+ * Memeriksa apakah data laporan melebihi batas lisensi tahunan
+ */
+function cekLisensi(sheetSkp, ui) {
+  if (!sheetSkp) return true; 
+  let judulLaporan = sheetSkp.getRange('A1').getValue().toString().trim();
+  const yearMatch = judulLaporan.match(/20\d{2}/);
+  let tahunLaporan = new Date().getFullYear();
+  
+  if (yearMatch) {
+    tahunLaporan = parseInt(yearMatch[0]);
+  }
+  
+  if (tahunLaporan > TAHUN_LISENSI) {
+    const msg = _getPesanLisensi(tahunLaporan, false);
+    if(ui) ui.alert('⚠️ Peringatan Lisensi', msg, ui.ButtonSet.OK);
+    return false; // Lisensi habis
+  }
+  return true; // Lisensi aman
+}
+
 function generateMasterPegawai() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const ui = SpreadsheetApp.getUi();
@@ -18,6 +68,9 @@ function generateMasterPegawai() {
     if(ui) ui.alert('Error: Pastikan sheet "skp" dan "pegawai" ada di file ini.');
     return;
   }
+  
+  // Cek Lisensi
+  if (!cekLisensi(sheetSkp, ui)) return;
 
   // Gunakan getDisplayValues() agar NIP (18 digit) terbaca sebagai Teks murni
   // Ini mencegah NIP terpotong menjadi 1970000000000 (presisi angka Google Sheets)
@@ -190,6 +243,11 @@ function hapusPengecualian() {
     return;
   }
   
+  // Cek Lisensi
+  const sheetSkp = ss.getSheetByName('skp');
+  if (!cekLisensi(sheetSkp, ui)) return;
+  
+  
   // 1. Ambil daftar NIP pengecualian
   const blacklistNip = new Set();
   if (sheetPengecualian) {
@@ -319,6 +377,11 @@ function _updateNilaiBulan(targetBulan) {
     ui.alert('Error: Sheet "pegawai" tidak ditemukan!');
     return;
   }
+  
+  // Cek Lisensi
+  const sheetSkp = ss.getSheetByName('skp');
+  if (!cekLisensi(sheetSkp, ui)) return;
+
 
   const sheetBulan = ss.getSheetByName(targetBulan);
   if (!sheetBulan) {
@@ -417,9 +480,14 @@ function _generateLaporanOPD(showUi = true) {
 
   const sheetPegawai = ss.getSheetByName('pegawai');
   if (!sheetPegawai) {
-    if(ui) ui.alert('Error: Sheet "pegawai" tidak ditemukan!');
+    if(ui && showUi) ui.alert('Error: Sheet "pegawai" belum ada. Ekstrak data pegawai terlebih dahulu.');
     return;
   }
+  
+  // Cek Lisensi
+  const sheetSkp = ss.getSheetByName('skp');
+  if (!cekLisensi(sheetSkp, ui)) return;
+
 
   const dataPegawai = sheetPegawai.getDataRange().getDisplayValues();
   if (dataPegawai.length <= 1) {
@@ -676,7 +744,9 @@ function getDashboardData() {
   // ===============================================
   let reportTitle = "Ekinerja BKN";
   let reportInstansi = "";
+  let licenseWarning = "";
   const sheetSkp = ss.getSheetByName('skp');
+  
   if (sheetSkp) {
     const a1 = sheetSkp.getRange("A1").getDisplayValue().trim();
     if (a1) reportTitle = a1;
@@ -686,6 +756,17 @@ function getDashboardData() {
       a2 = a2.substring(9).trim();
     }
     reportInstansi = a2;
+    
+    // Pengecekan Lisensi untuk ditampilkan di Dashboard
+    const yearMatch = reportTitle.match(/20\d{2}/);
+    let tahunLaporan = new Date().getFullYear();
+    if (yearMatch) {
+      tahunLaporan = parseInt(yearMatch[0]);
+    }
+    
+    if (tahunLaporan > TAHUN_LISENSI) {
+      licenseWarning = _getPesanLisensi(tahunLaporan, true);
+    }
   }
   
   return {
@@ -697,7 +778,8 @@ function getDashboardData() {
       timestamps: timestamps,
       metadata: {
         title: reportTitle,
-        instansi: reportInstansi
+        instansi: reportInstansi,
+        licenseWarning: licenseWarning
       }
     }
   };
