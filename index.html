@@ -147,8 +147,6 @@
     /* Chart Section */
     .chart-container {
       margin-bottom: 2rem;
-      height: 400px;
-      position: relative;
     }
 
     .section-title {
@@ -300,7 +298,13 @@
       padding: 0.5rem 0.3rem;
       border-bottom: 1px solid var(--glass-border);
       font-size: 0.85rem;
-      text-align: center; /* Rata tengah untuk semua angka */
+      text-align: center; /* Default rata tengah */
+    }
+
+    /* Kolom angka pada tabel OPD (Jumlah Pegawai sampai Tahunan) rata kanan */
+    #opdTable th:nth-child(n+3), #opdTable td:nth-child(n+3),
+    #opdTable tr.total-row td:nth-child(n+2) {
+      text-align: right !important;
     }
 
     /* Kolom OPD (kolom ke-2) pada tabel OPD harus rata kiri dan bisa turun baris (wrap) */
@@ -385,8 +389,13 @@
       transition: background 0.2s ease;
     }
 
+    /* Efek Zebra (belang-belang) untuk baris genap */
+    tbody tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
     tbody tr:hover {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.06);
     }
 
     /* Animations */
@@ -464,14 +473,22 @@
       <!-- Chart -->
       <div class="glass-panel chart-container">
         <h2 class="section-title">Tren Pegawai Melapor</h2>
-        <canvas id="laporanChart"></canvas>
+        <div style="position: relative; height: 350px; width: 100%;">
+          <canvas id="laporanChart"></canvas>
+        </div>
       </div>
 
       <!-- Pegawai Table Widget -->
       <div class="glass-panel" style="margin-bottom: 2rem;">
         <h2 class="section-title">Daftar Pegawai</h2>
         
-        <div class="filter-container" style="flex-wrap: wrap;">
+        <div id="pegawai-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem; color: #94a3b8;">
+          <div class="spinner" style="margin-bottom: 1rem; width: 35px; height: 35px; border-width: 3px;"></div>
+          <p id="pegawai-loading-text">Sedang memuat rincian pegawai dari server...</p>
+        </div>
+        
+        <div id="pegawai-content" style="display: none;">
+          <div class="filter-container" style="flex-wrap: wrap;">
           <input type="text" id="searchPegawai" class="search-box" style="flex: 1; min-width: 250px;" placeholder="🔍 Cari Nama atau NIP Pegawai...">
           <select id="filterOpd" class="search-box select-box" style="flex: 1; min-width: 200px;">
             <option value="semua">Semua OPD</option>
@@ -553,10 +570,11 @@
             </span>
             <button id="btnNextPage" class="btn-pagination">Next &rarr;</button>
           </div>
-        </div>
-      </div>
+        </div> <!-- End of pagination-container -->
+      </div> <!-- End of pegawai-content -->
+    </div> <!-- End of Daftar Pegawai glass-panel -->
 
-      <!-- Table OPD -->
+    <!-- Table OPD -->
       <div class="glass-panel">
         <h2 class="section-title">Rincian Per OPD</h2>
         <div class="table-responsive">
@@ -565,7 +583,7 @@
               <tr>
                 <th>No.</th>
                 <th>OPD</th>
-                <th>Total Pegawai</th>
+                <th>Jumlah Pegawai</th>
                 <th>SKP Disetujui</th>
                 <th id="opd-th-0">Jan</th>
                 <th id="opd-th-1">Feb</th>
@@ -622,6 +640,25 @@
       
       const data = response.data;
       renderDashboard(data);
+      // Set teks loading dengan angka pasti
+      const totalPegawai = data.grandTotal ? data.grandTotal.totalPegawai : 0;
+      if (totalPegawai > 0) {
+        document.getElementById('pegawai-loading-text').innerText = `Sedang mengunduh ${formatNumber(totalPegawai)} rincian pegawai dari server...`;
+      }
+      
+      // Panggil asinkron tabel pegawai
+      google.script.run
+        .withSuccessHandler(onPegawaiSuccess)
+        .withFailureHandler(onFailure)
+        .getPegawaiData();
+    }
+
+    function onPegawaiSuccess(response) {
+      if(response.status === 'error') {
+        document.getElementById('pegawai-loading').innerHTML = '<p class="error-msg">' + response.message + '</p>';
+        return;
+      }
+      renderPegawaiData(response.data);
     }
 
     function onFailure(error) {
@@ -795,7 +832,42 @@
         `;
       });
       
+      // Tambahkan baris Grand Total
+      let gtBulan = '';
+      gt.bulanan.forEach((val, idx) => {
+        let mClass = (val >= gt.totalPegawai && gt.totalPegawai > 0) ? 'val-green' : 'val-red';
+        if (gt.totalPegawai === 0) mClass = 'val-muted';
+        
+        let hlClass = targetHighlights.includes(idx) ? ' highlight-col' : '';
+        gtBulan += `<td class="${mClass}${hlClass}"><strong>${formatNumber(val)}</strong></td>`;
+      });
+      
+      let gtStatusClass = (gt.skpDisetujui >= gt.totalPegawai && gt.totalPegawai > 0) ? 'val-green' : 'val-red';
+      if (gt.totalPegawai === 0) gtStatusClass = 'val-muted';
+      
+      tableHTML += `
+        <tr class="total-row" style="background: rgba(59, 130, 246, 0.1); border-top: 2px solid var(--accent-1);">
+          <td colspan="2" style="text-align: center;"><strong>TOTAL</strong></td>
+          <td class="val-blue"><strong>${formatNumber(gt.totalPegawai)}</strong></td>
+          <td class="${gtStatusClass}"><strong>${formatNumber(gt.skpDisetujui)}</strong></td>
+          ${gtBulan}
+        </tr>
+      `;
+      
       tbody.innerHTML = tableHTML;
+    } // Akhir renderDashboard
+
+    let globalPegawaiData = [];
+    let globalFilteredPegawaiData = [];
+    let currentPage = 1;
+    
+    function renderPegawaiData(pegawaiDataArray) {
+      document.getElementById('pegawai-loading').style.display = 'none';
+      document.getElementById('pegawai-content').style.display = 'block';
+
+      globalPegawaiData = pegawaiDataArray || [];
+      globalFilteredPegawaiData = [];
+      currentPage = 1;
 
       // 4. Render Table Pegawai
       const pegawaiTbody = document.querySelector('#pegawaiTable tbody');
@@ -808,14 +880,11 @@
       const btnNextPage = document.getElementById('btnNextPage');
       const pageInfo = document.getElementById('pageInfo');
       
-      let allPegawaiData = data.pegawaiData || [];
-      let filteredPegawaiData = [];
-      let currentPage = 1;
       let itemsPerPage = parseInt(itemsPerPageSelect.value) || 10;
       
       const filterOpd = document.getElementById('filterOpd');
       // Populate dropdown OPD
-      const uniqueOpds = Array.from(new Set(allPegawaiData.map(p => p.opd).filter(o => o && o !== '-'))).sort();
+      const uniqueOpds = Array.from(new Set(globalPegawaiData.map(p => p.opd).filter(o => o && o !== '-'))).sort();
       uniqueOpds.forEach(opd => {
          const opt = document.createElement('option');
          opt.value = opd;
@@ -829,7 +898,7 @@
         const bulanVal = filterBulan.value;
         const statusVal = filterStatus.value;
         
-        let displayData = allPegawaiData;
+        let displayData = globalPegawaiData;
         
         // Highlight Header Bulan Aktif
         for(let i=0; i<=12; i++) {
@@ -884,23 +953,22 @@
           tsDiv.style.display = 'none';
         }
         
-        filteredPegawaiData = displayData;
-        currentPage = 1; // Reset ke halaman 1 setiap kali filter berubah
-        renderPegawaiPage();
+        globalFilteredPegawaiData = displayData;
+        currentPage = 1;
+        document.getElementById('inputPage').value = 1;
+        renderPaginatedTable();
       };
       
-      const renderPegawaiPage = () => {
-        // Logika Pagination
-        const totalItems = filteredPegawaiData.length;
+      const renderPaginatedTable = () => {
+        const totalItems = globalFilteredPegawaiData.length;
         const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
         
         if (currentPage > totalPages) currentPage = totalPages;
         
         const startIdx = (currentPage - 1) * itemsPerPage;
         const endIdx = startIdx + itemsPerPage;
-        const pageData = filteredPegawaiData.slice(startIdx, endIdx);
+        const pageData = globalFilteredPegawaiData.slice(startIdx, endIdx);
 
-        // Update UI Pagination
         document.getElementById('inputPage').value = currentPage;
         document.getElementById('totalPagesInfo').innerText = totalPages;
         btnPrevPage.disabled = currentPage === 1;
@@ -911,23 +979,12 @@
         
         const activeBulan = document.getElementById('filterBulan').value;
         
-        // Update header highlight pada tabel pegawai
-        for (let i = 0; i <= 12; i++) {
-          const th = document.getElementById(`th-${i}`);
-          if (th) th.classList.remove('highlight-col');
-        }
-        if (activeBulan !== 'semua') {
-          const activeTh = document.getElementById(`th-${activeBulan}`);
-          if (activeTh) activeTh.classList.add('highlight-col');
-        }
-        
         pageData.forEach(p => {
           let pBulan = '';
           p.bulanan.forEach((val, idx) => {
              let mClass = val ? 'val-green' : 'val-red';
              let displayVal = val ? val.toString().trim() : '-';
              
-             // Kompresi Teks Nilai (misal: "Sangat Baik" -> "SB", "Baik" -> "B")
              if (displayVal !== '-') {
                if (displayVal.length > 2) {
                  const parts = displayVal.split(' ');
@@ -962,13 +1019,11 @@
            pHTML += `<tr><td colspan="17" class="val-muted" style="text-align:center; padding: 1rem;">Tidak ada data pegawai yang cocok dengan filter.</td></tr>`;
         }
         
-        pegawaiTbody.innerHTML = pHTML;
+        document.querySelector('#pegawaiTable tbody').innerHTML = pHTML;
       };
       
-      // Initial Load
       applyFilters();
       
-      // Event Listeners
       searchInput.addEventListener('input', applyFilters);
       filterOpd.addEventListener('change', applyFilters);
       filterBulan.addEventListener('change', applyFilters);
@@ -981,37 +1036,36 @@
       
       document.getElementById('inputPage').addEventListener('change', (e) => {
         let val = parseInt(e.target.value);
-        const totalPages = Math.ceil(filteredPegawaiData.length / itemsPerPage) || 1;
+        const totalPages = Math.ceil(globalFilteredPegawaiData.length / itemsPerPage) || 1;
         if (isNaN(val) || val < 1) val = 1;
         if (val > totalPages) val = totalPages;
         currentPage = val;
-        renderPegawaiPage();
+        renderPaginatedTable();
       });
       
       btnPrevPage.addEventListener('click', () => {
         if (currentPage > 1) {
           currentPage--;
-          renderPegawaiPage();
+          renderPaginatedTable();
         }
       });
       
       btnNextPage.addEventListener('click', () => {
-        const totalPages = Math.ceil(filteredPegawaiData.length / itemsPerPage);
+        const totalPages = Math.ceil(globalFilteredPegawaiData.length / itemsPerPage);
         if (currentPage < totalPages) {
           currentPage++;
-          renderPegawaiPage();
+          renderPaginatedTable();
         }
       });
       
-      // Download PDF Listener
       document.getElementById('btnDownloadPdf').addEventListener('click', () => {
-        if (filteredPegawaiData.length === 0) {
+        if (globalFilteredPegawaiData.length === 0) {
           alert('Tidak ada data untuk diunduh.');
           return;
         }
 
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('l', 'pt', 'a4'); // Landscape, points, A4
+        const doc = new jsPDF('l', 'pt', 'a4'); 
         
         const pageWidth = doc.internal.pageSize.getWidth();
         let currentY = 30;
@@ -1039,7 +1093,6 @@
         const textBulan = selBulan.options[selBulan.selectedIndex].text;
         const selStatus = document.getElementById('filterStatus');
         const textStatus = selStatus.options[selStatus.selectedIndex].text;
-        const textPegawai = document.getElementById('searchPegawai').value || "Semua Pegawai";
         
         const activeBulanVal = document.getElementById('filterBulan').value;
         const activeOpdVal = selOpd.value;
@@ -1071,16 +1124,11 @@
         }
         
         let tableStartY = currentY + 10;
-        
-        // Reset font normal untuk tabel
         doc.setFont('helvetica', 'normal');
         
-        // Buat Header
         const headers = [['No', 'NIP', 'Nama', 'Jabatan', 'OPD', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Tahunan']];
         
-        // Format body
-        const body = filteredPegawaiData.map((p, index) => {
-           // Mengonversi singkatan bulan/nilai yang aslinya disimpan sebagai teks atau kosong
+        const body = globalFilteredPegawaiData.map((p, index) => {
            const getDisplay = (val) => {
              if(!val) return '-';
              let s = val.toString().trim();

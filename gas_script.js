@@ -774,52 +774,8 @@ function getDashboardData() {
     grandTotal.bulanan = [0,0,0,0,0,0,0,0,0,0,0,0,0];
   }
 
-  // ===============================================
-  // BACA DATA PEGAWAI
-  // ===============================================
-  let pegawaiData = [];
-  if (sheetPegawai) {
-    const rawPegawai = sheetPegawai.getDataRange().getDisplayValues();
-    if (rawPegawai.length > 1) {
-      const headerPegawai = rawPegawai[0];
-      const idxNip = headerPegawai.indexOf('nip');
-      const idxNama = headerPegawai.indexOf('nama');
+  // Data pegawai tidak ditarik di sini agar Dashboard muncul instan (Lazy Loading)
 
-      // Deteksi dinamis untuk nama kolom jabatan
-      let idxJabatan = headerPegawai.indexOf('jabatan');
-      if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('skp_jabatan');
-      if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('jabatan_akhir');
-      if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('nama_jabatan');
-
-      let idxOpd = headerPegawai.indexOf('skp_unor_induk');
-
-      const daftarBulan = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
-      const idxBulanPegawai = {};
-      daftarBulan.forEach(b => {
-        idxBulanPegawai[b] = headerPegawai.indexOf(b);
-      });
-
-      if (idxNip !== -1 && idxNama !== -1) {
-        for (let i = 1; i < rawPegawai.length; i++) {
-          const pRow = rawPegawai[i];
-          const bData = [];
-
-          daftarBulan.forEach(b => {
-             const realVal = idxBulanPegawai[b] !== -1 ? pRow[idxBulanPegawai[b]].toString().trim() : "";
-             bData.push(realVal);
-          });
-
-          pegawaiData.push({
-            nip: pRow[idxNip] ? pRow[idxNip].toString().trim() : "",
-            nama: pRow[idxNama] ? pRow[idxNama].toString().trim() : "",
-            jabatan: idxJabatan !== -1 && pRow[idxJabatan] ? pRow[idxJabatan].toString().trim() : "-",
-            opd: idxOpd !== -1 && pRow[idxOpd] ? pRow[idxOpd].toString().trim() : "-",
-            bulanan: bData
-          });
-        }
-      }
-    }
-  }
   // ===============================================
   // BACA WAKTU UPDATE (SEL A6) DARI MASING-MASING SHEET
   // ===============================================
@@ -872,7 +828,6 @@ function getDashboardData() {
     data: {
       opdData: rows,
       grandTotal: grandTotal,
-      pegawaiData: pegawaiData,
       timestamps: timestamps,
       metadata: {
         title: reportTitle,
@@ -880,5 +835,78 @@ function getDashboardData() {
         licenseWarning: licenseWarning
       }
     }
+  };
+}
+
+/**
+ * Fungsi khusus untuk menarik data Pegawai secara terpisah (Lazy Loading)
+ * Dipanggil dari Frontend UI di latar belakang.
+ */
+function getPegawaiData() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetPegawai = ss.getSheetByName('pegawai');
+  
+  if (!sheetPegawai) {
+    return { status: 'error', message: 'Sheet "pegawai" belum ada.' };
+  }
+
+  // Cek lisensi agar API ini juga terlindungi
+  const sheetSkp = ss.getSheetByName('skp');
+  if (sheetSkp) {
+    const judulLaporan = sheetSkp.getRange('A1').getValue().toString().trim();
+    const yearMatch = judulLaporan.match(/20\d{2}/);
+    let tahunLaporan = new Date().getFullYear();
+    if (yearMatch) tahunLaporan = parseInt(yearMatch[0]);
+    
+    if (tahunLaporan > _getValidTahunLisensi()) {
+      return { status: 'error', message: 'Masa lisensi berakhir.' };
+    }
+  }
+
+  let pegawaiData = [];
+  const rawPegawai = sheetPegawai.getDataRange().getDisplayValues();
+  if (rawPegawai.length > 1) {
+    const headerPegawai = rawPegawai[0];
+    const idxNip = headerPegawai.indexOf('nip');
+    const idxNama = headerPegawai.indexOf('nama');
+
+    // Deteksi dinamis untuk nama kolom jabatan
+    let idxJabatan = headerPegawai.indexOf('jabatan');
+    if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('skp_jabatan');
+    if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('jabatan_akhir');
+    if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('nama_jabatan');
+
+    let idxOpd = headerPegawai.indexOf('skp_unor_induk');
+
+    const daftarBulan = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
+    const idxBulanPegawai = {};
+    daftarBulan.forEach(b => {
+      idxBulanPegawai[b] = headerPegawai.indexOf(b);
+    });
+
+    if (idxNip !== -1 && idxNama !== -1) {
+      for (let i = 1; i < rawPegawai.length; i++) {
+        const pRow = rawPegawai[i];
+        const bData = [];
+
+        daftarBulan.forEach(b => {
+           const realVal = idxBulanPegawai[b] !== -1 ? pRow[idxBulanPegawai[b]].toString().trim() : "";
+           bData.push(realVal);
+        });
+
+        pegawaiData.push({
+          nip: pRow[idxNip] ? pRow[idxNip].toString().trim() : "",
+          nama: pRow[idxNama] ? pRow[idxNama].toString().trim() : "",
+          jabatan: idxJabatan !== -1 && pRow[idxJabatan] ? pRow[idxJabatan].toString().trim() : "-",
+          opd: idxOpd !== -1 && pRow[idxOpd] ? pRow[idxOpd].toString().trim() : "-",
+          bulanan: bData
+        });
+      }
+    }
+  }
+
+  return {
+    status: 'success',
+    data: pegawaiData
   };
 }
