@@ -322,12 +322,23 @@
       line-height: 1.4;
     }
 
-    /* Rata kiri khusus tabel pegawai (NIP, Nama, Jabatan, OPD) - Kolom 2 s/d 5 */
+    /* Rata kiri khusus tabel pegawai (NIP, Nama, Jabatan, Unit Kerja, OPD) - Kolom 2 s/d 6 */
     #pegawaiTable th:nth-child(2), #pegawaiTable td:nth-child(2),
     #pegawaiTable th:nth-child(3), #pegawaiTable td:nth-child(3),
     #pegawaiTable th:nth-child(4), #pegawaiTable td:nth-child(4),
-    #pegawaiTable th:nth-child(5), #pegawaiTable td:nth-child(5) {
+    #pegawaiTable th:nth-child(5), #pegawaiTable td:nth-child(5),
+    #pegawaiTable th:nth-child(6), #pegawaiTable td:nth-child(6) {
       text-align: left;
+    }
+
+    /* Agar kolom teks panjang bisa turun ke baris baru dan tidak membuat tabel terlalu lebar */
+    #pegawaiTable td:nth-child(3),
+    #pegawaiTable td:nth-child(4),
+    #pegawaiTable td:nth-child(5),
+    #pegawaiTable td:nth-child(6) {
+      white-space: normal;
+      min-width: 120px;
+      line-height: 1.4;
     }
 
     /* Kolom No (kolom pertama) rata kanan di semua tabel */
@@ -532,10 +543,11 @@
             <option value="belum">Belum Dinilai</option>
           </select>
           <button id="btnDownloadPdf" title="Download Daftar Pegawai (PDF)" style="background: transparent; color: #60a5fa; border: 1px solid transparent; padding: 0.75rem 0.5rem; margin: 0; font-size: 1.5rem; line-height: 1; flex-shrink: 0; display: flex; align-items: center; justify-content: center; align-self: stretch; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">⬇️</button>
+        </div>
 
-          <div id="timestampInfo" style="display: none; align-items: center; background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 0 1rem; font-size: 0.85rem; min-height: 42px;">
-            🕒 <span style="margin-left: 0.5rem; white-space: nowrap;"></span>
-          </div>
+        <!-- Info tarikan data dipindah ke luar filter-container -->
+        <div id="timestampInfo" style="display: none; align-items: center; background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 0 1rem; font-size: 0.85rem; min-height: 42px; margin-bottom: 1rem; max-width: max-content;">
+          🕒 <span style="margin-left: 0.5rem; white-space: nowrap;"></span>
         </div>
 
         <div class="table-responsive">
@@ -546,6 +558,7 @@
                 <th width="1%">NIP</th>
                 <th>Nama</th>
                 <th>Jabatan</th>
+                <th>Unit Kerja</th>
                 <th>OPD</th>
                 <th id="th-0" width="1%">Jan</th>
                 <th id="th-1" width="1%">Feb</th>
@@ -1034,6 +1047,7 @@
               <td style="white-space: nowrap; text-align: left; font-size: 0.75rem;">${p.nip}</td>
               <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 120px; font-size: 0.75rem;"><strong>${p.nama}</strong></td>
               <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 140px; font-size: 0.75rem;">${p.jabatan}</td>
+              <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 140px; font-size: 0.75rem;">${p.unit_kerja}</td>
               <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 150px; font-size: 0.7rem;">${p.opd}</td>
               ${pBulan}
             </tr>
@@ -1152,7 +1166,7 @@
         let tableStartY = currentY + 10;
         doc.setFont('helvetica', 'normal');
 
-        const headers = [['No', 'NIP', 'Nama', 'Jabatan', 'OPD', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Tahunan']];
+        const headers = [['No', 'NIP', 'Nama', 'Jabatan', 'Unit Kerja', 'OPD', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Tahunan']];
 
         const body = globalFilteredPegawaiData.map((p, index) => {
            const getDisplay = (val) => {
@@ -1171,12 +1185,13 @@
              p.nip,
              p.nama,
              p.jabatan,
+             p.unit_kerja,
              p.opd,
              ...p.bulanan.map(getDisplay)
            ];
         });
 
-        const targetColIdx = activeBulanVal !== 'semua' ? parseInt(activeBulanVal) + 5 : -1;
+        const targetColIdx = activeBulanVal !== 'semua' ? parseInt(activeBulanVal) + 6 : -1;
 
         doc.autoTable({
           head: headers,
@@ -1185,26 +1200,25 @@
           styles: { fontSize: 7, cellPadding: 2 },
           headStyles: { fillColor: [15, 23, 42] },
           columnStyles: {
-            0: { cellWidth: 20, halign: 'center' }, // No
-            1: { cellWidth: 75, halign: 'center' }, // NIP
-            2: { cellWidth: 120 }, // Nama
-            3: { cellWidth: 100 }, // Jabatan
-            4: { cellWidth: 135 }, // OPD
-            5: { cellWidth: 25, halign: 'center' }, // Jan
-            6: { cellWidth: 25, halign: 'center' }, // Feb
-            7: { cellWidth: 25, halign: 'center' }, // Mar
-            8: { cellWidth: 25, halign: 'center' }, // Apr
-            9: { cellWidth: 25, halign: 'center' }, // Mei
-            10: { cellWidth: 25, halign: 'center' }, // Jun
-            11: { cellWidth: 25, halign: 'center' }, // Jul
-            12: { cellWidth: 25, halign: 'center' }, // Agu
-            13: { cellWidth: 25, halign: 'center' }, // Sep
-            14: { cellWidth: 25, halign: 'center' }, // Okt
-            15: { cellWidth: 25, halign: 'center' }, // Nov
-            16: { cellWidth: 25, halign: 'center' }, // Des
-            17: { cellWidth: 40, halign: 'center' }  // Tahunan
+            0: { cellWidth: 15, halign: 'center' }, // No
+            1: { cellWidth: 85, halign: 'left' }, // NIP
+            // Kolom 2, 3, 4, 5 (teks) dilepas cellWidth-nya agar autotable membaginya secara proporsional 100%
+            6: { cellWidth: 20, halign: 'center' }, // Jan
+            7: { cellWidth: 20, halign: 'center' }, // Feb
+            8: { cellWidth: 20, halign: 'center' }, // Mar
+            9: { cellWidth: 20, halign: 'center' }, // Apr
+            10: { cellWidth: 20, halign: 'center' }, // Mei
+            11: { cellWidth: 20, halign: 'center' }, // Jun
+            12: { cellWidth: 20, halign: 'center' }, // Jul
+            13: { cellWidth: 20, halign: 'center' }, // Agu
+            14: { cellWidth: 20, halign: 'center' }, // Sep
+            15: { cellWidth: 20, halign: 'center' }, // Okt
+            16: { cellWidth: 20, halign: 'center' }, // Nov
+            17: { cellWidth: 20, halign: 'center' }, // Des
+            18: { cellWidth: 35, halign: 'center' }  // Tahunan
           },
-          margin: { top: 30, right: 15, bottom: 20, left: 15 },
+          margin: { top: 30, right: 30, bottom: 20, left: 30 },
+          tableWidth: 'auto',
           didParseCell: function(data) {
             if (targetColIdx !== -1 && data.column.index === targetColIdx) {
               if (data.section === 'head') {

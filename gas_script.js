@@ -876,6 +876,12 @@ function getPegawaiData() {
     if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('jabatan_akhir');
     if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('nama_jabatan');
 
+    // Deteksi dinamis untuk unit kerja
+    let idxUnitKerja = headerPegawai.indexOf('unit_kerja');
+    if (idxUnitKerja === -1) idxUnitKerja = headerPegawai.indexOf('skp_unor');
+    if (idxUnitKerja === -1) idxUnitKerja = headerPegawai.indexOf('skp_unor_nama');
+    if (idxUnitKerja === -1) idxUnitKerja = headerPegawai.indexOf('unor_nama');
+
     let idxOpd = headerPegawai.indexOf('skp_unor_induk');
     let idxSkpStatus = headerPegawai.indexOf('skp_status');
 
@@ -899,6 +905,7 @@ function getPegawaiData() {
           nip: pRow[idxNip] ? pRow[idxNip].toString().trim() : "",
           nama: pRow[idxNama] ? pRow[idxNama].toString().trim() : "",
           jabatan: idxJabatan !== -1 && pRow[idxJabatan] ? pRow[idxJabatan].toString().trim() : "-",
+          unit_kerja: idxUnitKerja !== -1 && pRow[idxUnitKerja] ? pRow[idxUnitKerja].toString().trim() : "-",
           opd: idxOpd !== -1 && pRow[idxOpd] ? pRow[idxOpd].toString().trim() : "-",
           skp_status: idxSkpStatus !== -1 && pRow[idxSkpStatus] ? pRow[idxSkpStatus].toString().trim() : "-",
           bulanan: bData
