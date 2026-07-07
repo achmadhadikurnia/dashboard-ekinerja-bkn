@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Laporan Kinerja</title>
-  
+
   <!-- Google Fonts: Inter -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <!-- Chart.js -->
@@ -163,7 +163,7 @@
       font-weight: 500;
       color: var(--accent-1);
     }
-    
+
     /* Modal Styles */
     .modal-overlay {
       position: fixed;
@@ -258,7 +258,7 @@
       background-position: right 10px center;
       padding-right: 30px;
     }
-    
+
     /* Perbaikan Warna Dropdown Options */
     .select-box option {
       background-color: #1e293b; /* Warna solid (bukan transparan) agar terbaca jelas */
@@ -312,8 +312,12 @@
       text-align: left;
     }
 
+    #opdTable th:nth-child(2) {
+      width: 100%; /* Memaksa kolom OPD mengambil seluruh sisa ruang yang ada */
+    }
+
     #opdTable td:nth-child(2) {
-      white-space: normal; 
+      white-space: normal;
       min-width: 200px;
       line-height: 1.4;
     }
@@ -325,12 +329,12 @@
     #pegawaiTable th:nth-child(5), #pegawaiTable td:nth-child(5) {
       text-align: left;
     }
-    
+
     /* Kolom No (kolom pertama) rata kanan di semua tabel */
     th:nth-child(1), td:nth-child(1) {
       text-align: right !important;
     }
-    
+
     /* Kembalikan rata tengah khusus untuk sel TOTAL (karena colspan) */
     #opdTable tr.total-row td:nth-child(1) {
       text-align: center !important;
@@ -420,7 +424,7 @@
       from { opacity: 0; transform: translateY(-20px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    
+
     /* Error Message */
     .error-msg {
       color: #ef4444;
@@ -443,7 +447,7 @@
       <div class="spinner"></div>
       <p>Mengambil data real-time dari Spreadsheet...</p>
     </div>
-    
+
     <div id="error-container" style="display: none;" class="glass-panel error-msg"></div>
 
     <div id="dashboard-content">
@@ -491,12 +495,12 @@
       <!-- Pegawai Table Widget -->
       <div class="glass-panel" style="margin-bottom: 2rem;">
         <h2 class="section-title">Daftar Pegawai</h2>
-        
+
         <div id="pegawai-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem; color: #94a3b8;">
           <div class="spinner" style="margin-bottom: 1rem; width: 35px; height: 35px; border-width: 3px;"></div>
           <p id="pegawai-loading-text">Sedang memuat rincian pegawai dari server...</p>
         </div>
-        
+
         <div id="pegawai-content" style="display: none;">
           <div class="filter-container" style="flex-wrap: nowrap; overflow-x: auto; padding-bottom: 5px;">
           <input type="text" id="searchPegawai" class="search-box" style="flex: 1; min-width: 150px;" placeholder="🔍 Cari Nama / NIP...">
@@ -527,8 +531,8 @@
             <option value="sudah">Sudah Dinilai</option>
             <option value="belum">Belum Dinilai</option>
           </select>
-          <button id="btnDownloadPdf" title="Download Daftar Pegawai (PDF)" style="background: transparent; color: #60a5fa; border: none; padding: 0.75rem 1rem; font-size: 1.5rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">⬇️</button>
-          
+          <button id="btnDownloadPdf" title="Download Daftar Pegawai (PDF)" style="background: transparent; color: #60a5fa; border: 1px solid transparent; padding: 0.75rem 0.5rem; margin: 0; font-size: 1.5rem; line-height: 1; flex-shrink: 0; display: flex; align-items: center; justify-content: center; align-self: stretch; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">⬇️</button>
+
           <div id="timestampInfo" style="display: none; align-items: center; background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 0 1rem; font-size: 0.85rem; min-height: 42px;">
             🕒 <span style="margin-left: 0.5rem; white-space: nowrap;"></span>
           </div>
@@ -563,7 +567,7 @@
             </tbody>
           </table>
         </div>
-        
+
         <!-- Pagination UI -->
         <div class="pagination-container">
           <div class="pagination-info">
@@ -594,7 +598,7 @@
           <table id="opdTable">
             <thead>
               <tr>
-                <th>No.</th>
+                <th width="1%">No.</th>
                 <th>OPD</th>
                 <th width="1%">Jumlah Pegawai</th>
                 <th width="1%">SKP Disetujui</th>
@@ -650,7 +654,7 @@
         showError(response.message);
         return;
       }
-      
+
       const data = response.data;
       renderDashboard(data);
       // Set teks loading dengan angka pasti
@@ -658,7 +662,7 @@
       if (totalPegawai > 0) {
         document.getElementById('pegawai-loading-text').innerText = `Sedang mengunduh ${formatNumber(totalPegawai)} rincian pegawai dari server...`;
       }
-      
+
       // Panggil asinkron tabel pegawai
       google.script.run
         .withSuccessHandler(onPegawaiSuccess)
@@ -677,7 +681,7 @@
     function onFailure(error) {
       showError("Terjadi kesalahan jaringan atau server: " + error.message);
     }
-    
+
     function showError(msg) {
       document.getElementById('loading').style.display = 'none';
       const errCont = document.getElementById('error-container');
@@ -695,7 +699,7 @@
       document.getElementById('dashboard-content').style.display = 'block';
 
       globalTimestamps = data.timestamps || [];
-      
+
       if (data.metadata) {
         if (data.metadata.title) {
           globalReportTitle = data.metadata.title;
@@ -707,7 +711,7 @@
           instEl.innerText = globalReportInstansi;
           instEl.style.display = 'block';
         }
-        
+
         // Pengecekan Peringatan Lisensi
         if (data.metadata.licenseWarning) {
           setTimeout(() => {
@@ -719,7 +723,7 @@
 
       const gt = data.grandTotal;
       const pct = gt.totalPegawai > 0 ? Math.round((gt.skpDisetujui / gt.totalPegawai) * 100) : 0;
-      
+
       const tahunanDinilai = gt.bulanan[12] || 0;
       const pctTahunan = gt.totalPegawai > 0 ? Math.round((tahunanDinilai / gt.totalPegawai) * 100) : 0;
 
@@ -727,13 +731,13 @@
       document.getElementById('val-total-pegawai').innerText = formatNumber(gt.totalPegawai);
       document.getElementById('val-skp-disetujui').innerText = formatNumber(gt.skpDisetujui);
       document.getElementById('val-persentase').innerText = pct + "%";
-      
+
       document.getElementById('val-tahunan-dinilai').innerText = formatNumber(tahunanDinilai);
       document.getElementById('val-persentase-tahunan').innerText = pctTahunan + "%";
 
       // 2. Render Chart (Chart.js)
       const ctx = document.getElementById('laporanChart').getContext('2d');
-      
+
       // Gradient for bars
       const gradient = ctx.createLinearGradient(0, 0, 0, 400);
       gradient.addColorStop(0, 'rgba(96, 165, 250, 0.8)'); // light blue
@@ -789,7 +793,7 @@
       // 3. Render Table OPD
       const currentRealYear = new Date().getFullYear();
       let reportYear = currentRealYear;
-      
+
       // Ekstrak tahun dari judul laporan (jika ada, misal: "Tahun 2026")
       const yearMatch = globalReportTitle.match(/20\d{2}/);
       if (yearMatch) {
@@ -797,7 +801,7 @@
       }
 
       let targetHighlights = [];
-      
+
       if (currentRealYear > reportYear) {
         // Jika sudah masuk tahun berikutnya, sorot HANYA kolom Tahunan
         targetHighlights = [12];
@@ -809,31 +813,31 @@
           targetHighlights = [currentRealMonth - 1]; // Dinilai bulan berikutnya
         }
       }
-      
+
       targetHighlights.forEach(idx => {
         const opdTh = document.getElementById(`opd-th-${idx}`);
         if (opdTh) opdTh.classList.add('highlight-col');
       });
-      
+
       const tbody = document.querySelector('#opdTable tbody');
       let tableHTML = '';
       let nomor = 1;
-      
+
       data.opdData.forEach(row => {
         let tdBulan = '';
         row.bulanan.forEach((val, idx) => {
           let mClass = (val >= row.totalPegawai && row.totalPegawai > 0) ? 'val-green' : 'val-red';
           if (row.totalPegawai === 0) mClass = 'val-muted';
-          
+
           let hlClass = targetHighlights.includes(idx) ? ' highlight-col' : '';
-          
+
           tdBulan += `<td class="${mClass}${hlClass}">${formatNumber(val)}</td>`;
         });
-        
+
         // Logika warna: Hijau jika disetujui sama dengan total, Merah jika kurang
         let statusClass = (row.skpDisetujui >= row.totalPegawai && row.totalPegawai > 0) ? 'val-green' : 'val-red';
         if (row.totalPegawai === 0) statusClass = 'val-muted'; // Jika tidak ada pegawai
-        
+
         tableHTML += `
           <tr>
             <td>${nomor++}</td>
@@ -844,20 +848,20 @@
           </tr>
         `;
       });
-      
+
       // Tambahkan baris Grand Total
       let gtBulan = '';
       gt.bulanan.forEach((val, idx) => {
         let mClass = (val >= gt.totalPegawai && gt.totalPegawai > 0) ? 'val-green' : 'val-red';
         if (gt.totalPegawai === 0) mClass = 'val-muted';
-        
+
         let hlClass = targetHighlights.includes(idx) ? ' highlight-col' : '';
         gtBulan += `<td class="${mClass}${hlClass}"><strong>${formatNumber(val)}</strong></td>`;
       });
-      
+
       let gtStatusClass = (gt.skpDisetujui >= gt.totalPegawai && gt.totalPegawai > 0) ? 'val-green' : 'val-red';
       if (gt.totalPegawai === 0) gtStatusClass = 'val-muted';
-      
+
       tableHTML += `
         <tr class="total-row" style="background: rgba(59, 130, 246, 0.1); border-top: 2px solid var(--accent-1);">
           <td colspan="2" style="text-align: center;"><strong>TOTAL</strong></td>
@@ -866,14 +870,14 @@
           ${gtBulan}
         </tr>
       `;
-      
+
       tbody.innerHTML = tableHTML;
     } // Akhir renderDashboard
 
     let globalPegawaiData = [];
     let globalFilteredPegawaiData = [];
     let currentPage = 1;
-    
+
     function renderPegawaiData(pegawaiDataArray) {
       document.getElementById('pegawai-loading').style.display = 'none';
       document.getElementById('pegawai-content').style.display = 'block';
@@ -887,14 +891,14 @@
       const searchInput = document.getElementById('searchPegawai');
       const filterBulan = document.getElementById('filterBulan');
       const filterStatus = document.getElementById('filterStatus');
-      
+
       const itemsPerPageSelect = document.getElementById('itemsPerPage');
       const btnPrevPage = document.getElementById('btnPrevPage');
       const btnNextPage = document.getElementById('btnNextPage');
       const pageInfo = document.getElementById('pageInfo');
-      
+
       let itemsPerPage = parseInt(itemsPerPageSelect.value) || 10;
-      
+
       const filterOpd = document.getElementById('filterOpd');
       // Populate dropdown OPD & SKP Status
       const opdSet = new Set();
@@ -903,28 +907,28 @@
          if (p.opd && p.opd !== '-') opdSet.add(p.opd);
          if (p.skp_status && p.skp_status !== '-') skpStatusSet.add(p.skp_status);
       });
-      
+
       Array.from(opdSet).sort().forEach(opd => {
          const opt = document.createElement('option');
          opt.value = opd;
          opt.innerText = opd;
          filterOpd.appendChild(opt);
       });
-      
+
       Array.from(skpStatusSet).sort().forEach(status => {
          const opt = document.createElement('option');
          opt.value = status;
          opt.innerText = status;
          filterSkpStatus.appendChild(opt);
       });
-      
+
       const applyFilters = () => {
         const searchVal = document.getElementById('searchPegawai').value.toLowerCase();
         const opdVal = document.getElementById('filterOpd').value;
         const bulanVal = document.getElementById('filterBulan').value;
         const statusVal = document.getElementById('filterStatus').value;
         const skpStatusVal = document.getElementById('filterSkpStatus').value;
-        
+
         // Highlight Header Bulan Aktif
         for(let i=0; i<=12; i++) {
            const th = document.getElementById(`th-${i}`);
@@ -934,7 +938,7 @@
            const activeTh = document.getElementById(`th-${bulanVal}`);
            if(activeTh) activeTh.classList.add('highlight-col');
         }
-        
+
         let displayData = globalPegawaiData.filter(p => {
           const mNama = p.nama.toLowerCase().includes(searchVal);
           const mNip = p.nip.toLowerCase().includes(searchVal);
@@ -942,19 +946,19 @@
           const mSkpStatus = skpStatusVal === 'semua' || p.skp_status === skpStatusVal;
           return (mNama || mNip) && mOpd && mSkpStatus;
         });
-        
+
         // B. Filter Bulan & Status Dinilai
         const tsDiv = document.getElementById('timestampInfo');
         if (bulanVal !== 'semua' || statusVal !== 'semua') {
            const idxBulan = bulanVal === 'semua' ? -1 : parseInt(bulanVal);
-           
+
            if (idxBulan !== -1 && globalTimestamps[idxBulan]) {
              tsDiv.style.display = 'flex';
              tsDiv.querySelector('span').innerText = globalTimestamps[idxBulan];
            } else {
              tsDiv.style.display = 'none';
            }
-          
+
           displayData = displayData.filter(p => {
              if (idxBulan !== -1) {
                const val = p.bulanan[idxBulan];
@@ -964,27 +968,27 @@
                return true;
              } else {
                const reportedCount = p.bulanan.filter(v => v !== "").length;
-               if (statusVal === 'sudah' && reportedCount === 0) return false; 
-               if (statusVal === 'belum' && reportedCount > 0) return false;   
+               if (statusVal === 'sudah' && reportedCount === 0) return false;
+               if (statusVal === 'belum' && reportedCount > 0) return false;
                return true;
              }
           });
         } else {
           tsDiv.style.display = 'none';
         }
-        
+
         globalFilteredPegawaiData = displayData;
         currentPage = 1;
         document.getElementById('inputPage').value = 1;
         renderPaginatedTable();
       };
-      
+
       const renderPaginatedTable = () => {
         const totalItems = globalFilteredPegawaiData.length;
         const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
-        
+
         if (currentPage > totalPages) currentPage = totalPages;
-        
+
         const startIdx = (currentPage - 1) * itemsPerPage;
         const endIdx = startIdx + itemsPerPage;
         const pageData = globalFilteredPegawaiData.slice(startIdx, endIdx);
@@ -996,15 +1000,15 @@
 
         let pHTML = '';
         let pNo = startIdx + 1;
-        
+
         const activeBulan = document.getElementById('filterBulan').value;
-        
+
         pageData.forEach(p => {
           let pBulan = '';
           p.bulanan.forEach((val, idx) => {
              let mClass = val ? 'val-green' : 'val-red';
              let displayVal = val ? val.toString().trim() : '-';
-             
+
              if (displayVal !== '-') {
                if (displayVal.length > 2) {
                  const parts = displayVal.split(' ');
@@ -1017,12 +1021,12 @@
                  displayVal = displayVal.toUpperCase();
                }
              }
-             
+
              let hlClass = (activeBulan !== 'semua' && parseInt(activeBulan) === idx) ? ' highlight-col' : '';
-             
+
              pBulan += `<td class="${mClass}${hlClass}" title="${val}" style="cursor:help;">${displayVal}</td>`;
           });
-          
+
           pHTML += `
             <tr>
               <td>${pNo++}</td>
@@ -1034,27 +1038,27 @@
             </tr>
           `;
         });
-        
+
         if (totalItems === 0) {
            pHTML += `<tr><td colspan="17" class="val-muted" style="text-align:center; padding: 1rem;">Tidak ada data pegawai yang cocok dengan filter.</td></tr>`;
         }
-        
+
         document.querySelector('#pegawaiTable tbody').innerHTML = pHTML;
       };
-      
+
       applyFilters();
-      
+
       searchInput.addEventListener('input', applyFilters);
       filterOpd.addEventListener('change', applyFilters);
       filterBulan.addEventListener('change', applyFilters);
       filterStatus.addEventListener('change', applyFilters);
       filterSkpStatus.addEventListener('change', applyFilters);
-      
+
       itemsPerPageSelect.addEventListener('change', (e) => {
         itemsPerPage = parseInt(e.target.value);
         applyFilters();
       });
-      
+
       document.getElementById('inputPage').addEventListener('change', (e) => {
         let val = parseInt(e.target.value);
         const totalPages = Math.ceil(globalFilteredPegawaiData.length / itemsPerPage) || 1;
@@ -1063,14 +1067,14 @@
         currentPage = val;
         renderPaginatedTable();
       });
-      
+
       btnPrevPage.addEventListener('click', () => {
         if (currentPage > 1) {
           currentPage--;
           renderPaginatedTable();
         }
       });
-      
+
       btnNextPage.addEventListener('click', () => {
         const totalPages = Math.ceil(globalFilteredPegawaiData.length / itemsPerPage);
         if (currentPage < totalPages) {
@@ -1078,7 +1082,7 @@
           renderPaginatedTable();
         }
       });
-      
+
       document.getElementById('btnDownloadPdf').addEventListener('click', () => {
         if (globalFilteredPegawaiData.length === 0) {
           alert('Tidak ada data untuk diunduh.');
@@ -1086,8 +1090,8 @@
         }
 
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('l', 'pt', 'a4'); 
-        
+        const doc = new jsPDF('l', 'pt', 'a4');
+
         const pageWidth = doc.internal.pageSize.getWidth();
         let currentY = 30;
 
@@ -1099,14 +1103,14 @@
           doc.text(upperInstansi, (pageWidth - instWidth) / 2, currentY);
           currentY += 20;
         }
-        
+
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
         const titleText = globalReportTitle;
         const titleWidth = doc.getTextWidth(titleText);
         doc.text(titleText, (pageWidth - titleWidth) / 2, currentY);
         currentY += 25;
-        
+
         doc.setFontSize(10);
         const selOpd = document.getElementById('filterOpd');
         const textOpd = selOpd.options[selOpd.selectedIndex].text;
@@ -1114,14 +1118,14 @@
         const textBulan = selBulan.options[selBulan.selectedIndex].text;
         const selStatus = document.getElementById('filterStatus');
         const textStatus = selStatus.options[selStatus.selectedIndex].text;
-        
+
         const activeBulanVal = document.getElementById('filterBulan').value;
         const activeOpdVal = selOpd.value;
         const activeStatusVal = selStatus.value;
-        
+
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
-        
+
         const printCenter = (text) => {
            const w = doc.getTextWidth(text);
            doc.text(text, (pageWidth - w) / 2, currentY);
@@ -1143,12 +1147,12 @@
            }
            printCenter(txtBulan);
         }
-        
+
         let tableStartY = currentY + 10;
         doc.setFont('helvetica', 'normal');
-        
+
         const headers = [['No', 'NIP', 'Nama', 'Jabatan', 'OPD', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Tahunan']];
-        
+
         const body = globalFilteredPegawaiData.map((p, index) => {
            const getDisplay = (val) => {
              if(!val) return '-';
@@ -1160,7 +1164,7 @@
              }
              return s.toUpperCase();
            };
-           
+
            return [
              index + 1,
              p.nip,
