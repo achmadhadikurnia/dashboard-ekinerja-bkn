@@ -156,7 +156,8 @@ function cekLisensi(sheetSkp, ui) {
 
 function generateMasterPegawai() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const ui = SpreadsheetApp.getUi();
+  let ui = null;
+  try { ui = SpreadsheetApp.getUi(); } catch(e) {}
 
   const sheetSkp = ss.getSheetByName('skp');
   const sheetPegawai = ss.getSheetByName('pegawai');
@@ -330,19 +331,24 @@ function generateMasterPegawai() {
 
 function hapusPengecualian() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const ui = SpreadsheetApp.getUi();
+  let ui = null;
+  try {
+    ui = SpreadsheetApp.getUi();
+  } catch(e) {
+    // Abaikan error jika dipanggil dari Web App context
+  }
 
   const sheetPegawai = ss.getSheetByName('pegawai');
   const sheetPengecualian = ss.getSheetByName('pengecualian');
 
   if (!sheetPegawai) {
     if(ui) ui.alert('Sheet "pegawai" tidak ditemukan.');
-    return;
+    return { status: 'error', message: 'Sheet "pegawai" tidak ditemukan.' };
   }
 
   // Cek Lisensi
   const sheetSkp = ss.getSheetByName('skp');
-  if (!cekLisensi(sheetSkp, ui)) return;
+  if (!cekLisensi(sheetSkp, ui)) return { status: 'error', message: 'Lisensi tidak valid.' };
 
 
   // 1. Ambil daftar NIP pengecualian
@@ -364,12 +370,12 @@ function hapusPengecualian() {
 
   if (blacklistNip.size === 0) {
     if(ui) ui.alert('Tidak ada NIP di daftar pengecualian (atau sheet tidak ditemukan).');
-    return;
+    return { status: 'info', message: 'Tidak ada NIP di daftar pengecualian (atau sheet tidak ditemukan).' };
   }
 
   // 2. Baca sheet pegawai
   const dataPegawai = sheetPegawai.getDataRange().getValues();
-  if (dataPegawai.length <= 1) return;
+  if (dataPegawai.length <= 1) return { status: 'info', message: 'Data pegawai kosong.' };
 
   const headerPegawai = dataPegawai[0].map(h => h.toString().trim().toLowerCase());
 
@@ -379,7 +385,7 @@ function hapusPengecualian() {
 
   if (idxId === -1) {
     if(ui) ui.alert('Kolom NIP tidak ditemukan di sheet pegawai.');
-    return;
+    return { status: 'error', message: 'Kolom NIP tidak ditemukan di sheet pegawai.' };
   }
 
   // 3. Filter data
@@ -399,7 +405,7 @@ function hapusPengecualian() {
 
   if (countDihapus === 0) {
     if(ui) ui.alert('Tidak ada pegawai di sheet "pegawai" yang cocok dengan daftar pengecualian.');
-    return;
+    return { status: 'info', message: 'Tidak ada pegawai di sheet "pegawai" yang cocok dengan daftar pengecualian.' };
   }
 
   // 4. Tulis ulang
@@ -409,7 +415,9 @@ function hapusPengecualian() {
   // 5. Update Rekap OPD
   _generateLaporanOPD(false);
 
-  if(ui) ui.alert('Selesai! Sebanyak ' + countDihapus + ' pegawai telah dihapus dari sheet "pegawai". Nilai bulanan tetap aman dan Rekap OPD sudah diperbarui otomatis.');
+  const finalMsg = 'Selesai! Sebanyak ' + countDihapus + ' pegawai telah dihapus dari sheet "pegawai". Nilai bulanan tetap aman dan Rekap OPD sudah diperbarui otomatis.';
+  if(ui) ui.alert(finalMsg);
+  return { status: 'success', message: finalMsg };
 }
 
 function onOpen() {
@@ -467,7 +475,8 @@ function syncTahunan() { _updateNilaiBulan('tahunan'); }
  */
 function _updateNilaiBulan(targetBulan) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const ui = SpreadsheetApp.getUi();
+  let ui = null;
+  try { ui = SpreadsheetApp.getUi(); } catch(e) {}
 
   const sheetPegawai = ss.getSheetByName('pegawai');
   if (!sheetPegawai) {
@@ -573,7 +582,8 @@ function _updateNilaiBulan(targetBulan) {
  */
 function _generateLaporanOPD(showUi = true) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const ui = SpreadsheetApp.getUi();
+  let ui = null;
+  try { ui = SpreadsheetApp.getUi(); } catch(e) {}
 
   const sheetPegawai = ss.getSheetByName('pegawai');
   if (!sheetPegawai) {

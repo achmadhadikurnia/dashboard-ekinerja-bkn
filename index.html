@@ -12,6 +12,8 @@
   <!-- jsPDF & AutoTable -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <style>
     :root {
@@ -239,6 +241,10 @@
     .search-box:focus {
       outline: none;
       border-color: var(--accent-1);
+    }
+    .search-box:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     .filter-container {
@@ -646,7 +652,20 @@
       <div class="glass-panel" style="margin-top: 2rem; margin-bottom: 2rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 1rem; padding-bottom: 0.5rem;">
           <h2 class="section-title" style="margin: 0; padding: 0; border: none;">Daftar Pegawai Pengecualian</h2>
-          <button id="btnAddPengecualian" class="btn-pagination" style="background: #3b82f6; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4); transition: opacity 0.2s;">+ Tambah Data</button>
+          <div style="display: flex; gap: 0.5rem;">
+            <button id="btnSyncPengecualian" class="btn-pagination" disabled style="display: flex; align-items: center; gap: 0.4rem; background: #64748b; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: not-allowed; box-shadow: 0 4px 6px -1px rgba(100, 116, 139, 0.4); transition: opacity 0.2s; opacity: 0.5;" title="Jalankan Sinkronisasi Pengecualian (Hapus Pegawai Pengecualian)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+              Sync
+            </button>
+            <button id="btnDownloadPdfPengecualian" class="btn-pagination" disabled style="display: flex; align-items: center; gap: 0.4rem; background: #64748b; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: not-allowed; box-shadow: 0 4px 6px -1px rgba(100, 116, 139, 0.4); transition: opacity 0.2s; opacity: 0.5;" title="Unduh Data Pengecualian ke PDF">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Unduh PDF
+            </button>
+            <button id="btnAddPengecualian" class="btn-pagination" disabled style="display: flex; align-items: center; gap: 0.4rem; background: #3b82f6; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: not-allowed; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4); transition: opacity 0.2s; opacity: 0.5;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              Tambah Data
+            </button>
+          </div>
         </div>
 
         <div id="pengecualian-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem; color: #94a3b8;">
@@ -657,6 +676,13 @@
         <div id="pengecualian-content" class="table-responsive" style="display: none;">
           <div class="filter-container" style="flex-wrap: nowrap; overflow-x: auto; padding-bottom: 5px; margin-bottom: 1rem;">
             <input type="text" id="searchPengecualian" class="search-box" style="flex: 1; min-width: 150px; margin-bottom: 0;" placeholder="🔍 Cari Nama / NIP...">
+            <select id="filterKeteranganPengecualian" class="search-box select-box" style="margin-bottom: 0; width: auto; max-width: 200px;">
+              <option value="semua">Semua Keterangan</option>
+              <option value="Pensiun">Pensiun</option>
+              <option value="Meninggal">Meninggal</option>
+              <option value="Mutasi">Mutasi</option>
+              <option value="Hukdis">Hukdis</option>
+            </select>
           </div>
           <table id="pengecualianTable">
             <thead>
@@ -711,49 +737,51 @@
 
   <!-- Modal Pengecualian -->
   <div id="pengecualianModal" class="modal-overlay" style="display: none;">
-    <div class="modal-box" style="max-width: 500px; padding: 2rem; text-align: left;">
-      <h3 id="pengecualianModalTitle" style="margin-top: 0; color: #1e293b; font-size: 1.25rem;">Tambah Pengecualian</h3>
+    <div class="modal-box" style="max-width: 700px; padding: 2rem; text-align: left;">
+      <h3 id="pengecualianModalTitle" style="margin-top: 0; margin-bottom: 1.5rem; color: #f8fafc; font-size: 1.25rem;">Tambah Pengecualian</h3>
 
-      <div style="margin-bottom: 1rem;">
-        <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #475569;">NIP</label>
-        <input type="text" id="pengNip" class="search-box" style="width: 100%; box-sizing: border-box;" placeholder="Ketik NIP untuk mencari...">
-        <div id="pengError" style="color: #ef4444; font-size: 0.75rem; margin-top: 0.25rem; display: none;">NIP tidak ditemukan di data pegawai (Sinkronkan data jika perlu).</div>
-      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem 1rem; align-items: start; margin-bottom: 1.5rem;">
+        <div>
+          <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #cbd5e1;">NIP</label>
+          <input type="text" id="pengNip" class="search-box" style="width: 100%; box-sizing: border-box; margin-bottom: 0;" placeholder="Ketik NIP untuk mencari...">
+          <div id="pengError" style="margin-top: 0.35rem; color: #ef4444; font-size: 0.75rem; display: none; line-height: 1.3;">NIP tidak ditemukan di data pegawai (Sinkronkan data jika perlu).</div>
+        </div>
 
-      <div style="margin-bottom: 1rem;">
-        <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #475569;">Nama</label>
-        <input type="text" id="pengNama" class="search-box" style="width: 100%; box-sizing: border-box; background: #f1f5f9; color: #64748b;" disabled>
-      </div>
+        <div>
+          <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #cbd5e1;">Nama</label>
+          <input type="text" id="pengNama" class="search-box" style="width: 100%; box-sizing: border-box; margin-bottom: 0;" disabled>
+        </div>
 
-      <div style="margin-bottom: 1rem;">
-        <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #475569;">Jabatan</label>
-        <input type="text" id="pengJab" class="search-box" style="width: 100%; box-sizing: border-box; background: #f1f5f9; color: #64748b;" disabled>
-      </div>
+        <div>
+          <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #cbd5e1;">Jabatan</label>
+          <input type="text" id="pengJab" class="search-box" style="width: 100%; box-sizing: border-box; margin-bottom: 0;" disabled>
+        </div>
 
-      <div style="margin-bottom: 1rem;">
-        <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #475569;">Unit Kerja</label>
-        <input type="text" id="pengUnit" class="search-box" style="width: 100%; box-sizing: border-box; background: #f1f5f9; color: #64748b;" disabled>
-      </div>
+        <div>
+          <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #cbd5e1;">Unit Kerja</label>
+          <input type="text" id="pengUnit" class="search-box" style="width: 100%; box-sizing: border-box; margin-bottom: 0;" disabled>
+        </div>
 
-      <div style="margin-bottom: 1rem;">
-        <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #475569;">OPD</label>
-        <input type="text" id="pengOpd" class="search-box" style="width: 100%; box-sizing: border-box; background: #f1f5f9; color: #64748b;" disabled>
-      </div>
+        <div>
+          <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #cbd5e1;">OPD</label>
+          <input type="text" id="pengOpd" class="search-box" style="width: 100%; box-sizing: border-box; margin-bottom: 0;" disabled>
+        </div>
 
-      <div style="margin-bottom: 1.5rem;">
-        <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #475569;">Keterangan</label>
-        <select id="pengKet" class="search-box select-box" style="width: 100%; box-sizing: border-box; background: #f1f5f9; color: #64748b;" disabled>
-          <option value="">-- Pilih Keterangan --</option>
-          <option value="Pensiun">Pensiun</option>
-          <option value="Meninggal">Meninggal</option>
-          <option value="Mutasi">Mutasi</option>
-          <option value="Hukdis">Hukdis</option>
-        </select>
+        <div>
+          <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #cbd5e1;">Keterangan</label>
+          <select id="pengKet" class="search-box select-box" style="width: 100%; box-sizing: border-box; margin-bottom: 0;" disabled>
+            <option value="">-- Pilih Keterangan --</option>
+            <option value="Pensiun">Pensiun</option>
+            <option value="Meninggal">Meninggal</option>
+            <option value="Mutasi">Mutasi</option>
+            <option value="Hukdis">Hukdis</option>
+          </select>
+        </div>
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
-        <button id="btnBatalPengecualian" class="btn-pagination" style="background: transparent; color: #475569; border: 1px solid #cbd5e1; cursor: pointer;">Batal</button>
-        <button id="btnSimpanPengecualian" class="btn-pagination" style="background: #94a3b8; color: white; border: none; cursor: not-allowed;" disabled>Simpan</button>
+        <button id="btnBatalPengecualian" class="btn-pagination" style="background: transparent; color: #cbd5e1; border: 1px solid rgba(255,255,255,0.2); cursor: pointer;">Batal</button>
+        <button id="btnSimpanPengecualian" class="btn-pagination" style="background: #3b82f6; color: white; border: none;" disabled>Simpan</button>
       </div>
     </div>
   </div>
@@ -1213,7 +1241,7 @@
 
       document.getElementById('btnDownloadPdf').addEventListener('click', () => {
         if (globalFilteredPegawaiData.length === 0) {
-          alert('Tidak ada data untuk diunduh.');
+          Swal.fire('Info', 'Tidak ada data untuk diunduh.', 'info');
           return;
         }
 
@@ -1229,7 +1257,7 @@
           const upperInstansi = globalReportInstansi.toUpperCase();
           const instWidth = doc.getTextWidth(upperInstansi);
           doc.text(upperInstansi, (pageWidth - instWidth) / 2, currentY);
-          currentY += 20;
+          currentY += 15;
         }
 
         doc.setFontSize(12);
@@ -1237,7 +1265,7 @@
         const titleText = globalReportTitle;
         const titleWidth = doc.getTextWidth(titleText);
         doc.text(titleText, (pageWidth - titleWidth) / 2, currentY);
-        currentY += 25;
+        currentY += 15;
 
         doc.setFontSize(10);
         const selOpd = document.getElementById('filterOpd');
@@ -1310,11 +1338,11 @@
           head: headers,
           body: body,
           startY: tableStartY,
-          styles: { fontSize: 7, cellPadding: 2 },
-          headStyles: { fillColor: [15, 23, 42] },
+          styles: { fontSize: 7, cellPadding: 2, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1 },
+          headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], lineColor: [0, 0, 0], lineWidth: 0.1 },
           columnStyles: {
-            0: { cellWidth: 15, halign: 'center' }, // No
-            1: { cellWidth: 85, halign: 'left' }, // NIP
+            0: { cellWidth: 'auto', halign: 'right' }, // No (dinamis menyesuaikan panjang teks tanpa terpotong)
+            1: { cellWidth: 'auto', halign: 'left' }, // NIP (dinamis agar tidak break)
             // Kolom 2, 3, 4, 5 (teks) dilepas cellWidth-nya agar autotable membaginya secara proporsional 100%
             6: { cellWidth: 20, halign: 'center' }, // Jan
             7: { cellWidth: 20, halign: 'center' }, // Feb
@@ -1333,6 +1361,10 @@
           margin: { top: 30, right: 30, bottom: 20, left: 30 },
           tableWidth: 'auto',
           didParseCell: function(data) {
+            // Rata kanan untuk header kolom No. (index 0)
+            if (data.section === 'head' && data.column.index === 0) {
+              data.cell.styles.halign = 'right';
+            }
             if (targetColIdx !== -1 && data.column.index === targetColIdx) {
               if (data.section === 'head') {
                 data.cell.styles.fillColor = [59, 130, 246]; // Blue-500
@@ -1379,10 +1411,19 @@
       document.getElementById('pengecualian-loading').style.display = 'flex';
       document.getElementById('pengecualian-content').style.display = 'none';
 
-      const btnAdd = document.getElementById('btnAddPengecualian');
-      btnAdd.disabled = true;
-      btnAdd.style.cursor = 'not-allowed';
-      btnAdd.style.opacity = '0.5';
+      const btns = [
+        document.getElementById('btnAddPengecualian'),
+        document.getElementById('btnSyncPengecualian'),
+        document.getElementById('btnDownloadPdfPengecualian')
+      ];
+
+      btns.forEach(btn => {
+        if (btn) {
+          btn.disabled = true;
+          btn.style.cursor = 'not-allowed';
+          btn.style.opacity = '0.5';
+        }
+      });
 
       google.script.run
         .withSuccessHandler(onPengecualianSuccess)
@@ -1391,9 +1432,13 @@
           document.getElementById('pengecualian-content').style.display = 'block';
           document.getElementById('pengecualianBody').innerHTML = '<tr><td colspan="8" style="text-align:center; color:#ef4444;">Gagal memuat data: ' + err.message + '</td></tr>';
 
-          btnAdd.disabled = false;
-          btnAdd.style.cursor = 'pointer';
-          btnAdd.style.opacity = '1';
+          btns.forEach(btn => {
+            if (btn) {
+              btn.disabled = false;
+              btn.style.cursor = 'pointer';
+              btn.style.opacity = '1';
+            }
+          });
         })
         .getPengecualianData();
     }
@@ -1402,10 +1447,19 @@
       document.getElementById('pengecualian-loading').style.display = 'none';
       document.getElementById('pengecualian-content').style.display = 'block';
 
-      const btnAdd = document.getElementById('btnAddPengecualian');
-      btnAdd.disabled = false;
-      btnAdd.style.cursor = 'pointer';
-      btnAdd.style.opacity = '1';
+      const btns = [
+        document.getElementById('btnAddPengecualian'),
+        document.getElementById('btnSyncPengecualian'),
+        document.getElementById('btnDownloadPdfPengecualian')
+      ];
+
+      btns.forEach(btn => {
+        if (btn) {
+          btn.disabled = false;
+          btn.style.cursor = 'pointer';
+          btn.style.opacity = '1';
+        }
+      });
 
       const tbody = document.getElementById('pengecualianBody');
       if (response.status === 'error') {
@@ -1414,6 +1468,13 @@
       }
 
       globalPengecualianData = response.data || [];
+      
+      // Tidak perlu lagi me-load opsi secara dinamis karena sudah disamakan (hardcode) dengan opsi di form input
+      const selKet = document.getElementById('filterKeteranganPengecualian');
+      if (selKet) {
+        // Biarkan value tetap pada pilihan user saat refresh data
+      }
+
       globalFilteredPengecualianData = [...globalPengecualianData];
       currentPengPage = 1;
 
@@ -1423,10 +1484,15 @@
 
     function applyPengFilters() {
       const searchVal = document.getElementById('searchPengecualian').value.toLowerCase();
+      const selKet = document.getElementById('filterKeteranganPengecualian').value;
+      
       globalFilteredPengecualianData = globalPengecualianData.filter(p => {
         const mNama = p.nama.toLowerCase().includes(searchVal);
         const mNip = p.nip.toLowerCase().includes(searchVal);
-        return mNama || mNip;
+        const matchSearch = mNama || mNip;
+        const matchKet = selKet === 'semua' || p.keterangan === selKet;
+        
+        return matchSearch && matchKet;
       });
       currentPengPage = 1;
       document.getElementById('inputPagePeng').value = 1;
@@ -1487,12 +1553,14 @@
       isPengecualianEventSetup = true;
 
       const searchInput = document.getElementById('searchPengecualian');
+      const selKet = document.getElementById('filterKeteranganPengecualian');
       const itemsPerPageSelect = document.getElementById('itemsPerPagePeng');
       const btnPrevPage = document.getElementById('btnPrevPagePeng');
       const btnNextPage = document.getElementById('btnNextPagePeng');
       const inputPage = document.getElementById('inputPagePeng');
 
       searchInput.addEventListener('input', applyPengFilters);
+      if (selKet) selKet.addEventListener('change', applyPengFilters);
       itemsPerPageSelect.addEventListener('change', () => {
         currentPengPage = 1;
         renderPaginatedPengecualianTable();
@@ -1526,6 +1594,7 @@
     // Modal Handlers
     const modalPengecualian = document.getElementById('pengecualianModal');
     const btnAddPengecualian = document.getElementById('btnAddPengecualian');
+    const btnSyncPengecualian = document.getElementById('btnSyncPengecualian');
     const btnBatalPengecualian = document.getElementById('btnBatalPengecualian');
     const btnSimpanPengecualian = document.getElementById('btnSimpanPengecualian');
 
@@ -1537,6 +1606,104 @@
     const pengOpd = document.getElementById('pengOpd');
     const pengKet = document.getElementById('pengKet');
     const pengError = document.getElementById('pengError');
+
+    if (btnSyncPengecualian) {
+      btnSyncPengecualian.addEventListener('click', () => {
+        const originalText = btnSyncPengecualian.innerText;
+        btnSyncPengecualian.innerText = 'Syncing...';
+        btnSyncPengecualian.disabled = true;
+        btnSyncPengecualian.style.opacity = '0.5';
+
+        google.script.run
+          .withSuccessHandler((res) => {
+            btnSyncPengecualian.innerText = originalText;
+            btnSyncPengecualian.disabled = false;
+            btnSyncPengecualian.style.opacity = '1';
+            
+            if (res && res.status === 'error') {
+              Swal.fire('Gagal', res.message, 'error');
+            } else {
+              const msg = res && res.message ? res.message : 'Proses Sinkronisasi Pengecualian selesai!';
+              Swal.fire('Sukses', msg, 'success');
+              // Refresh tabel pengecualian setelah sync jika diperlukan, tapi ini mengubah sheet pegawai
+              // Bisa memanggil fungsi load (opsional) atau update rekap
+            }
+          })
+          .withFailureHandler((err) => {
+            btnSyncPengecualian.innerText = originalText;
+            btnSyncPengecualian.disabled = false;
+            btnSyncPengecualian.style.opacity = '1';
+            Swal.fire('Error', 'Gagal menjalankan proses Sync: ' + err.message, 'error');
+          })
+          .hapusPengecualian();
+      });
+    }
+
+    const btnDownloadPdfPengecualian = document.getElementById('btnDownloadPdfPengecualian');
+    if (btnDownloadPdfPengecualian) {
+      btnDownloadPdfPengecualian.addEventListener('click', () => {
+        if (globalFilteredPengecualianData.length === 0) {
+          Swal.fire('Info', 'Tidak ada data pengecualian untuk diunduh.', 'info');
+          return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'pt', 'a4');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        let currentY = 30;
+
+        if (globalReportInstansi) {
+          doc.setFontSize(14);
+          doc.setFont('helvetica', 'bold');
+          const upperInstansi = globalReportInstansi.toUpperCase();
+          const instWidth = doc.getTextWidth(upperInstansi);
+          doc.text(upperInstansi, (pageWidth - instWidth) / 2, currentY);
+          currentY += 15;
+        }
+
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        const titleText = "Daftar Pegawai Pengecualian";
+        const titleWidth = doc.getTextWidth(titleText);
+        doc.text(titleText, (pageWidth - titleWidth) / 2, currentY);
+        currentY += 15;
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+
+        const tableBody = globalFilteredPengecualianData.map((item, index) => [
+          index + 1,
+          item.nip,
+          item.nama,
+          item.jabatan,
+          item.unit_kerja,
+          item.opd,
+          item.keterangan
+        ]);
+
+        doc.autoTable({
+          startY: currentY,
+          head: [['No.', 'NIP', 'Nama', 'Jabatan', 'Unit Kerja', 'OPD', 'Keterangan']],
+          body: tableBody,
+          theme: 'grid',
+          styles: { font: 'helvetica', fontSize: 8, textColor: [0, 0, 0], cellPadding: 3, lineColor: [0, 0, 0], lineWidth: 0.1 },
+          headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255], lineColor: [0, 0, 0], lineWidth: 0.1 },
+          columnStyles: {
+            0: { halign: 'right', cellWidth: 'auto' }, // No. seperti width="1%"
+            1: { cellWidth: 'auto' },                  // NIP seperti width="1%" agar tidak break
+            6: { cellWidth: 'auto' }                   // Keterangan seperti width="1%"
+          },
+          didParseCell: function(data) {
+            // Memaksa header kolom "No." (index 0) menjadi rata kanan
+            if (data.section === 'head' && data.column.index === 0) {
+              data.cell.styles.halign = 'right';
+            }
+          }
+        });
+
+        doc.save('Daftar_Pegawai_Pengecualian.pdf');
+      });
+    }
 
     btnAddPengecualian.addEventListener('click', () => {
       pengNip.value = '';
@@ -1610,7 +1777,7 @@
       } else {
         if (nip.length === 18) {
            pengError.style.display = 'block';
-           pengError.innerText = 'Mencari NIP di database mentah SKP...';
+           pengError.innerText = 'Mencari data pegawai...';
            pengError.style.color = '#3b82f6';
            
            if(searchTimeout) clearTimeout(searchTimeout);
@@ -1677,31 +1844,42 @@
             modalPengecualian.style.display = 'none';
             loadPengecualianData();
           } else {
-            alert('Gagal: ' + res.message);
+            Swal.fire('Gagal', res.message, 'error');
             btnSimpanPengecualian.disabled = false;
           }
         })
         .withFailureHandler((err) => {
           btnSimpanPengecualian.innerText = 'Simpan';
           btnSimpanPengecualian.disabled = false;
-          alert('Error Server: ' + err.message);
+          Swal.fire('Error', 'Error Server: ' + err.message, 'error');
         })
         .savePengecualianData(payload);
     });
 
     window.hapusPengecualian = function(nip) {
-      if(confirm('Yakin ingin menghapus NIP ' + nip + ' dari daftar pengecualian?')) {
-        google.script.run
-          .withSuccessHandler((res) => {
-            if (res.status === 'success') {
-              loadPengecualianData();
-            } else {
-              alert('Gagal menghapus: ' + res.message);
-            }
-          })
-          .withFailureHandler((err) => alert('Error: ' + err.message))
-          .deletePengecualianData(nip);
-      }
+      Swal.fire({
+        title: 'Konfirmasi Hapus',
+        text: 'Yakin ingin menghapus NIP ' + nip + ' dari daftar pengecualian?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#94a3b8',
+        confirmButtonText: 'Ya, Hapus!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          google.script.run
+            .withSuccessHandler((res) => {
+              if (res.status === 'success') {
+                Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
+                loadPengecualianData();
+              } else {
+                Swal.fire('Gagal', 'Gagal menghapus: ' + res.message, 'error');
+              }
+            })
+            .withFailureHandler((err) => Swal.fire('Error', err.message, 'error'))
+            .deletePengecualianData(nip);
+        }
+      });
     };
   </script>
 </body>
