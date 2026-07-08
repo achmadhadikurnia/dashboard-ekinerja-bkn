@@ -1,4 +1,4 @@
-# Dashboard Report Kinerja (E-Kinerja BKN)
+# Dashboard Report E-Kinerja BKN
 
 Aplikasi Web terintegrasi berbasis **Google Apps Script (GAS)** dan **Google Sheets** untuk mempermudah instansi dalam mengunggah, merekap, menganalisis, dan mencetak laporan kinerja (SKP) pegawai yang diunduh dari sistem E-Kinerja BKN.
 
