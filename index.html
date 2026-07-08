@@ -305,6 +305,7 @@
       border-bottom: 1px solid var(--glass-border);
       font-size: 0.85rem;
       text-align: center; /* Default rata tengah */
+      vertical-align: top;
     }
 
     /* Kolom angka pada tabel OPD (Jumlah Pegawai sampai Tahunan) rata kanan */
@@ -564,11 +565,17 @@
       <!-- Table OPD (Moved from bottom) -->
       <div class="glass-panel" style="margin-bottom: 2rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <h2 class="section-title" style="margin: 0; padding: 0; border: none;">Rincian Per OPD</h2>
-          <select id="opdFormatToggle" class="search-box select-box" style="margin-bottom: 0; width: auto;" onchange="opdFormat = this.value; buildOpdTableBody();">
-            <option value="persen">Tampilkan: Persentase (%)</option>
-            <option value="angka">Tampilkan: Angka Mutlak</option>
-          </select>
+          <h2 class="section-title" style="margin: 0; padding: 0; border: none;">Rekap Penilaian Per OPD</h2>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <select id="opdFormatToggle" class="search-box select-box" style="margin-bottom: 0; width: auto;" onchange="opdFormat = this.value; buildOpdTableBody();">
+              <option value="persen">Tampilkan: Persentase (%)</option>
+              <option value="angka">Tampilkan: Angka Mutlak</option>
+            </select>
+            <button id="btnDownloadPdfOpd" class="btn-pagination" style="display: flex; align-items: center; gap: 0.4rem; background: #64748b; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(100, 116, 139, 0.4); transition: opacity 0.2s;" title="Unduh Rincian OPD ke PDF">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Unduh PDF
+            </button>
+          </div>
         </div>
         <div class="table-responsive">
           <table id="opdTable">
@@ -576,8 +583,8 @@
               <tr>
                 <th width="1%">No.</th>
                 <th style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'opd')">OPD <span class="sort-icon"></span></th>
-                <th width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'totalPegawai')">Jumlah Pegawai <span class="sort-icon"></span></th>
-                <th width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'skpDisetujui')">SKP Disetujui <span class="sort-icon"></span></th>
+                <th width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'totalPegawai')">Pegawai <span class="sort-icon"></span></th>
+                <th width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'skpDisetujui')">SKP <span class="sort-icon"></span></th>
                 <th id="opd-th-0" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 0)">Jan <span class="sort-icon"></span></th>
                 <th id="opd-th-1" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 1)">Feb <span class="sort-icon"></span></th>
                 <th id="opd-th-2" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 2)">Mar <span class="sort-icon"></span></th>
@@ -791,16 +798,16 @@
         for (var i = 0; i < panels.length; i++) {
           panels[i].classList.remove('active');
         }
-        
+
         // Remove active class from all buttons
         var btns = document.getElementsByClassName('nav-btn');
         for (var i = 0; i < btns.length; i++) {
           btns[i].classList.remove('active');
         }
-        
+
         // Show selected panel
         document.getElementById(panelId).classList.add('active');
-        
+
         // Highlight clicked button
         btnElement.classList.add('active');
       }
@@ -926,7 +933,7 @@
     let globalTimestamps = [];
     let globalReportTitle = "Ekinerja BKN";
     let globalReportInstansi = "";
-    
+
     let globalDashboardData = null;
     let globalTargetHighlights = [];
     let opdFormat = 'persen'; // Default
@@ -1066,7 +1073,7 @@
 
     function sortOpdData(thElement, colName, monthIdx = -1) {
       if (!globalDashboardData) return;
-      
+
       const sortKey = colName + monthIdx;
       if (currentSortColOpd === sortKey) {
         currentSortAscOpd = !currentSortAscOpd;
@@ -1111,12 +1118,12 @@
 
     function buildOpdTableBody() {
       if (!globalDashboardData) return;
-      
+
       const data = globalDashboardData;
       const gt = data.grandTotal;
       const targetHighlights = globalTargetHighlights;
       const tbody = document.querySelector('#opdTable tbody');
-      
+
       let tableHTML = '';
       let nomor = 1;
 
@@ -1142,7 +1149,7 @@
         // Logika warna: Hijau jika disetujui sama dengan total, Merah jika kurang
         let statusClass = (row.skpDisetujui >= row.totalPegawai && row.totalPegawai > 0) ? 'val-green' : 'val-red';
         if (row.totalPegawai === 0) statusClass = 'val-muted'; // Jika tidak ada pegawai
-        
+
         let displaySkp = formatNumber(row.skpDisetujui);
         if (opdFormat === 'persen' && row.totalPegawai > 0) {
           displaySkp = ((row.skpDisetujui / row.totalPegawai) * 100).toFixed(2) + '%';
@@ -1169,7 +1176,7 @@
         if (gt.totalPegawai === 0) mClass = 'val-muted';
 
         let hlClass = targetHighlights.includes(idx) ? ' highlight-col' : '';
-        
+
         let displayVal = formatNumber(val);
         if (opdFormat === 'persen' && gt.totalPegawai > 0) {
           displayVal = ((val / gt.totalPegawai) * 100).toFixed(2) + '%';
@@ -1177,13 +1184,13 @@
           displayVal = '0.00%';
         }
         if (val === 0) displayVal = '-';
-        
+
         gtBulan += `<td class="${mClass}${hlClass}"><strong>${displayVal}</strong></td>`;
       });
 
       let gtStatusClass = (gt.skpDisetujui >= gt.totalPegawai && gt.totalPegawai > 0) ? 'val-green' : 'val-red';
       if (gt.totalPegawai === 0) gtStatusClass = 'val-muted';
-      
+
       let gtDisplaySkp = formatNumber(gt.skpDisetujui);
       if (opdFormat === 'persen' && gt.totalPegawai > 0) {
         gtDisplaySkp = ((gt.skpDisetujui / gt.totalPegawai) * 100).toFixed(2) + '%';
@@ -1644,7 +1651,7 @@
       }
 
       globalPengecualianData = response.data || [];
-      
+
       // Tidak perlu lagi me-load opsi secara dinamis karena sudah disamakan (hardcode) dengan opsi di form input
       const selKet = document.getElementById('filterKeteranganPengecualian');
       if (selKet) {
@@ -1661,13 +1668,13 @@
     function applyPengFilters() {
       const searchVal = document.getElementById('searchPengecualian').value.toLowerCase();
       const selKet = document.getElementById('filterKeteranganPengecualian').value;
-      
+
       globalFilteredPengecualianData = globalPengecualianData.filter(p => {
         const mNama = p.nama.toLowerCase().includes(searchVal);
         const mNip = p.nip.toLowerCase().includes(searchVal);
         const matchSearch = mNama || mNip;
         const matchKet = selKet === 'semua' || p.keterangan === selKet;
-        
+
         return matchSearch && matchKet;
       });
       currentPengPage = 1;
@@ -1795,7 +1802,7 @@
             btnSyncPengecualian.innerText = originalText;
             btnSyncPengecualian.disabled = false;
             btnSyncPengecualian.style.opacity = '1';
-            
+
             if (res && res.status === 'error') {
               Swal.fire('Gagal', res.message, 'error');
             } else {
@@ -1862,7 +1869,7 @@
           head: [['No.', 'NIP', 'Nama', 'Jabatan', 'Unit Kerja', 'OPD', 'Keterangan']],
           body: tableBody,
           theme: 'grid',
-          styles: { font: 'helvetica', fontSize: 8, textColor: [0, 0, 0], cellPadding: 3, lineColor: [0, 0, 0], lineWidth: 0.1 },
+          styles: { font: 'helvetica', fontSize: 8, textColor: [0, 0, 0], cellPadding: 3, lineColor: [0, 0, 0], lineWidth: 0.1, valign: 'top' },
           headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255], lineColor: [0, 0, 0], lineWidth: 0.1 },
           columnStyles: {
             0: { halign: 'right', cellWidth: 'auto' }, // No. seperti width="1%"
@@ -1878,6 +1885,100 @@
         });
 
         doc.save('Daftar_Pegawai_Pengecualian.pdf');
+      });
+    }
+
+    const btnDownloadPdfOpd = document.getElementById('btnDownloadPdfOpd');
+    if (btnDownloadPdfOpd) {
+      btnDownloadPdfOpd.addEventListener('click', () => {
+        if (!globalDashboardData || !globalDashboardData.opdData || globalDashboardData.opdData.length === 0) {
+          Swal.fire('Info', 'Tidak ada data OPD untuk diunduh.', 'info');
+          return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'pt', 'a4');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        let currentY = 30;
+
+        if (globalReportInstansi) {
+          doc.setFontSize(14);
+          doc.setFont('helvetica', 'bold');
+          const upperInstansi = globalReportInstansi.toUpperCase();
+          const instWidth = doc.getTextWidth(upperInstansi);
+          doc.text(upperInstansi, (pageWidth - instWidth) / 2, currentY);
+          currentY += 15;
+        }
+
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        const titleText = "Rekap Penilaian Per OPD";
+        const titleWidth = doc.getTextWidth(titleText);
+        doc.text(titleText, (pageWidth - titleWidth) / 2, currentY);
+        currentY += 15;
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+
+        const formatPdfVal = (val, total) => {
+          if (opdFormat === 'persen' && total > 0) {
+            let pct = ((val / total) * 100).toFixed(2);
+            return pct === '0.00' ? '-' : pct + '%';
+          } else if (opdFormat === 'persen' && total === 0) {
+            return '-';
+          } else {
+            return val === 0 ? '-' : formatNumber(val);
+          }
+        };
+
+        const tableBody = globalDashboardData.opdData.map((item, index) => {
+          let row = [
+            index + 1,
+            item.opd,
+            formatNumber(item.totalPegawai),
+            formatPdfVal(item.skpDisetujui, item.totalPegawai)
+          ];
+          item.bulanan.forEach(val => {
+            row.push(formatPdfVal(val, item.totalPegawai));
+          });
+          return row;
+        });
+
+        const gt = globalDashboardData.grandTotal;
+        let gtRow = [
+          '',
+          'TOTAL',
+          formatNumber(gt.totalPegawai),
+          formatPdfVal(gt.skpDisetujui, gt.totalPegawai)
+        ];
+        gt.bulanan.forEach(val => {
+          gtRow.push(formatPdfVal(val, gt.totalPegawai));
+        });
+        tableBody.push(gtRow);
+
+        doc.autoTable({
+          startY: currentY,
+          head: [['No.', 'OPD', 'Pegawai', 'SKP', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Tahunan']],
+          body: tableBody,
+          theme: 'grid',
+          styles: { font: 'helvetica', fontSize: 6, textColor: [0, 0, 0], cellPadding: 2, lineColor: [0, 0, 0], lineWidth: 0.1, halign: 'right', cellWidth: 'wrap', valign: 'top' },
+          headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255], lineColor: [0, 0, 0], lineWidth: 0.1, halign: 'right' },
+          columnStyles: {
+            1: { halign: 'left', cellWidth: 'auto' } // OPD column expands dynamically
+          },
+          didParseCell: function(data) {
+            // Check if this is the last row (Grand Total)
+            if (data.section === 'body' && data.row.index === tableBody.length - 1) {
+              data.cell.styles.fontStyle = 'bold';
+              data.cell.styles.fillColor = [240, 249, 255];
+            }
+            // Ensure OPD column is always left aligned even in head
+            if (data.column.index === 1) {
+              data.cell.styles.halign = 'left';
+            }
+          }
+        });
+        doc.save('Rekap_Penilaian_Per_OPD.pdf');
       });
     }
 
@@ -1924,14 +2025,14 @@
 
     pengNip.addEventListener('input', () => {
       const nip = pengNip.value.trim();
-      
+
       if (nip.length < 5) {
         pengNama.value = ''; pengJab.value = ''; pengUnit.value = ''; pengOpd.value = '';
         pengKet.value = ''; pengKet.disabled = true;
         pengError.style.display = 'none';
-        
+
         pengNama.disabled = true; pengJab.disabled = true; pengUnit.disabled = true; pengOpd.disabled = true;
-        
+
         btnSimpanPengecualian.disabled = true;
         btnSimpanPengecualian.style.background = '#94a3b8';
         btnSimpanPengecualian.style.cursor = 'not-allowed';
@@ -1955,7 +2056,7 @@
            pengError.style.display = 'block';
            pengError.innerText = 'Mencari data pegawai...';
            pengError.style.color = '#3b82f6';
-           
+
            if(searchTimeout) clearTimeout(searchTimeout);
            searchTimeout = setTimeout(() => {
              google.script.run
@@ -1976,7 +2077,7 @@
                     pengError.style.display = 'block';
                     pengError.innerText = 'NIP tidak ditemukan di database. Silakan ketik manual.';
                     pengError.style.color = '#f59e0b';
-                    
+
                     pengNama.disabled = false; pengJab.disabled = false; pengUnit.disabled = false; pengOpd.disabled = false;
                     checkPengecualianForm();
                   }
@@ -1993,7 +2094,7 @@
            pengError.style.display = 'block';
            pengError.innerText = 'NIP tidak ditemukan. Ketik 18 digit untuk mencari di SKP.';
            pengError.style.color = '#ef4444';
-           
+
            pengNama.disabled = true; pengJab.disabled = true; pengUnit.disabled = true; pengOpd.disabled = true;
            checkPengecualianForm();
         }
