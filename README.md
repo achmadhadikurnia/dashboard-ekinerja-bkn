@@ -32,16 +32,22 @@ Aplikasi ini menggunakan pola **Frontend-Backend (Client-Server)** di dalam ekos
 
 ## 🛠️ Panduan Instalasi (Deployment)
 
-1. Buat Spreadsheet baru di Google Sheets.
-2. Buka menu **Ekstensi > Apps Script**.
-3. Hapus kode bawaan (jika ada) lalu tempel (*paste*) isi file `code.js` ke dalam file `Code.gs`.
-4. Buat file HTML baru dengan nama `index.html` (huruf kecil semua), dan tempel isi file `index.html` ke dalamnya.
-5. Simpan (Save) proyek.
-6. Klik **Terapkan (Deploy) > Deployment Baru (New Deployment)**.
-7. Pilih jenis **Aplikasi Web (Web App)**.
-8. Atur hak akses: *Execute as: Me*, *Who has access: Anyone* (atau sesuai kebijakan instansi).
-9. Otorisasi izin akses (*Authorization*) Google.
-10. Salin URL Web App yang dihasilkan.
+1. **Siapkan Template**: Upload file template `Dashboard Report E-Kinerja BKN v1.0.xlsx` ke Google Drive Anda.
+2. **Konversi ke Spreadsheet**: Buka file tersebut di Google Drive web, lalu klik menu **File > Save as Google Sheets**.
+3. **Buka Editor Script**: Dari file Google Sheets yang baru saja dibuat, klik menu **Extensions > Apps Script**.
+4. **Pasang Kode Backend**: Salin (*copy*) seluruh isi file `code.js` dan tempelkan (*paste*) ke dalam file `Code.gs` (timpa kode bawaannya).
+5. **Pasang Kode Frontend**: Klik logo tambah `(+) > HTML`, beri nama persis `index` (huruf kecil). Hapus kode bawaannya, lalu salin seluruh isi file `index.html` ke dalamnya.
+6. **Simpan**: Klik ikon disket untuk menyimpan proyek (Save).
+7. **Proses Deploy**:
+   - Klik tombol biru **Deploy** di pojok kanan atas, lalu pilih **New deployment**.
+   - Klik ikon **gerigi (⚙️)** di sebelah "Select type", lalu pilih **Web app**.
+   - Isi form *Description* (bebas).
+   - Atur pengaturan Web App: *Execute as* pilih **Me**, dan *Who has access* pilih **Anyone** (atau batasi khusus akun instansi).
+   - Klik tombol **Deploy**.
+8. **Otorisasi Keamanan**:
+   - Klik tombol **Authorize access**.
+   - Pilih akun Google Anda. Jika muncul peringatan keamanan Google, klik teks **Advanced** di bagian bawah, lalu klik **Go to ... (unsafe)**. Klik **Continue/Allow** di halaman berikutnya.
+9. **Selesai**: Akan muncul URL Web App. Salin *link* tersebut. Klik **Done**. Buka URL yang disalin tadi di browser untuk menggunakan Dashboard!
 
 ## 📖 Cara Penggunaan
 
