@@ -454,6 +454,45 @@
       padding: 2rem;
       font-size: 1.2rem;
     }
+    /* Navbar Navigation */
+    .navbar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      background: rgba(15, 23, 42, 0.4);
+      padding: 0.5rem;
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      overflow-x: auto;
+    }
+    .nav-btn {
+      background: transparent;
+      color: var(--text-muted);
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .nav-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .nav-btn.active {
+      background: var(--accent-1);
+      color: white;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    .nav-panel {
+      display: none;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    .nav-panel.active {
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -473,6 +512,14 @@
     <div id="error-container" style="display: none;" class="glass-panel error-msg"></div>
 
     <div id="dashboard-content">
+      <!-- Navigation Bar -->
+      <nav class="navbar">
+        <button class="nav-btn active" onclick="switchTab('panelDashboard', this)">Dashboard</button>
+        <button class="nav-btn" onclick="switchTab('panelPegawai', this)">Data Pegawai</button>
+        <button class="nav-btn" onclick="switchTab('panelPengecualian', this)">Data Pengecualian</button>
+      </nav>
+
+      <div id="panelDashboard" class="nav-panel active">
       <!-- Top Cards -->
       <div class="summary-grid">
         <div class="glass-panel summary-card">
@@ -514,6 +561,41 @@
         </div>
       </div>
 
+      <!-- Table OPD (Moved from bottom) -->
+      <div class="glass-panel" style="margin-bottom: 2rem;">
+        <h2 class="section-title">Rincian Per OPD</h2>
+        <div class="table-responsive">
+          <table id="opdTable">
+            <thead>
+              <tr>
+                <th width="1%">No.</th>
+                <th>OPD</th>
+                <th width="1%">Jumlah Pegawai</th>
+                <th width="1%">SKP Disetujui</th>
+                <th id="opd-th-0" width="1%">Jan</th>
+                <th id="opd-th-1" width="1%">Feb</th>
+                <th id="opd-th-2" width="1%">Mar</th>
+                <th id="opd-th-3" width="1%">Apr</th>
+                <th id="opd-th-4" width="1%">Mei</th>
+                <th id="opd-th-5" width="1%">Jun</th>
+                <th id="opd-th-6" width="1%">Jul</th>
+                <th id="opd-th-7" width="1%">Agu</th>
+                <th id="opd-th-8" width="1%">Sep</th>
+                <th id="opd-th-9" width="1%">Okt</th>
+                <th id="opd-th-10" width="1%">Nov</th>
+                <th id="opd-th-11" width="1%">Des</th>
+                <th id="opd-th-12" width="1%">Tahunan</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Data akan diinject via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      </div> <!-- End of panelDashboard -->
+
+      <div id="panelPegawai" class="nav-panel">
       <!-- Pegawai Table Widget -->
       <div class="glass-panel" style="margin-bottom: 2rem;">
         <h2 class="section-title">Daftar Pegawai</h2>
@@ -614,42 +696,11 @@
         </div> <!-- End of pagination-container -->
       </div> <!-- End of pegawai-content -->
     </div> <!-- End of Daftar Pegawai glass-panel -->
+    </div> <!-- End of panelPegawai -->
 
-    <!-- Table OPD -->
-      <div class="glass-panel">
-        <h2 class="section-title">Rincian Per OPD</h2>
-        <div class="table-responsive">
-          <table id="opdTable">
-            <thead>
-              <tr>
-                <th width="1%">No.</th>
-                <th>OPD</th>
-                <th width="1%">Jumlah Pegawai</th>
-                <th width="1%">SKP Disetujui</th>
-                <th id="opd-th-0" width="1%">Jan</th>
-                <th id="opd-th-1" width="1%">Feb</th>
-                <th id="opd-th-2" width="1%">Mar</th>
-                <th id="opd-th-3" width="1%">Apr</th>
-                <th id="opd-th-4" width="1%">Mei</th>
-                <th id="opd-th-5" width="1%">Jun</th>
-                <th id="opd-th-6" width="1%">Jul</th>
-                <th id="opd-th-7" width="1%">Agu</th>
-                <th id="opd-th-8" width="1%">Sep</th>
-                <th id="opd-th-9" width="1%">Okt</th>
-                <th id="opd-th-10" width="1%">Nov</th>
-                <th id="opd-th-11" width="1%">Des</th>
-                <th id="opd-th-12" width="1%">Tahunan</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Data akan diinject via JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
+    <div id="panelPengecualian" class="nav-panel">
       <!-- Pengecualian Card -->
-      <div class="glass-panel" style="margin-top: 2rem; margin-bottom: 2rem;">
+      <div class="glass-panel" style="margin-bottom: 2rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 1rem; padding-bottom: 0.5rem;">
           <h2 class="section-title" style="margin: 0; padding: 0; border: none;">Daftar Pegawai Pengecualian</h2>
           <div style="display: flex; gap: 0.5rem;">
@@ -724,7 +775,30 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> <!-- End of panelPengecualian -->
+    </div> <!-- End of dashboard-content -->
+
+    <script>
+      function switchTab(panelId, btnElement) {
+        // Hide all panels
+        var panels = document.getElementsByClassName('nav-panel');
+        for (var i = 0; i < panels.length; i++) {
+          panels[i].classList.remove('active');
+        }
+        
+        // Remove active class from all buttons
+        var btns = document.getElementsByClassName('nav-btn');
+        for (var i = 0; i < btns.length; i++) {
+          btns[i].classList.remove('active');
+        }
+        
+        // Show selected panel
+        document.getElementById(panelId).classList.add('active');
+        
+        // Highlight clicked button
+        btnElement.classList.add('active');
+      }
+    </script>
   </div>
 
   <!-- Modal Peringatan Lisensi -->
