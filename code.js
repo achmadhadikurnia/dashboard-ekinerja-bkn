@@ -159,11 +159,16 @@ function generateMasterPegawai() {
   let ui = null;
   try { ui = SpreadsheetApp.getUi(); } catch(e) {}
 
+  const _alert = (msg, isSuccess = false) => {
+    if(ui) ui.alert(msg);
+    else if(!isSuccess) throw new Error(msg);
+  };
+
   const sheetSkp = ss.getSheetByName('skp');
   const sheetPegawai = ss.getSheetByName('pegawai');
 
   if (!sheetSkp || !sheetPegawai) {
-    if(ui) ui.alert('Error: Pastikan sheet "skp" dan "pegawai" ada di file ini.');
+    _alert('Error: Pastikan sheet "skp" dan "pegawai" ada di file ini.');
     return;
   }
 
@@ -184,7 +189,7 @@ function generateMasterPegawai() {
   }
 
   if (barisHeaderSkp === -1) {
-    if(ui) ui.alert('Error: Kolom "nip" tidak ditemukan di 20 baris pertama sheet "skp".');
+    _alert('Error: Kolom "nip" tidak ditemukan di 20 baris pertama sheet "skp".');
     return;
   }
 
@@ -194,7 +199,7 @@ function generateMasterPegawai() {
   const idxPeriodeAkhir = headerSkp.indexOf('periode_akhir'); // Untuk menentukan jabatan terbaru
 
   if (idxNip === -1 || idxIsPlt === -1 || idxPeriodeAkhir === -1) {
-    if(ui) ui.alert('Error: Kolom "nip", "is_plt_plh", atau "periode_akhir" tidak ditemukan di baris header sheet "skp".');
+    _alert('Error: Kolom "nip", "is_plt_plh", atau "periode_akhir" tidak ditemukan di baris header sheet "skp".');
     return;
   }
 
@@ -219,7 +224,7 @@ function generateMasterPegawai() {
           if (nip) blacklistNip.add(nip.toString().trim());
         }
       } else {
-        if(ui) ui.alert('Peringatan: Kolom "nip" tidak ditemukan di baris pertama sheet "pengecualian". Filter pengecualian tidak akan berjalan.');
+        _alert('Peringatan: Kolom "nip" tidak ditemukan di baris pertama sheet "pengecualian". Filter pengecualian tidak akan berjalan.');
       }
     }
   }
@@ -317,7 +322,7 @@ function generateMasterPegawai() {
 
   // Jika tidak ada data
   if(outputData.length <= 1) {
-    if(ui) ui.alert('Tidak ada data yang memenuhi kriteria (Semua mungkin PLT atau nip kosong).');
+    _alert('Tidak ada data yang memenuhi kriteria (Semua mungkin PLT atau nip kosong).');
     return;
   }
 
@@ -326,7 +331,7 @@ function generateMasterPegawai() {
   // Update otomatis sheet OPD
   _generateLaporanOPD(false);
 
-  if(ui) ui.alert('Sukses! Ditemukan ' + (outputData.length - 1) + ' pegawai unik (tanpa PLT/PLH dan bebas duplikat mutasi). Data sudah dicetak ke sheet Pegawai & OPD.');
+  _alert('Sukses! Ditemukan ' + (outputData.length - 1) + ' pegawai unik (tanpa PLT/PLH dan bebas duplikat mutasi). Data sudah dicetak ke sheet Pegawai & OPD.', true);
 }
 
 function hapusPengecualian() {
@@ -478,9 +483,14 @@ function _updateNilaiBulan(targetBulan) {
   let ui = null;
   try { ui = SpreadsheetApp.getUi(); } catch(e) {}
 
+  const _alert = (msg, isSuccess = false) => {
+    if(ui) ui.alert(msg);
+    else if(!isSuccess) throw new Error(msg);
+  };
+
   const sheetPegawai = ss.getSheetByName('pegawai');
   if (!sheetPegawai) {
-    ui.alert('Error: Sheet "pegawai" tidak ditemukan!');
+    _alert('Error: Sheet "pegawai" tidak ditemukan!');
     return;
   }
 
@@ -488,10 +498,9 @@ function _updateNilaiBulan(targetBulan) {
   const sheetSkp = ss.getSheetByName('skp');
   if (!cekLisensi(sheetSkp, ui)) return;
 
-
   const sheetBulan = ss.getSheetByName(targetBulan);
   if (!sheetBulan) {
-    ui.alert('Error: Sheet "' + targetBulan + '" tidak ditemukan atau belum ada di file ini!');
+    _alert('Error: Sheet "' + targetBulan + '" tidak ditemukan atau belum ada di file ini!');
     return;
   }
 
@@ -510,7 +519,7 @@ function _updateNilaiBulan(targetBulan) {
   }
 
   if (barisHeaderBulan === -1) {
-    ui.alert('Error: Kolom "id" atau "hasil_akhir" tidak ditemukan di 20 baris pertama sheet "' + targetBulan + '".');
+    _alert('Error: Kolom "id" atau "hasil_akhir" tidak ditemukan di 20 baris pertama sheet "' + targetBulan + '".');
     return;
   }
 
@@ -535,7 +544,7 @@ function _updateNilaiBulan(targetBulan) {
   // Gunakan getDisplayValues() untuk mencocokkan format NIP yang identik
   const dataPegawai = sheetPegawai.getDataRange().getDisplayValues();
   if (dataPegawai.length <= 1) {
-    ui.alert('Error: Sheet "pegawai" kosong. Jalankan menu ke-1 dulu.');
+    _alert('Error: Sheet "pegawai" kosong. Jalankan menu ke-1 dulu.');
     return;
   }
 
@@ -544,11 +553,11 @@ function _updateNilaiBulan(targetBulan) {
   const posisiKolomBulan = headerPegawai.indexOf(targetBulan);
 
   if(idxId === -1) {
-    ui.alert('Error: Kolom "id" tidak ditemukan di sheet pegawai.');
+    _alert('Error: Kolom "id" tidak ditemukan di sheet pegawai.');
     return;
   }
   if (posisiKolomBulan === -1) {
-    ui.alert('Error: Kolom "' + targetBulan + '" tidak ditemukan di sheet pegawai. Pastikan Anda sudah menjalankan menu ke-1.');
+    _alert('Error: Kolom "' + targetBulan + '" tidak ditemukan di sheet pegawai. Pastikan Anda sudah menjalankan menu ke-1.');
     return;
   }
 
@@ -573,7 +582,7 @@ function _updateNilaiBulan(targetBulan) {
   // Update otomatis sheet OPD
   _generateLaporanOPD(false);
 
-  ui.alert('Berhasil! Menarik nilai kinerja bulan [' + targetBulan.toUpperCase() + '] (' + jumlahUpdate + ' pegawai lapor). Sheet OPD ikut diperbarui.');
+  _alert('Berhasil! Menarik nilai kinerja bulan [' + targetBulan.toUpperCase() + '] (' + jumlahUpdate + ' pegawai lapor). Sheet OPD ikut diperbarui.', true);
 }
 
 /**
@@ -585,9 +594,14 @@ function _generateLaporanOPD(showUi = true) {
   let ui = null;
   try { ui = SpreadsheetApp.getUi(); } catch(e) {}
 
+  const _alert = (msg, isSuccess = false) => {
+    if(ui && showUi) ui.alert(msg);
+    else if(!isSuccess && !ui) throw new Error(msg);
+  };
+
   const sheetPegawai = ss.getSheetByName('pegawai');
   if (!sheetPegawai) {
-    if(ui && showUi) ui.alert('Error: Sheet "pegawai" belum ada. Ekstrak data pegawai terlebih dahulu.');
+    _alert('Error: Sheet "pegawai" belum ada. Ekstrak data pegawai terlebih dahulu.');
     return;
   }
 
@@ -598,7 +612,7 @@ function _generateLaporanOPD(showUi = true) {
 
   const dataPegawai = sheetPegawai.getDataRange().getDisplayValues();
   if (dataPegawai.length <= 1) {
-    if(ui) ui.alert('Error: Sheet "pegawai" kosong!');
+    _alert('Error: Sheet "pegawai" kosong!');
     return;
   }
 
@@ -607,11 +621,11 @@ function _generateLaporanOPD(showUi = true) {
   const idxStatus = headerPegawai.indexOf('skp_status');
 
   if (idxOpd === -1) {
-    if(ui) ui.alert('Error: Kolom "skp_unor_induk" tidak ditemukan di sheet pegawai.');
+    _alert('Error: Kolom "skp_unor_induk" tidak ditemukan di sheet pegawai.');
     return;
   }
   if (idxStatus === -1) {
-    if(ui) ui.alert('Error: Kolom "skp_status" tidak ditemukan di sheet pegawai.');
+    _alert('Error: Kolom "skp_status" tidak ditemukan di sheet pegawai.');
     return;
   }
 
@@ -701,7 +715,7 @@ function _generateLaporanOPD(showUi = true) {
     sheetOpd.getRange(1, 1, outputData.length, outputData[0].length).setValues(outputData);
   }
 
-  if(ui && showUi) ui.alert('Berhasil! Sheet "opd" telah diperbarui dengan rekapitulasi data dari ' + daftarNamaOpd.length + ' Instansi/OPD.');
+  _alert('Berhasil! Sheet "opd" telah diperbarui dengan rekapitulasi data dari ' + daftarNamaOpd.length + ' Instansi/OPD.', true);
 }
 
 // ==========================================
@@ -1146,4 +1160,43 @@ function getPegawaiFromSkp(nip) {
       message: 'Pegawai tidak ditemukan di sheet SKP.'
     };
   }
+}
+
+// ==========================================
+// FUNGSI UPLOAD LAPORAN (CHUNK)
+// ==========================================
+
+function uploadLaporanChunk(bulanId, chunkData, isFirstChunk) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(bulanId);
+  
+  if (!sheet) {
+    sheet = ss.insertSheet(bulanId);
+  }
+  
+  if (isFirstChunk) {
+    sheet.clear();
+  }
+  
+  if (chunkData && chunkData.length > 0) {
+    const numRows = chunkData.length;
+    const numCols = chunkData[0].length;
+    
+    const startRow = isFirstChunk ? 1 : sheet.getLastRow() + 1;
+    sheet.getRange(startRow, 1, numRows, numCols).setValues(chunkData);
+  }
+  
+  return true;
+}
+
+function processUploadSync(bulanId) {
+  let msg = '';
+  if (bulanId === 'skp') {
+    generateMasterPegawai();
+    msg = 'Berhasil memperbarui Master Pegawai.';
+  } else {
+    _updateNilaiBulan(bulanId);
+    msg = 'Berhasil sinkronisasi nilai bulan ' + bulanId.toUpperCase() + '.';
+  }
+  return { status: 'success', message: msg };
 }

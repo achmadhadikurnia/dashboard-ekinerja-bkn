@@ -12,6 +12,8 @@
   <!-- jsPDF & AutoTable -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <!-- SheetJS -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -518,6 +520,7 @@
         <button class="nav-btn active" onclick="switchTab('panelDashboard', this)">Dashboard</button>
         <button class="nav-btn" onclick="switchTab('panelPegawai', this)">Data Pegawai</button>
         <button class="nav-btn" onclick="switchTab('panelPengecualian', this)">Data Pengecualian</button>
+        <button class="nav-btn" onclick="switchTab('panelUpload', this)">Upload Laporan</button>
       </nav>
 
       <div id="panelDashboard" class="nav-panel active">
@@ -789,6 +792,68 @@
         </div>
       </div>
     </div> <!-- End of panelPengecualian -->
+
+    <!-- Panel Upload Laporan -->
+    <div id="panelUpload" class="nav-panel">
+      <div class="glass-panel" style="margin-bottom: 2rem;">
+        <h2 class="section-title">Upload Laporan Penilaian Kinerja (BKN)</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.95rem;">
+          Pilih file laporan Excel (.xlsx, .xls) yang diunduh dari sistem BKN. Sistem akan otomatis mendeteksi Bulan/Tahun dari dalam file dan menyimpannya secara otomatis ke database bulanan/tahunan.
+        </p>
+
+        <div id="uploadInputContainer" style="background: rgba(15, 23, 42, 0.4); padding: 1.5rem; border-radius: 8px; border: 1px dashed rgba(255, 255, 255, 0.2); text-align: center; margin-bottom: 1.5rem;">
+          <input type="file" id="fileUploadInput" accept=".xlsx, .xls, .csv" style="display: none;" onchange="handleFileSelect(event)">
+          <button class="btn-pagination" onclick="document.getElementById('fileUploadInput').click()" style="background: var(--accent-1); color: white; border: none; padding: 0.75rem 2rem; font-size: 1rem; border-radius: 6px;">
+            Pilih File Laporan
+          </button>
+          <div id="fileUploadName" style="margin-top: 1rem; font-weight: 500; color: var(--accent-2);"></div>
+        </div>
+
+        <div id="uploadParsingLoading" style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; color: #94a3b8;">
+          <div class="spinner" style="margin-bottom: 1rem; width: 35px; height: 35px; border-width: 3px;"></div>
+          <p>Sedang membaca dan menganalisis file Excel...</p>
+        </div>
+
+        <div id="uploadConfirmationContainer" style="display: none; background: rgba(30, 41, 59, 0.6); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--glass-border); margin-bottom: 1.5rem; text-align: left;">
+          <h3 style="margin-bottom: 1rem; color: #f8fafc; font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">Informasi Data Terdeteksi</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <div>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Target Periode / Sheet</p>
+              <p id="confTargetSheet" style="color: var(--accent-1); font-weight: 600; font-size: 1.1rem;">-</p>
+            </div>
+            <div>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Tahun Laporan</p>
+              <p id="confTahun" style="color: #f59e0b; font-weight: 600; font-size: 1.1rem;">-</p>
+            </div>
+            <div>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Jumlah Data Pegawai</p>
+              <p id="confDataCount" style="color: var(--accent-2); font-weight: 600; font-size: 1.1rem;">-</p>
+            </div>
+          </div>
+          
+          <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+            <button class="btn-pagination" onclick="batalUpload()" style="background: transparent; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2); padding: 0.6rem 1.5rem; font-size: 0.95rem; border-radius: 6px; cursor: pointer;">
+              Batal
+            </button>
+            <button class="btn-pagination" onclick="startUploadProcess()" style="background: var(--accent-1); color: white; border: none; padding: 0.6rem 1.5rem; font-size: 0.95rem; border-radius: 6px; font-weight: 600; cursor: pointer;">
+              Proses
+            </button>
+          </div>
+        </div>
+
+        <div id="uploadStatusContainer" style="display: none; background: rgba(30, 41, 59, 0.6); padding: 1rem; border-radius: 8px; border: 1px solid var(--glass-border);">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span id="uploadMetaInfo" style="font-weight: 600;">Memeriksa metadata...</span>
+            <span id="uploadPercentage">0%</span>
+          </div>
+          <div style="width: 100%; background: rgba(15, 23, 42, 0.6); border-radius: 4px; overflow: hidden; height: 10px; margin-bottom: 0.5rem;">
+            <div id="uploadProgressBar" style="width: 0%; height: 100%; background: var(--accent-2); transition: width 0.3s ease;"></div>
+          </div>
+          <div id="uploadDetails" style="font-size: 0.85rem; color: var(--text-muted);"></div>
+        </div>
+      </div>
+    </div> <!-- End of panelUpload -->
+
     </div> <!-- End of dashboard-content -->
 
     <script>
@@ -1490,7 +1555,14 @@
         let tableStartY = currentY + 10;
         doc.setFont('helvetica', 'normal');
 
-        const headers = [['No', 'NIP', 'Nama', 'Jabatan', 'Unit Kerja', 'OPD', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Tahunan']];
+        let headers = [['No', 'NIP', 'Nama', 'Jabatan', 'Unit Kerja', 'OPD', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Tahunan']];
+        const isBulanFiltered = activeBulanVal !== 'semua';
+        const selectedMonthIdx = isBulanFiltered ? parseInt(activeBulanVal) : -1;
+
+        if (isBulanFiltered) {
+            const newHeaders = ['No', 'NIP', 'Nama', 'Jabatan', 'Unit Kerja', 'OPD', headers[0][selectedMonthIdx + 6]];
+            headers = [newHeaders];
+        }
 
         const body = globalFilteredPegawaiData.map((p, index) => {
            const getDisplay = (val) => {
@@ -1504,7 +1576,7 @@
              return s.toUpperCase();
            };
 
-           return [
+           const fullRow = [
              index + 1,
              p.nip,
              p.nama,
@@ -1513,9 +1585,24 @@
              p.opd,
              ...p.bulanan.map(getDisplay)
            ];
+           
+           if (isBulanFiltered) {
+             return [fullRow[0], fullRow[1], fullRow[2], fullRow[3], fullRow[4], fullRow[5], fullRow[selectedMonthIdx + 6]];
+           }
+           return fullRow;
         });
 
-        const targetColIdx = activeBulanVal !== 'semua' ? parseInt(activeBulanVal) + 6 : -1;
+        let colStyles = {
+          0: { cellWidth: 'auto', halign: 'right' },
+          1: { cellWidth: 'auto', halign: 'left' }
+        };
+        
+        if (isBulanFiltered) {
+          colStyles[6] = { cellWidth: 50, halign: 'center' };
+        } else {
+          for (let i = 6; i <= 17; i++) { colStyles[i] = { cellWidth: 20, halign: 'center' }; }
+          colStyles[18] = { cellWidth: 35, halign: 'center' };
+        }
 
         doc.autoTable({
           head: headers,
@@ -1523,24 +1610,7 @@
           startY: tableStartY,
           styles: { fontSize: 7, cellPadding: 2, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1 },
           headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], lineColor: [0, 0, 0], lineWidth: 0.1 },
-          columnStyles: {
-            0: { cellWidth: 'auto', halign: 'right' }, // No (dinamis menyesuaikan panjang teks tanpa terpotong)
-            1: { cellWidth: 'auto', halign: 'left' }, // NIP (dinamis agar tidak break)
-            // Kolom 2, 3, 4, 5 (teks) dilepas cellWidth-nya agar autotable membaginya secara proporsional 100%
-            6: { cellWidth: 20, halign: 'center' }, // Jan
-            7: { cellWidth: 20, halign: 'center' }, // Feb
-            8: { cellWidth: 20, halign: 'center' }, // Mar
-            9: { cellWidth: 20, halign: 'center' }, // Apr
-            10: { cellWidth: 20, halign: 'center' }, // Mei
-            11: { cellWidth: 20, halign: 'center' }, // Jun
-            12: { cellWidth: 20, halign: 'center' }, // Jul
-            13: { cellWidth: 20, halign: 'center' }, // Agu
-            14: { cellWidth: 20, halign: 'center' }, // Sep
-            15: { cellWidth: 20, halign: 'center' }, // Okt
-            16: { cellWidth: 20, halign: 'center' }, // Nov
-            17: { cellWidth: 20, halign: 'center' }, // Des
-            18: { cellWidth: 35, halign: 'center' }  // Tahunan
-          },
+          columnStyles: colStyles,
           margin: { top: 30, right: 30, bottom: 20, left: 30 },
           tableWidth: 'auto',
           didParseCell: function(data) {
@@ -1548,7 +1618,13 @@
             if (data.section === 'head' && data.column.index === 0) {
               data.cell.styles.halign = 'right';
             }
-            if (targetColIdx !== -1 && data.column.index === targetColIdx) {
+            if (isBulanFiltered && data.column.index === 6) {
+              if (data.section === 'head') {
+                data.cell.styles.fillColor = [59, 130, 246]; // Blue-500
+              } else if (data.section === 'body') {
+                data.cell.styles.fillColor = [219, 234, 254]; // Blue-100
+              }
+            } else if (!isBulanFiltered && data.column.index === (selectedMonthIdx + 6)) {
               if (data.section === 'head') {
                 data.cell.styles.fillColor = [59, 130, 246]; // Blue-500
               } else if (data.section === 'body') {
@@ -2158,6 +2234,236 @@
         }
       });
     };
+
+    // ==========================================
+    // LOGIKA UPLOAD LAPORAN EXCEL / CSV
+    // ==========================================
+    let currentUploadData = [];
+    let currentUploadBulan = '';
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if(!file) return;
+
+      const fileNameEl = document.getElementById('fileUploadName');
+      fileNameEl.innerText = file.name;
+
+      document.getElementById('uploadInputContainer').style.display = 'none';
+      document.getElementById('uploadParsingLoading').style.display = 'flex';
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        setTimeout(() => {
+          try {
+            const data = new Uint8Array(e.target.result);
+            
+            if (typeof XLSX === 'undefined') {
+               document.getElementById('uploadParsingLoading').style.display = 'none';
+               document.getElementById('uploadInputContainer').style.display = 'block';
+               Swal.fire('Error Sistem', 'Library pemroses Excel gagal dimuat. Pastikan koneksi internet Anda stabil, lalu refresh halaman ini.', 'error');
+               event.target.value = '';
+               return;
+            }
+            
+            const workbook = XLSX.read(data, {type: 'array'});
+            
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            const a1 = worksheet['A1'] ? worksheet['A1'].v.toString() : '';
+            const a3 = worksheet['A3'] ? worksheet['A3'].v.toString() : '';
+
+          const yearMatch = a1.match(/20\d{2}/);
+          let tahunLaporan = new Date().getFullYear();
+          if(yearMatch) tahunLaporan = parseInt(yearMatch[0]);
+
+          let targetBulan = '';
+          const a1Lower = a1.toLowerCase();
+          
+          let isMaster = false;
+          let isPenilaian = false;
+
+          if (a1Lower.includes('laporan skp') && !a1Lower.includes('penilaian')) {
+             isMaster = true;
+          } else if (a1Lower.includes('laporan penilaian skp')) {
+             isPenilaian = true;
+          }
+
+          if (isMaster) {
+             targetBulan = 'skp';
+          } else if (isPenilaian) {
+             const a3Lower = a3.toLowerCase();
+             if (a3Lower.includes('januari')) targetBulan = 'jan';
+             else if (a3Lower.includes('februari')) targetBulan = 'feb';
+             else if (a3Lower.includes('maret')) targetBulan = 'mar';
+             else if (a3Lower.includes('april')) targetBulan = 'apr';
+             else if (a3Lower.includes('mei')) targetBulan = 'mei';
+             else if (a3Lower.includes('juni')) targetBulan = 'jun';
+             else if (a3Lower.includes('juli')) targetBulan = 'jul';
+             else if (a3Lower.includes('agustus')) targetBulan = 'agu';
+             else if (a3Lower.includes('september')) targetBulan = 'sep';
+             else if (a3Lower.includes('oktober')) targetBulan = 'okt';
+             else if (a3Lower.includes('november')) targetBulan = 'nov';
+             else if (a3Lower.includes('desember')) targetBulan = 'des';
+             else if (a3Lower.includes('tahunan')) targetBulan = 'tahunan';
+             else {
+                document.getElementById('uploadParsingLoading').style.display = 'none';
+                document.getElementById('uploadInputContainer').style.display = 'block';
+                Swal.fire('Error Metadata', 'Gagal mendeteksi Periode Bulan dari Laporan Penilaian (Sel A3: "' + a3 + '").', 'error');
+                event.target.value = '';
+                return;
+             }
+          } else {
+             document.getElementById('uploadParsingLoading').style.display = 'none';
+             document.getElementById('uploadInputContainer').style.display = 'block';
+             Swal.fire('Error Metadata', 'Format laporan tidak dikenali pada sel A1. Pastikan Anda mengunduh dari E-Kinerja BKN.', 'error');
+             event.target.value = '';
+             return;
+          }
+
+          let jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ""});
+          
+          let headerRowIdx = -1;
+          for(let i=0; i < Math.min(20, jsonData.length); i++) {
+             const rowStr = jsonData[i].map(x => String(x).toLowerCase()).join('|');
+             if(rowStr.includes('nip')) {
+                headerRowIdx = i;
+                break;
+             }
+          }
+
+          if(headerRowIdx === -1) {
+             document.getElementById('uploadParsingLoading').style.display = 'none';
+             document.getElementById('uploadInputContainer').style.display = 'block';
+             Swal.fire('Format Salah', 'Tidak menemukan baris header (kolom NIP) di 20 baris pertama.', 'error');
+             event.target.value = '';
+             return;
+          }
+
+          currentUploadData = jsonData;
+          currentUploadBulan = targetBulan;
+
+          if(currentUploadData.length <= 1) {
+             document.getElementById('uploadParsingLoading').style.display = 'none';
+             document.getElementById('uploadInputContainer').style.display = 'block';
+             Swal.fire('Data Kosong', 'Tidak ada data pegawai yang ditemukan di laporan ini.', 'warning');
+             event.target.value = '';
+             return;
+          }
+
+          // Sembunyikan loading
+          document.getElementById('uploadParsingLoading').style.display = 'none';
+
+          // Tampilkan konfirmasi
+          document.getElementById('confTargetSheet').innerText = targetBulan.toUpperCase();
+          document.getElementById('confTahun').innerText = tahunLaporan;
+          document.getElementById('confDataCount').innerText = (currentUploadData.length - 1) + ' Baris';
+          document.getElementById('uploadConfirmationContainer').style.display = 'block';
+          document.getElementById('uploadStatusContainer').style.display = 'none';
+
+          } catch (error) {
+             document.getElementById('uploadParsingLoading').style.display = 'none';
+             document.getElementById('uploadInputContainer').style.display = 'block';
+             console.error("Error saat memproses Excel:", error);
+             Swal.fire('Error Membaca File', 'Terjadi kesalahan saat membaca file. Pastikan file bukan hasil corrupt atau formatnya valid. (' + error.message + ')', 'error');
+             event.target.value = '';
+          }
+        }, 100);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function batalUpload() {
+      document.getElementById('fileUploadInput').value = '';
+      document.getElementById('fileUploadName').innerText = '';
+      document.getElementById('uploadConfirmationContainer').style.display = 'none';
+      document.getElementById('uploadStatusContainer').style.display = 'none';
+      document.getElementById('fileUploadInput').parentElement.style.display = 'block';
+      currentUploadData = [];
+      currentUploadBulan = '';
+    }
+
+    function startUploadProcess() {
+      document.getElementById('uploadConfirmationContainer').style.display = 'none';
+      document.getElementById('uploadStatusContainer').style.display = 'block';
+      document.getElementById('uploadMetaInfo').innerText = `Mengirim ke sheet '${currentUploadBulan}' (${currentUploadData.length - 1} data)`;
+      document.getElementById('uploadProgressBar').style.width = '0%';
+      document.getElementById('uploadPercentage').innerText = '0%';
+      document.getElementById('uploadDetails').innerText = 'Memulai pengiriman...';
+
+      const CHUNK_SIZE = 500;
+      let currentChunk = 0;
+      const totalChunks = Math.ceil(currentUploadData.length / CHUNK_SIZE);
+
+      function sendNextChunk() {
+        if(currentChunk >= totalChunks) {
+          document.getElementById('uploadPercentage').innerText = '100%';
+          document.getElementById('uploadProgressBar').style.width = '100%';
+          document.getElementById('uploadDetails').innerText = 'Data berhasil dikirim!';
+          
+          Swal.fire({
+            title: 'Sinkronisasi Sistem',
+            text: 'Data telah disalin. Memproses sinkronisasi dan update dasbor...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+          });
+          
+          google.script.run
+            .withSuccessHandler((res) => { 
+               Swal.fire('Selesai', res.message, 'success').then(() => {
+                 document.getElementById('fileUploadInput').value = '';
+                 batalUpload(); // Reset UI upload panel
+                 
+                 // Pindah ke tab pertama (Dashboard)
+                 const btns = document.getElementsByClassName('nav-btn');
+                 if(btns.length > 0) switchTab('panelDashboard', btns[0]);
+
+                 // Tampilkan kembali layar loading
+                 document.getElementById('dashboard-content').style.display = 'none';
+                 const loadingEl = document.getElementById('loading');
+                 if(loadingEl) loadingEl.style.display = 'flex';
+                 
+                 const loadText = document.getElementById('loading-text');
+                 if(loadText) loadText.innerText = 'Memperbarui Dasbor...';
+                 
+                 // Ambil ulang data dasbor dan pegawai
+                 google.script.run
+                    .withSuccessHandler(onSuccess)
+                    .withFailureHandler(onFailure)
+                    .getDashboardData();
+               });
+            })
+            .withFailureHandler(err => { 
+               Swal.fire('Error Sync', err.message, 'error'); 
+            })
+            .processUploadSync(currentUploadBulan);
+            
+          return;
+        }
+
+        const startIdx = currentChunk * CHUNK_SIZE;
+        const endIdx = Math.min(startIdx + CHUNK_SIZE, currentUploadData.length);
+        const chunkData = currentUploadData.slice(startIdx, endIdx);
+        const isFirstChunk = (currentChunk === 0);
+
+        google.script.run
+          .withSuccessHandler(() => {
+            currentChunk++;
+            const pct = Math.floor((currentChunk / totalChunks) * 100);
+            document.getElementById('uploadPercentage').innerText = pct + '%';
+            document.getElementById('uploadProgressBar').style.width = pct + '%';
+            document.getElementById('uploadDetails').innerText = `Mengirim chunk ${currentChunk} dari ${totalChunks}...`;
+            sendNextChunk();
+          })
+          .withFailureHandler((err) => {
+            Swal.fire('Upload Gagal', 'Gagal mengirim data: ' + err.message, 'error');
+            document.getElementById('fileUploadInput').value = '';
+          })
+          .uploadLaporanChunk(currentUploadBulan, chunkData, isFirstChunk);
+      }
+
+      sendNextChunk();
+    }
   </script>
 </body>
 </html>
