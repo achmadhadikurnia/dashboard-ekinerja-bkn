@@ -2410,7 +2410,12 @@
           
           google.script.run
             .withSuccessHandler((res) => { 
-               Swal.fire('Selesai', res.message, 'success').then(() => {
+               Swal.fire({
+                 title: 'Selesai',
+                 html: res.message + '<div style="margin-top: 15px; padding: 12px; background-color: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; color: #92400e; font-size: 0.9em; text-align: left;"><b style="display: flex; align-items: center; gap: 5px;">Catatan Penting:</b><div style="margin-top: 5px; line-height: 1.4;">Jika dasbor masih kosong atau data belum berubah, harap tunggu beberapa saat agar sistem selesai memproses kalkulasi, lalu muat ulang (refresh) halaman ini.</div></div>',
+                 icon: 'success',
+                 confirmButtonColor: '#2563eb'
+               }).then(() => {
                  document.getElementById('fileUploadInput').value = '';
                  batalUpload(); // Reset UI upload panel
                  

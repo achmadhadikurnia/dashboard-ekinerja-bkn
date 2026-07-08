@@ -47,7 +47,13 @@ Aplikasi ini menggunakan pola **Frontend-Backend (Client-Server)** di dalam ekos
 8. **Otorisasi Keamanan**:
    - Klik tombol **Authorize access**.
    - Pilih akun Google Anda. Jika muncul peringatan keamanan Google, klik teks **Advanced** di bagian bawah, lalu klik **Go to ... (unsafe)**. Klik **Continue/Allow** di halaman berikutnya.
-9. **Selesai**: Akan muncul URL Web App. Salin *link* tersebut. Klik **Done**. Buka URL yang disalin tadi di browser untuk menggunakan Dashboard!
+9. **Selesai**: Akan muncul URL Web App (berakhiran `/exec`). Salin *link* tersebut. Klik **Done**. Buka URL yang disalin tadi di browser untuk menggunakan Dashboard!
+
+> [!TIP]
+> **Penting Saat Mengubah Kode!**
+> Jika Anda mengubah atau memperbarui kode di masa depan, menekan tombol *Save* saja **TIDAK** akan mengubah hasil di *link* utama (`/exec`). Anda **WAJIB** melakukan klik **Deploy > New deployment** lagi agar kode terbaru dipublikasikan.
+> 
+> *Alternatif*: Jika Anda sedang menguji coba perubahan kode, gunakan **Deploy > Test deployments**, lalu klik *link* Web App yang diberikan (berakhiran `/dev`). Link `/dev` ini akan selalu merespons kode terbaru secara instan setiap kali Anda menekan *Save*.
 
 ## 📖 Cara Penggunaan
 

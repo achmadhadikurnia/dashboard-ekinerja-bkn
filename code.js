@@ -689,49 +689,44 @@ function doGet(e) {
 function getDashboardData() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheetOpd = ss.getSheetByName('opd');
-  const sheetPegawai = ss.getSheetByName('pegawai');
-
-  if (!sheetOpd) {
-    return { status: 'error', message: 'Sheet "opd" belum ada. Harap tarik data pegawai terlebih dahulu.' };
-  }
-
-  const data = sheetOpd.getDataRange().getDisplayValues();
-  if (data.length <= 1) {
-    return { status: 'error', message: 'Sheet "opd" kosong.' };
-  }
 
   const rows = [];
   let grandTotalRow = null;
 
-  // Baca semua baris kecuali header
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-    if (row[1] === "JUMLAH TOTAL") {
-      grandTotalRow = row;
-      continue;
-    }
+  if (sheetOpd) {
+    const data = sheetOpd.getDataRange().getDisplayValues();
+    if (data.length > 1) {
+      // Baca semua baris kecuali header
+      for (let i = 1; i < data.length; i++) {
+        const row = data[i];
+        if (row[1] === "JUMLAH TOTAL") {
+          grandTotalRow = row;
+          continue;
+        }
 
-    // Parse angka agar jadi Number bukan String
-    rows.push({
-      opd: row[1],
-      totalPegawai: parseInt(row[2].toString().replace(/\D/g, '')) || 0,
-      skpDisetujui: parseInt(row[3].toString().replace(/\D/g, '')) || 0,
-      bulanan: [
-        parseInt(row[4]?.toString().replace(/\D/g, '')) || 0, // Jan
-        parseInt(row[5]?.toString().replace(/\D/g, '')) || 0, // Feb
-        parseInt(row[6]?.toString().replace(/\D/g, '')) || 0, // Mar
-        parseInt(row[7]?.toString().replace(/\D/g, '')) || 0, // Apr
-        parseInt(row[8]?.toString().replace(/\D/g, '')) || 0, // Mei
-        parseInt(row[9]?.toString().replace(/\D/g, '')) || 0, // Jun
-        parseInt(row[10]?.toString().replace(/\D/g, '')) || 0, // Jul
-        parseInt(row[11]?.toString().replace(/\D/g, '')) || 0, // Agu
-        parseInt(row[12]?.toString().replace(/\D/g, '')) || 0, // Sep
-        parseInt(row[13]?.toString().replace(/\D/g, '')) || 0, // Okt
-        parseInt(row[14]?.toString().replace(/\D/g, '')) || 0, // Nov
-        parseInt(row[15]?.toString().replace(/\D/g, '')) || 0, // Des
-        parseInt(row[16]?.toString().replace(/\D/g, '')) || 0  // Tahunan
-      ]
-    });
+        // Parse angka agar jadi Number bukan String
+        rows.push({
+          opd: row[1],
+          totalPegawai: parseInt(row[2].toString().replace(/\D/g, '')) || 0,
+          skpDisetujui: parseInt(row[3].toString().replace(/\D/g, '')) || 0,
+          bulanan: [
+            parseInt(row[4]?.toString().replace(/\D/g, '')) || 0, // Jan
+            parseInt(row[5]?.toString().replace(/\D/g, '')) || 0, // Feb
+            parseInt(row[6]?.toString().replace(/\D/g, '')) || 0, // Mar
+            parseInt(row[7]?.toString().replace(/\D/g, '')) || 0, // Apr
+            parseInt(row[8]?.toString().replace(/\D/g, '')) || 0, // Mei
+            parseInt(row[9]?.toString().replace(/\D/g, '')) || 0, // Jun
+            parseInt(row[10]?.toString().replace(/\D/g, '')) || 0, // Jul
+            parseInt(row[11]?.toString().replace(/\D/g, '')) || 0, // Agu
+            parseInt(row[12]?.toString().replace(/\D/g, '')) || 0, // Sep
+            parseInt(row[13]?.toString().replace(/\D/g, '')) || 0, // Okt
+            parseInt(row[14]?.toString().replace(/\D/g, '')) || 0, // Nov
+            parseInt(row[15]?.toString().replace(/\D/g, '')) || 0, // Des
+            parseInt(row[16]?.toString().replace(/\D/g, '')) || 0  // Tahunan
+          ]
+        });
+      }
+    }
   }
 
   // Siapkan data Grand Total
