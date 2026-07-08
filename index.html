@@ -563,28 +563,34 @@
 
       <!-- Table OPD (Moved from bottom) -->
       <div class="glass-panel" style="margin-bottom: 2rem;">
-        <h2 class="section-title">Rincian Per OPD</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h2 class="section-title" style="margin: 0; padding: 0; border: none;">Rincian Per OPD</h2>
+          <select id="opdFormatToggle" class="search-box select-box" style="margin-bottom: 0; width: auto;" onchange="opdFormat = this.value; buildOpdTableBody();">
+            <option value="persen">Tampilkan: Persentase (%)</option>
+            <option value="angka">Tampilkan: Angka Mutlak</option>
+          </select>
+        </div>
         <div class="table-responsive">
           <table id="opdTable">
             <thead>
               <tr>
                 <th width="1%">No.</th>
-                <th>OPD</th>
-                <th width="1%">Jumlah Pegawai</th>
-                <th width="1%">SKP Disetujui</th>
-                <th id="opd-th-0" width="1%">Jan</th>
-                <th id="opd-th-1" width="1%">Feb</th>
-                <th id="opd-th-2" width="1%">Mar</th>
-                <th id="opd-th-3" width="1%">Apr</th>
-                <th id="opd-th-4" width="1%">Mei</th>
-                <th id="opd-th-5" width="1%">Jun</th>
-                <th id="opd-th-6" width="1%">Jul</th>
-                <th id="opd-th-7" width="1%">Agu</th>
-                <th id="opd-th-8" width="1%">Sep</th>
-                <th id="opd-th-9" width="1%">Okt</th>
-                <th id="opd-th-10" width="1%">Nov</th>
-                <th id="opd-th-11" width="1%">Des</th>
-                <th id="opd-th-12" width="1%">Tahunan</th>
+                <th style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'opd')">OPD <span class="sort-icon"></span></th>
+                <th width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'totalPegawai')">Jumlah Pegawai <span class="sort-icon"></span></th>
+                <th width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'skpDisetujui')">SKP Disetujui <span class="sort-icon"></span></th>
+                <th id="opd-th-0" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 0)">Jan <span class="sort-icon"></span></th>
+                <th id="opd-th-1" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 1)">Feb <span class="sort-icon"></span></th>
+                <th id="opd-th-2" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 2)">Mar <span class="sort-icon"></span></th>
+                <th id="opd-th-3" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 3)">Apr <span class="sort-icon"></span></th>
+                <th id="opd-th-4" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 4)">Mei <span class="sort-icon"></span></th>
+                <th id="opd-th-5" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 5)">Jun <span class="sort-icon"></span></th>
+                <th id="opd-th-6" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 6)">Jul <span class="sort-icon"></span></th>
+                <th id="opd-th-7" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 7)">Agu <span class="sort-icon"></span></th>
+                <th id="opd-th-8" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 8)">Sep <span class="sort-icon"></span></th>
+                <th id="opd-th-9" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 9)">Okt <span class="sort-icon"></span></th>
+                <th id="opd-th-10" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 10)">Nov <span class="sort-icon"></span></th>
+                <th id="opd-th-11" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 11)">Des <span class="sort-icon"></span></th>
+                <th id="opd-th-12" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 12)">Tahunan <span class="sort-icon"></span></th>
               </tr>
             </thead>
             <tbody>
@@ -920,6 +926,10 @@
     let globalTimestamps = [];
     let globalReportTitle = "Ekinerja BKN";
     let globalReportInstansi = "";
+    
+    let globalDashboardData = null;
+    let globalTargetHighlights = [];
+    let opdFormat = 'persen'; // Default
 
     function renderDashboard(data) {
       // Hide Loading, Show Dashboard
@@ -1047,7 +1057,66 @@
         if (opdTh) opdTh.classList.add('highlight-col');
       });
 
+      globalDashboardData = data;
+      globalTargetHighlights = targetHighlights;
+      buildOpdTableBody();
+    } // Akhir renderDashboard
+    let currentSortColOpd = '';
+    let currentSortAscOpd = true;
+
+    function sortOpdData(thElement, colName, monthIdx = -1) {
+      if (!globalDashboardData) return;
+      
+      const sortKey = colName + monthIdx;
+      if (currentSortColOpd === sortKey) {
+        currentSortAscOpd = !currentSortAscOpd;
+      } else {
+        currentSortColOpd = sortKey;
+        currentSortAscOpd = true;
+      }
+
+      const ths = document.querySelectorAll('#opdTable th .sort-icon');
+      ths.forEach(icon => icon.innerHTML = '');
+
+      const iconSpan = thElement.querySelector('.sort-icon');
+      if (iconSpan) {
+        iconSpan.innerHTML = currentSortAscOpd ? ' ▲' : ' ▼';
+      }
+
+      globalDashboardData.opdData.sort((a, b) => {
+        let valA, valB;
+        if (colName === 'opd') {
+          valA = a.opd.toLowerCase();
+          valB = b.opd.toLowerCase();
+        } else if (colName === 'totalPegawai') {
+          valA = a.totalPegawai;
+          valB = b.totalPegawai;
+        } else if (colName === 'skpDisetujui') {
+          valA = (opdFormat === 'persen' && a.totalPegawai > 0) ? (a.skpDisetujui / a.totalPegawai) : a.skpDisetujui;
+          valB = (opdFormat === 'persen' && b.totalPegawai > 0) ? (b.skpDisetujui / b.totalPegawai) : b.skpDisetujui;
+        } else if (colName === 'bulan') {
+          let aBul = a.bulanan[monthIdx] || 0;
+          let bBul = b.bulanan[monthIdx] || 0;
+          valA = (opdFormat === 'persen' && a.totalPegawai > 0) ? (aBul / a.totalPegawai) : aBul;
+          valB = (opdFormat === 'persen' && b.totalPegawai > 0) ? (bBul / b.totalPegawai) : bBul;
+        }
+
+        if (valA < valB) return currentSortAscOpd ? -1 : 1;
+        if (valA > valB) return currentSortAscOpd ? 1 : -1;
+        return 0;
+      });
+
+      buildOpdTableBody();
+    }
+
+    function buildOpdTableBody() {
+      if (!globalDashboardData) return;
+      
+      const data = globalDashboardData;
+      const gt = data.grandTotal;
+      const targetHighlights = globalTargetHighlights;
       const tbody = document.querySelector('#opdTable tbody');
+      
       let tableHTML = '';
       let nomor = 1;
 
@@ -1059,19 +1128,35 @@
 
           let hlClass = targetHighlights.includes(idx) ? ' highlight-col' : '';
 
-          tdBulan += `<td class="${mClass}${hlClass}">${formatNumber(val)}</td>`;
+          let displayVal = formatNumber(val);
+          if (opdFormat === 'persen' && row.totalPegawai > 0) {
+            displayVal = ((val / row.totalPegawai) * 100).toFixed(2) + '%';
+          } else if (opdFormat === 'persen' && row.totalPegawai === 0) {
+            displayVal = '0.00%';
+          }
+          if (val === 0) displayVal = '-';
+
+          tdBulan += `<td class="${mClass}${hlClass}">${displayVal}</td>`;
         });
 
         // Logika warna: Hijau jika disetujui sama dengan total, Merah jika kurang
         let statusClass = (row.skpDisetujui >= row.totalPegawai && row.totalPegawai > 0) ? 'val-green' : 'val-red';
         if (row.totalPegawai === 0) statusClass = 'val-muted'; // Jika tidak ada pegawai
+        
+        let displaySkp = formatNumber(row.skpDisetujui);
+        if (opdFormat === 'persen' && row.totalPegawai > 0) {
+          displaySkp = ((row.skpDisetujui / row.totalPegawai) * 100).toFixed(2) + '%';
+        } else if (opdFormat === 'persen' && row.totalPegawai === 0) {
+          displaySkp = '0.00%';
+        }
+        if (row.skpDisetujui === 0) displaySkp = '-';
 
         tableHTML += `
           <tr>
             <td>${nomor++}</td>
             <td><strong>${row.opd}</strong></td>
             <td class="val-blue">${formatNumber(row.totalPegawai)}</td>
-            <td class="${statusClass}">${formatNumber(row.skpDisetujui)}</td>
+            <td class="${statusClass}">${displaySkp}</td>
             ${tdBulan}
           </tr>
         `;
@@ -1084,24 +1169,41 @@
         if (gt.totalPegawai === 0) mClass = 'val-muted';
 
         let hlClass = targetHighlights.includes(idx) ? ' highlight-col' : '';
-        gtBulan += `<td class="${mClass}${hlClass}"><strong>${formatNumber(val)}</strong></td>`;
+        
+        let displayVal = formatNumber(val);
+        if (opdFormat === 'persen' && gt.totalPegawai > 0) {
+          displayVal = ((val / gt.totalPegawai) * 100).toFixed(2) + '%';
+        } else if (opdFormat === 'persen' && gt.totalPegawai === 0) {
+          displayVal = '0.00%';
+        }
+        if (val === 0) displayVal = '-';
+        
+        gtBulan += `<td class="${mClass}${hlClass}"><strong>${displayVal}</strong></td>`;
       });
 
       let gtStatusClass = (gt.skpDisetujui >= gt.totalPegawai && gt.totalPegawai > 0) ? 'val-green' : 'val-red';
       if (gt.totalPegawai === 0) gtStatusClass = 'val-muted';
+      
+      let gtDisplaySkp = formatNumber(gt.skpDisetujui);
+      if (opdFormat === 'persen' && gt.totalPegawai > 0) {
+        gtDisplaySkp = ((gt.skpDisetujui / gt.totalPegawai) * 100).toFixed(2) + '%';
+      } else if (opdFormat === 'persen' && gt.totalPegawai === 0) {
+        gtDisplaySkp = '0.00%';
+      }
+      if (gt.skpDisetujui === 0) gtDisplaySkp = '-';
 
       tableHTML += `
         <tr class="total-row" style="background: rgba(59, 130, 246, 0.1); border-top: 2px solid var(--accent-1);">
           <td style="text-align: right;"><strong></strong></td>
           <td style="text-align: center;"><strong>TOTAL</strong></td>
           <td class="val-blue"><strong>${formatNumber(gt.totalPegawai)}</strong></td>
-          <td class="${gtStatusClass}"><strong>${formatNumber(gt.skpDisetujui)}</strong></td>
+          <td class="${gtStatusClass}"><strong>${gtDisplaySkp}</strong></td>
           ${gtBulan}
         </tr>
       `;
 
       tbody.innerHTML = tableHTML;
-    } // Akhir renderDashboard
+    } // Akhir buildOpdTableBody
 
     let globalPegawaiData = [];
     let globalFilteredPegawaiData = [];
