@@ -518,9 +518,11 @@
       <!-- Navigation Bar -->
       <nav class="navbar">
         <button class="nav-btn active" onclick="switchTab('panelDashboard', this)">Dashboard</button>
-        <button class="nav-btn" onclick="switchTab('panelPegawai', this)">Data Pegawai</button>
-        <button class="nav-btn" onclick="switchTab('panelPengecualian', this)">Data Pengecualian</button>
-        <button class="nav-btn" onclick="switchTab('panelUpload', this)">Upload Laporan</button>
+        <button id="navPegawai" class="nav-btn" style="display: none;" onclick="switchTab('panelPegawai', this)">Data Pegawai</button>
+        <button id="navPengecualian" class="nav-btn" style="display: none;" onclick="switchTab('panelPengecualian', this)">Data Pengecualian</button>
+        <button id="navUpload" class="nav-btn" style="display: none;" onclick="switchTab('panelUpload', this)">Upload Laporan</button>
+        <button id="btnLogin" class="nav-btn" style="margin-left: auto; background: #3b82f6; color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);" onclick="promptLogin()">Login</button>
+        <button id="btnLogout" class="nav-btn" style="display: none; margin-left: auto; background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.5);" onclick="logout()">Logout</button>
       </nav>
 
       <div id="panelDashboard" class="nav-panel active">
@@ -858,6 +860,78 @@
 
     <script>
       function switchTab(panelId, btnElement) {
+        _doSwitchTab(panelId, btnElement);
+      }
+
+      function promptLogin() {
+        Swal.fire({
+          title: '<span style="color: #1e293b; font-weight: 600;">Login Admin</span>',
+          background: '#ffffff',
+          html: `
+            <div style="margin-top: 10px;">
+              <input id="swal-input-user" class="swal2-input" placeholder="Username" style="background: #ffffff !important; color: #1e293b !important; border: 1px solid #94a3b8 !important; max-width: 80%;">
+              <input id="swal-input-pass" type="password" class="swal2-input" placeholder="Password" style="background: #ffffff !important; color: #1e293b !important; border: 1px solid #94a3b8 !important; max-width: 80%; margin-top: 15px;">
+            </div>
+          `,
+          confirmButtonText: 'Login',
+          showCancelButton: true,
+          cancelButtonText: 'Batal',
+          confirmButtonColor: '#3b82f6',
+          cancelButtonColor: '#94a3b8',
+          reverseButtons: true,
+          focusConfirm: false,
+          preConfirm: () => {
+            const user = document.getElementById('swal-input-user').value;
+            const pass = document.getElementById('swal-input-pass').value;
+            if (!user || !pass) {
+              Swal.showValidationMessage('Mohon isi Username dan Password');
+            }
+            return { user: user, pass: pass };
+          }
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({ title: 'Memeriksa...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+            google.script.run
+              .withSuccessHandler((res) => {
+                if (res.status === 'success') {
+                  localStorage.setItem('authToken', res.token);
+                  applyLoginState();
+                  Swal.fire('Berhasil', 'Login sukses!', 'success');
+                } else {
+                  Swal.fire('Gagal', res.message, 'error');
+                }
+              })
+              .withFailureHandler((err) => {
+                Swal.fire('Error', err.message, 'error');
+              })
+              .verifyLogin(result.value.user, result.value.pass);
+          }
+        });
+      }
+
+      function applyLoginState() {
+        const btnPegawai = document.getElementById('navPegawai');
+        const btnPengecualian = document.getElementById('navPengecualian');
+        const btnUpload = document.getElementById('navUpload');
+        const btnLogin = document.getElementById('btnLogin');
+        const btnLogout = document.getElementById('btnLogout');
+
+        if (localStorage.getItem('authToken')) {
+          if (btnPegawai) btnPegawai.style.display = 'inline-block';
+          if (btnPengecualian) btnPengecualian.style.display = 'inline-block';
+          if (btnUpload) btnUpload.style.display = 'inline-block';
+          if (btnLogin) btnLogin.style.display = 'none';
+          if (btnLogout) btnLogout.style.display = 'inline-block';
+        } else {
+          if (btnPegawai) btnPegawai.style.display = 'none';
+          if (btnPengecualian) btnPengecualian.style.display = 'none';
+          if (btnUpload) btnUpload.style.display = 'none';
+          if (btnLogin) btnLogin.style.display = 'inline-block';
+          if (btnLogout) btnLogout.style.display = 'none';
+        }
+      }
+
+      function _doSwitchTab(panelId, btnElement) {
         // Hide all panels
         var panels = document.getElementsByClassName('nav-panel');
         for (var i = 0; i < panels.length; i++) {
@@ -875,6 +949,28 @@
 
         // Highlight clicked button
         btnElement.classList.add('active');
+      }
+
+      function logout() {
+        Swal.fire({
+          title: 'Konfirmasi',
+          text: 'Anda yakin ingin keluar?',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#ef4444',
+          cancelButtonColor: '#94a3b8',
+          confirmButtonText: 'Ya, Keluar'
+        }).then((res) => {
+          if (res.isConfirmed) {
+            localStorage.removeItem('authToken');
+            applyLoginState();
+            // Kembali ke halaman Dashboard
+            const dashboardBtn = document.querySelector('.navbar .nav-btn:first-child');
+            if (dashboardBtn) {
+              _doSwitchTab('panelDashboard', dashboardBtn);
+            }
+          }
+        });
       }
     </script>
   </div>
@@ -946,6 +1042,9 @@
 
     // Fungsi utama dipanggil saat halaman dimuat
     document.addEventListener("DOMContentLoaded", () => {
+      // Cek status login saat dimuat
+      applyLoginState();
+
       // Panggil backend google apps script
       google.script.run
         .withSuccessHandler(onSuccess)

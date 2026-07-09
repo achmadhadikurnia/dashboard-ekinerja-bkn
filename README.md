@@ -62,6 +62,15 @@ Aplikasi ini menggunakan pola **Frontend-Backend (Client-Server)** di dalam ekos
 3. **Pemrosesan Otomatis**: Klik "Proses". Sistem akan membedah isi Excel dan menyinkronkannya ke *database* Google Sheets.
 4. **Analisis & Cetak**: Masuk ke menu "Daftar Pegawai" atau "Rekap OPD", gunakan filter yang disediakan, lalu klik ikon **Unduh PDF** untuk mencetak laporan.
 
+## 🔐 Default Login Admin
+
+Aplikasi ini dilengkapi sistem penguncian (login) pada halaman sensitif seperti Data Pegawai dan Upload Laporan. Kredensial default untuk masuk adalah:
+- **Username:** `adminkinerja`
+- **Password:** `sangatbaik`
+
+> [!TIP]
+> Anda dapat mengganti username dan password ini kapan saja melalui file Google Sheets Anda. Buka sheet **`pengaturan`**, lalu ubah nilai di sebelah sel Username (sel B2) dan Password (sel B3).
+
 ## 🔒 Keamanan & Privasi Data
 
 Data instansi dan pegawai Anda **sangat aman**. Aplikasi ini berjalan 100% di dalam lingkungan Google Workspace (akun Google) milik Anda sendiri.

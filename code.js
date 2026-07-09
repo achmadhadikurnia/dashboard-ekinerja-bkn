@@ -1146,3 +1146,25 @@ function processUploadSync(bulanId) {
   }
   return { status: 'success', message: msg };
 }
+
+// ==========================================
+// FUNGSI LOGIN
+// ==========================================
+function verifyLogin(username, password) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetPengaturan = ss.getSheetByName('pengaturan');
+  
+  if (!sheetPengaturan) {
+    return { status: 'error', message: 'Sheet pengaturan tidak ditemukan!' };
+  }
+  
+  const expectedUser = sheetPengaturan.getRange('B2').getValue().toString().trim();
+  const expectedPass = sheetPengaturan.getRange('B3').getValue().toString().trim();
+  
+  if (username === expectedUser && password === expectedPass) {
+    const token = Utilities.base64Encode(username + ':' + password);
+    return { status: 'success', token: token };
+  } else {
+    return { status: 'error', message: 'Username atau Password salah!' };
+  }
+}
