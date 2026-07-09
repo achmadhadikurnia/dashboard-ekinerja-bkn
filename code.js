@@ -1168,3 +1168,32 @@ function verifyLogin(username, password) {
     return { status: 'error', message: 'Username atau Password salah!' };
   }
 }
+
+/**
+ * Reset seluruh data database (semua sheet kecuali pengaturan)
+ * Khusus sheet pengecualian, baris pertama (header) dipertahankan.
+ */
+function resetDatabase() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheets = ss.getSheets();
+  
+  sheets.forEach(sheet => {
+    const sheetName = sheet.getName();
+    
+    if (sheetName === 'pengaturan') {
+      // Abaikan sheet pengaturan
+      return;
+    } else if (sheetName === 'pengecualian') {
+      // Khusus pengecualian, hapus data mulai dari baris ke-2 (pertahankan header)
+      const lastRow = sheet.getLastRow();
+      if (lastRow > 1) {
+        sheet.getRange(2, 1, lastRow - 1, sheet.getMaxColumns()).clearContent();
+      }
+    } else {
+      // Hapus seluruh isi sheet lainnya (db_pegawai, skp, db_jan, dll)
+      sheet.clearContents();
+    }
+  });
+  
+  return { status: 'success', message: 'Seluruh database telah berhasil direset!' };
+}
