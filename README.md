@@ -32,7 +32,7 @@ Aplikasi ini menggunakan pola **Frontend-Backend (Client-Server)** di dalam ekos
 
 ## 🛠️ Panduan Instalasi (Deployment)
 
-1. **Siapkan Template**: Upload file template `Dashboard Report E-Kinerja BKN v1.0.xlsx` ke Google Drive Anda.
+1. **Siapkan Template**: Upload file template `dashboard.xlsx` ke Google Drive Anda.
 2. **Konversi ke Spreadsheet**: Buka file tersebut di Google Drive web, lalu klik menu **File > Save as Google Sheets**.
 3. **Buka Editor Script**: Dari file Google Sheets yang baru saja dibuat, klik menu **Extensions > Apps Script**.
 4. **Pasang Kode Backend**: Salin (*copy*) seluruh isi file `code.js` dan tempelkan (*paste*) ke dalam file `Code.gs` (timpa kode bawaannya).
