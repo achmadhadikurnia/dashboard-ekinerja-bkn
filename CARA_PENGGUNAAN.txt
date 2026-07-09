@@ -1,0 +1,34 @@
+CARA PENGGUNAAN DASHBOARD E-KINERJA
+==================================================
+
+1. Unduh Data
+   Unduh laporan Excel (Laporan SKP atau Penilaian SKP Bulanan/Tahunan) dari aplikasi E-Kinerja BKN instansi Anda.
+
+2. Buka Aplikasi Dashboard
+   Buka URL Web App (link /exec) yang Anda peroleh setelah proses Deployment, melalui browser (direkomendasikan Google Chrome).
+
+3. Login Admin
+   Gunakan kredensial (akun) bawaan untuk masuk:
+   - Username : adminkinerja
+   - Password : sangatbaik
+   *(Anda dapat mengganti kredensial ini kapan saja dengan mengedit nilai pada sheet "pengaturan" di file Google Sheets).*
+
+4. Unggah Data
+   Masuk ke menu "Upload Laporan", lalu klik area pencarian file untuk memilih file Excel hasil unduhan dari E-Kinerja BKN.
+
+5. Sinkronisasi Data
+   Klik "Proses File (Sync)". Sistem akan membedah isi Excel secara otomatis (tidak perlu khawatir jenis laporannya, sistem akan mendeteksinya) dan menyinkronkannya ke dalam database Google Sheets Anda secara bertahap tanpa takut timeout.
+
+6. Analisis, Filter, & Cetak (Unduh PDF)
+   - Masuk ke menu "Daftar Pegawai" atau "Rekap OPD".
+   - Gunakan filter pencarian yang disediakan (Cari Nama/NIP, Unit Kerja, Bulan, dsb.).
+   - Klik tombol "Unduh PDF" untuk mencetak laporan berdasarkan data hasil penyaringan Anda. (Kolom-kolom akan menyesuaikan diri agar muat di dalam file PDF!).
+
+==================================================
+FITUR TAMBAHAN LAINNYA
+==================================================
+- Data Pengecualian: Jika ada pegawai yang Pensiun, Mutasi, Hukdis, dsb., Anda bisa memasukkannya ke menu Pengecualian agar tidak terhitung merah/belum buat SKP.
+- Reset Database: Jika Anda ingin memulai ulang semuanya dari nol, gulir (scroll) ke bawah di menu Upload Laporan dan klik tombol merah "Reset Seluruh Data". Semua isi data pegawai akan dikosongkan secara permanen.
+
+
+(Informasi lebih lengkap terkait Arsitektur dan Panduan Keamanan dapat dibaca di file README.md)

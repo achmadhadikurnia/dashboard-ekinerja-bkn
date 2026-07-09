@@ -12,6 +12,8 @@ Aplikasi Web terintegrasi berbasis **Google Apps Script (GAS)** dan **Google She
 - **Dashboard Analitik Dinamis**: Menampilkan ringkasan statistik secara *real-time* dengan antarmuka modern (Glassmorphism) dan notifikasi interaktif (SweetAlert2).
 - **Filter Canggih**: Mendukung pencarian dan penyaringan berdasarkan Nama/NIP, Unit Kerja/OPD, Status Kinerja (Sudah/Belum), dan Periode Bulan.
 - **Ekspor PDF Cerdas**: Terintegrasi dengan *jsPDF* & *autoTable*. Kolom tabel PDF menyesuaikan secara dinamis—jika difilter 1 bulan, hanya kolom nilai bulan tersebut yang dicetak, meminimalisir teks terpotong dan membuat desain lebih elegan.
+- **Fitur Pengecualian**: Menyaring pegawai dengan status khusus (Pensiun, Mutasi, Hukdis, dsb) agar terpisah dan tidak tercatat secara keliru sebagai pegawai yang belum menyusun SKP.
+- **Reset Database**: Fitur pengosongan data secara cepat dan permanen dengan satu klik, sambil tetap mempertahankan konfigurasi utama (Pengaturan) agar aplikasi siap digunakan ulang kapan saja.
 
 ## 🏗️ Arsitektur Sistem
 
@@ -52,15 +54,17 @@ Aplikasi ini menggunakan pola **Frontend-Backend (Client-Server)** di dalam ekos
 > [!TIP]
 > **Penting Saat Mengubah Kode!**
 > Jika Anda mengubah atau memperbarui kode di masa depan, menekan tombol *Save* saja **TIDAK** akan mengubah hasil di *link* utama (`/exec`). Anda **WAJIB** melakukan klik **Deploy > New deployment** lagi agar kode terbaru dipublikasikan.
-> 
+>
 > *Alternatif*: Jika Anda sedang menguji coba perubahan kode, gunakan **Deploy > Test deployments**, lalu klik *link* Web App yang diberikan (berakhiran `/dev`). Link `/dev` ini akan selalu merespons kode terbaru secara instan setiap kali Anda menekan *Save*.
 
 ## 📖 Cara Penggunaan
 
-1. **Unduh Data**: Unduh laporan Excel (Laporan SKP / Penilaian SKP) dari aplikasi E-Kinerja BKN.
-2. **Unggah ke Dashboard**: Buka URL Web App, masuk ke tab "Upload Laporan", dan pilih file Excel tersebut.
-3. **Pemrosesan Otomatis**: Klik "Proses". Sistem akan membedah isi Excel dan menyinkronkannya ke *database* Google Sheets.
-4. **Analisis & Cetak**: Masuk ke menu "Daftar Pegawai" atau "Rekap OPD", gunakan filter yang disediakan, lalu klik ikon **Unduh PDF** untuk mencetak laporan.
+1. **Unduh Data**: Unduh laporan Excel (Laporan SKP atau Penilaian SKP Bulanan/Tahunan) dari aplikasi E-Kinerja BKN instansi Anda.
+2. **Buka Aplikasi Dashboard**: Buka URL Web App (link `/exec`) yang Anda peroleh setelah proses *Deployment*, melalui browser (direkomendasikan Google Chrome).
+3. **Login Admin**: Gunakan kredensial (akun) bawaan untuk masuk: Username `adminkinerja` dan Password `sangatbaik`.
+4. **Unggah Data**: Masuk ke menu "Upload Laporan", lalu klik area pencarian file untuk memilih file Excel hasil unduhan dari E-Kinerja BKN.
+5. **Sinkronisasi Data**: Klik "Proses File (Sync)". Sistem akan membedah isi Excel secara otomatis dan menyinkronkannya ke dalam database Google Sheets Anda secara bertahap tanpa takut *timeout*.
+6. **Analisis, Filter, & Cetak (Unduh PDF)**: Masuk ke menu "Daftar Pegawai" atau "Rekap OPD", gunakan filter pencarian yang disediakan, lalu klik tombol **Unduh PDF** untuk mencetak laporan. Kolom tabel PDF akan menyesuaikan diri secara otomatis.
 
 ## 🔐 Default Login Admin
 

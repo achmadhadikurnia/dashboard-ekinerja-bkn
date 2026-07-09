@@ -1,0 +1,52 @@
+PANDUAN INSTALASI (METODE SALIN PROJECT)
+==================================================
+
+Jika Anda mendapatkan akses langsung ke file Google Sheets "Dashboard e-Kinerja" yang sudah berisi kode script di dalamnya, ikuti langkah-langkah praktis di bawah ini:
+
+LANGKAH-LANGKAH DEPLOYMENT:
+
+1. Salin Template
+   Klik kanan pada file/tautan Google Sheets "Dashboard e-Kinerja" yang kami berikan, lalu pilih menu "Make a copy" (Buat salinan).
+
+2. Buka File Salinan
+   Klik popup di kiri bawah layar yang bertuliskan "Tampilkan lokasi file" (Show file location), atau Anda bisa mencari di menu Beranda (Home) Google Drive Anda. Dobel klik file hasil salinan tersebut (biasanya bernama "Copy of Dashboard e-Kinerja").
+
+3. Buka Editor Script
+   Dari file Google Sheets salinan yang sedang terbuka tersebut, klik menu Extensions > Apps Script. 
+   (Anda tidak perlu melakukan copy-paste kode lagi, karena seluruh kode Backend dan Frontend sudah ikut tersalin secara otomatis!).
+
+4. Proses Deploy
+   - Di tab Apps Script yang baru terbuka, klik tombol biru "Deploy" di pojok kanan atas, lalu pilih "New deployment".
+   - Klik ikon gerigi (pengaturan) di sebelah "Select type", lalu pilih "Web app".
+   - Isi form Description (bebas).
+   - Atur pengaturan Web App: 
+     * Execute as pilih "Me"
+     * Who has access pilih "Anyone" (agar bisa diakses oleh siapa saja, atau batasi jika khusus akun instansi).
+   - Klik tombol "Deploy".
+
+5. Otorisasi Keamanan
+   - Klik tombol "Authorize access".
+   - Pilih akun Google Anda. 
+   - Jika muncul peringatan keamanan Google, klik teks "Advanced" di bagian bawah, lalu klik "Go to ... (unsafe)". 
+   - Klik "Continue" atau "Allow" di halaman berikutnya.
+
+6. Selesai
+   Akan muncul URL Web App (berakhiran /exec). Salin link tersebut. Klik "Done". Buka URL yang Anda salin tadi di tab browser baru untuk menggunakan Dashboard!
+
+
+==================================================
+AKUN AKSES BAWAAN (DEFAULT)
+==================================================
+Akses untuk masuk ke dalam Dashboard menggunakan akun berikut:
+- Username : adminkinerja
+- Password : sangatbaik
+
+(Anda dapat mengubahnya kapan saja melalui sheet "pengaturan" di dalam file Google Sheets Anda).
+
+
+==================================================
+CATATAN PENTING SAAT MENGUBAH KODE!
+==================================================
+Jika Anda mengubah atau memperbarui kode di masa depan, menekan tombol Save saja TIDAK akan mengubah hasil di link utama (/exec). Anda WAJIB melakukan klik Deploy > New deployment lagi agar kode terbaru dipublikasikan.
+
+Alternatif: Jika Anda sedang menguji coba perubahan kode, gunakan Deploy > Test deployments, lalu klik link Web App yang diberikan (berakhiran /dev). Link /dev ini akan selalu merespons kode terbaru secara instan setiap kali Anda menekan Save.
