@@ -284,7 +284,12 @@
 
     /* Table Section */
     .table-responsive {
-      /* Dihapus agar sticky header menempel pada layar browser, bukan membuat scroll di dalam tabel */
+      overflow-x: auto;
+      max-height: 80vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
     }
 
     /* Membuat Header Sticky */
@@ -569,9 +574,9 @@
 
       <!-- Table OPD (Moved from bottom) -->
       <div class="glass-panel" style="margin-bottom: 2rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
           <h2 class="section-title" style="margin: 0; padding: 0; border: none;">Rekap Penilaian Per OPD</h2>
-          <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
             <select id="opdFormatToggle" class="search-box select-box" style="margin-bottom: 0; width: auto;" onchange="opdFormat = this.value; buildOpdTableBody();">
               <option value="persen">Tampilkan: Persentase (%)</option>
               <option value="angka">Tampilkan: Angka Mutlak</option>
@@ -624,7 +629,7 @@
         </div>
 
         <div id="pegawai-content" style="display: none;">
-          <div class="filter-container" style="flex-wrap: nowrap; overflow-x: auto; padding-bottom: 5px;">
+          <div class="filter-container" style="padding-bottom: 5px;">
           <input type="text" id="searchPegawai" class="search-box" style="flex: 1; min-width: 150px;" placeholder="🔍 Cari Nama / NIP...">
           <select id="filterOpd" class="search-box select-box" style="flex: 1; min-width: 120px;">
             <option value="semua">Semua OPD</option>
@@ -719,9 +724,9 @@
     <div id="panelPengecualian" class="nav-panel">
       <!-- Pengecualian Card -->
       <div class="glass-panel" style="margin-bottom: 2rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 1rem; padding-bottom: 0.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 1rem; padding-bottom: 0.5rem; flex-wrap: wrap; gap: 1rem;">
           <h2 class="section-title" style="margin: 0; padding: 0; border: none;">Daftar Pegawai Pengecualian</h2>
-          <div style="display: flex; gap: 0.5rem;">
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
             <button id="btnSyncPengecualian" class="btn-pagination" disabled style="display: flex; align-items: center; gap: 0.4rem; background: #64748b; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: not-allowed; box-shadow: 0 4px 6px -1px rgba(100, 116, 139, 0.4); transition: opacity 0.2s; opacity: 0.5;" title="Jalankan Sinkronisasi Pengecualian (Hapus Pegawai Pengecualian)">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
               Sync
@@ -742,10 +747,10 @@
           <p>Sedang memuat data pengecualian...</p>
         </div>
 
-        <div id="pengecualian-content" class="table-responsive" style="display: none;">
-          <div class="filter-container" style="flex-wrap: nowrap; overflow-x: auto; padding-bottom: 5px; margin-bottom: 1rem;">
-            <input type="text" id="searchPengecualian" class="search-box" style="flex: 1; min-width: 150px; margin-bottom: 0;" placeholder="🔍 Cari Nama / NIP...">
-            <select id="filterKeteranganPengecualian" class="search-box select-box" style="margin-bottom: 0; width: auto; max-width: 200px;">
+        <div id="pengecualian-content" style="display: none;">
+          <div class="filter-container" style="padding-bottom: 5px;">
+            <input type="text" id="searchPengecualian" class="search-box" style="flex: 1; min-width: 150px;" placeholder="🔍 Cari Nama / NIP...">
+            <select id="filterKeteranganPengecualian" class="search-box select-box" style="flex: 1; min-width: 120px;">
               <option value="semua">Semua Keterangan</option>
               <option value="Pensiun">Pensiun</option>
               <option value="Meninggal">Meninggal</option>
@@ -753,7 +758,9 @@
               <option value="Hukdis">Hukdis</option>
             </select>
           </div>
-          <table id="pengecualianTable">
+          
+          <div class="table-responsive">
+            <table id="pengecualianTable">
             <thead>
               <tr>
                 <th width="1%" style="text-align: right;">No.</th>
@@ -769,10 +776,11 @@
             <tbody id="pengecualianBody">
               <tr><td colspan="8" style="text-align:center;">Memuat data...</td></tr>
             </tbody>
-          </table>
+            </table>
+          </div>
 
           <!-- Pagination UI Pengecualian -->
-          <div class="pagination-container" style="margin-top: 1rem;">
+          <div class="pagination-container">
             <div class="pagination-info">
               <label for="itemsPerPagePeng">Tampilkan:</label>
               <select id="itemsPerPagePeng" class="search-box select-box" style="width: 80px; padding: 0.4rem; margin: 0 0.5rem; display: inline-block;">
