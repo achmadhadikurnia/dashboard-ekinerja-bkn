@@ -292,8 +292,10 @@
 
     .content-area {
       flex: 1;
-      padding: 2rem;
+      padding: 2rem 2rem 1rem 2rem;
       overflow-y: auto;
+      display: flex;
+      flex-direction: column;
     }
 
     .content-container {
@@ -764,6 +766,26 @@
     }
 
     /* Responsive */
+    .footer-container {
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .footer-left {
+      margin: 0;
+      line-height: 1.5;
+      text-align: left;
+    }
+    
+    .footer-right {
+      margin: 0;
+      text-align: right;
+    }
+
     @media (max-width: 1024px) {
       .sidebar {
         position: fixed;
@@ -771,11 +793,9 @@
         height: 100vh;
         box-shadow: 4px 0 10px rgba(0,0,0,0.1);
       }
-
       .sidebar.open {
         left: 0;
       }
-
       .hamburger-btn {
         display: block;
       }
@@ -788,6 +808,16 @@
       .content-area { padding: 1rem; }
 
       .summary-grid { grid-template-columns: 1fr; }
+      
+      .footer-container {
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+      }
+      
+      .footer-left, .footer-right {
+        text-align: center;
+      }
     }
   </style>
 </head>
@@ -1287,6 +1317,21 @@
           </div> <!-- End panelUpload -->
 
         </div> <!-- End of dashboard-content -->
+
+        <!-- Footer / Copyright -->
+        <div style="margin-top: auto; padding-top: 2rem; color: var(--text-secondary); font-size: 0.875rem;">
+          <div class="footer-container">
+            <p class="footer-left">
+              &copy; <span id="currentYear">2026</span> Dashboard E-Kinerja BKN. All rights reserved.<br>
+              Designed & Developed by <a href="https://achmadhadikurnia.com" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 500;">Achmad Hadi Kurnia</a>.
+            </p>
+            <p class="footer-right">
+              Temukan produk menarik lainnya di<br>
+              <a href="https://lynk.id/achmadhadikurnia" target="_blank" style="color: var(--accent); text-decoration: underline;">lynk.id/achmadhadikurnia</a>
+            </p>
+          </div>
+        </div>
+
       </div> <!-- End content-area -->
     </main>
   </div>
@@ -1384,6 +1429,7 @@
     }
 
     function initTheme() {
+      const themeToggle = document.getElementById('themeToggle');
       const savedTheme = localStorage.getItem('theme');
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -1395,6 +1441,13 @@
       }
       updateThemeIcon(isDark);
     }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      const yearEl = document.getElementById('currentYear');
+      if (yearEl) {
+        yearEl.innerText = new Date().getFullYear();
+      }
+    });
 
     // Sidebar Mobile Toggle
     function toggleSidebar() {
