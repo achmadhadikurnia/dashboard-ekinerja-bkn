@@ -1444,16 +1444,16 @@
         const btnLogout = document.getElementById('btnLogout');
 
         if (localStorage.getItem('authToken')) {
-          if (btnPegawai) btnPegawai.style.display = 'inline-block';
-          if (btnPengecualian) btnPengecualian.style.display = 'inline-block';
-          if (btnUpload) btnUpload.style.display = 'inline-block';
+          if (btnPegawai) btnPegawai.style.display = 'flex';
+          if (btnPengecualian) btnPengecualian.style.display = 'flex';
+          if (btnUpload) btnUpload.style.display = 'flex';
           if (btnLogin) btnLogin.style.display = 'none';
-          if (btnLogout) btnLogout.style.display = 'inline-block';
+          if (btnLogout) btnLogout.style.display = 'flex';
         } else {
           if (btnPegawai) btnPegawai.style.display = 'none';
           if (btnPengecualian) btnPengecualian.style.display = 'none';
           if (btnUpload) btnUpload.style.display = 'none';
-          if (btnLogin) btnLogin.style.display = 'inline-block';
+          if (btnLogin) btnLogin.style.display = 'flex';
           if (btnLogout) btnLogout.style.display = 'none';
         }
       }
