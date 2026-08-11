@@ -1178,20 +1178,22 @@
                 <div class="pagination-container">
                   <div class="pagination-info">
                     <label for="itemsPerPage">Tampilkan:</label>
-                    <select id="itemsPerPage" class="search-box select-box" style="width: auto; padding: 0.4rem 2rem 0.4rem 0.75rem;">
+                    <select id="itemsPerPage" class="search-box select-box" style="width: auto; min-width: 0; padding: 0.3rem 1.8rem 0.3rem 0.6rem;">
                       <option value="10" selected>10</option>
                       <option value="25">25</option>
                       <option value="50">50</option>
                       <option value="100">100</option>
                     </select>
-                    baris
+                    baris <span id="totalDataInfo" style="margin-left: 10px; color: var(--text-secondary); font-size: 0.9rem;"></span>
                   </div>
                   <div class="pagination-controls">
-                    <button id="btnPrevPage" class="btn btn-secondary" disabled>Sebelumnya</button>
+                    <button id="btnFirstPage" class="btn btn-secondary" disabled title="Awal">&laquo;</button>
+                    <button id="btnPrevPage" class="btn btn-secondary" disabled title="Sebelumnya">&lsaquo;</button>
                     <span id="pageInfo" class="pagination-info">
                       Hal <input type="number" id="inputPage" class="search-box" style="width: 60px; padding: 0.3rem; text-align: center;" min="1" value="1"> dari <span id="totalPagesInfo">1</span>
                     </span>
-                    <button id="btnNextPage" class="btn btn-secondary">Selanjutnya</button>
+                    <button id="btnNextPage" class="btn btn-secondary" title="Selanjutnya">&rsaquo;</button>
+                    <button id="btnLastPage" class="btn btn-secondary" title="Akhir">&raquo;</button>
                   </div>
                 </div>
               </div>
@@ -1264,20 +1266,22 @@
                 <div class="pagination-container">
                   <div class="pagination-info">
                     <label for="itemsPerPagePeng">Tampilkan:</label>
-                    <select id="itemsPerPagePeng" class="search-box select-box" style="width: auto; padding: 0.4rem 2rem 0.4rem 0.75rem;">
+                    <select id="itemsPerPagePeng" class="search-box select-box" style="width: auto; min-width: 0; padding: 0.3rem 1.8rem 0.3rem 0.6rem;">
                       <option value="10" selected>10</option>
                       <option value="25">25</option>
                       <option value="50">50</option>
                       <option value="100">100</option>
                     </select>
-                    baris
+                    baris <span id="totalDataInfoPeng" style="margin-left: 10px; color: var(--text-secondary); font-size: 0.9rem;"></span>
                   </div>
                   <div class="pagination-controls">
-                    <button id="btnPrevPagePeng" class="btn btn-secondary" disabled>Sebelumnya</button>
+                    <button id="btnFirstPagePeng" class="btn btn-secondary" disabled title="Awal">&laquo;</button>
+                    <button id="btnPrevPagePeng" class="btn btn-secondary" disabled title="Sebelumnya">&lsaquo;</button>
                     <span id="pageInfoPeng" class="pagination-info">
                       Hal <input type="number" id="inputPagePeng" class="search-box" style="width: 60px; padding: 0.3rem; text-align: center;" min="1" value="1"> dari <span id="totalPagesInfoPeng">1</span>
                     </span>
-                    <button id="btnNextPagePeng" class="btn btn-secondary" disabled>Selanjutnya</button>
+                    <button id="btnNextPagePeng" class="btn btn-secondary" disabled title="Selanjutnya">&rsaquo;</button>
+                    <button id="btnLastPagePeng" class="btn btn-secondary" disabled title="Akhir">&raquo;</button>
                   </div>
                 </div>
               </div>
@@ -2298,6 +2302,21 @@
         btnPrevPage.disabled = currentPage === 1;
         btnNextPage.disabled = currentPage === totalPages;
 
+        const btnFirstPage = document.getElementById('btnFirstPage');
+        if (btnFirstPage) btnFirstPage.disabled = currentPage === 1;
+        const btnLastPage = document.getElementById('btnLastPage');
+        if (btnLastPage) btnLastPage.disabled = currentPage === totalPages;
+
+        const totalDataInfo = document.getElementById('totalDataInfo');
+        if (totalDataInfo) {
+          const actualEndIdx = Math.min(endIdx, totalItems);
+          if (totalItems > 0) {
+            totalDataInfo.innerText = `${startIdx + 1} - ${actualEndIdx} dari ${totalItems}`;
+          } else {
+            totalDataInfo.innerText = `(0 data)`;
+          }
+        }
+
         let pHTML = '';
         let pNo = startIdx + 1;
 
@@ -2386,6 +2405,27 @@
           renderPaginatedTable();
         }
       });
+
+      const btnFirstPage = document.getElementById('btnFirstPage');
+      if (btnFirstPage) {
+        btnFirstPage.addEventListener('click', () => {
+          if (currentPage > 1) {
+            currentPage = 1;
+            renderPaginatedTable();
+          }
+        });
+      }
+
+      const btnLastPage = document.getElementById('btnLastPage');
+      if (btnLastPage) {
+        btnLastPage.addEventListener('click', () => {
+          const totalPages = Math.ceil(globalFilteredPegawaiData.length / itemsPerPage);
+          if (currentPage < totalPages) {
+            currentPage = totalPages;
+            renderPaginatedTable();
+          }
+        });
+      }
 
       document.getElementById('btnDownloadPdf').addEventListener('click', () => {
         if (globalFilteredPegawaiData.length === 0) {
@@ -2673,6 +2713,15 @@
         document.getElementById('totalPagesInfoPeng').innerText = '1';
         btnPrevPage.disabled = true;
         btnNextPage.disabled = true;
+        
+        const totalDataInfoPeng = document.getElementById('totalDataInfoPeng');
+        if(totalDataInfoPeng) totalDataInfoPeng.innerText = `(0 data)`;
+        
+        const btnFirstPagePeng = document.getElementById('btnFirstPagePeng');
+        if(btnFirstPagePeng) btnFirstPagePeng.disabled = true;
+        const btnLastPagePeng = document.getElementById('btnLastPagePeng');
+        if(btnLastPagePeng) btnLastPagePeng.disabled = true;
+        
         return;
       }
 
@@ -2687,6 +2736,17 @@
       document.getElementById('totalPagesInfoPeng').innerText = totalPages;
       btnPrevPage.disabled = currentPengPage === 1;
       btnNextPage.disabled = currentPengPage === totalPages;
+
+      const btnFirstPagePeng = document.getElementById('btnFirstPagePeng');
+      if (btnFirstPagePeng) btnFirstPagePeng.disabled = currentPengPage === 1;
+      const btnLastPagePeng = document.getElementById('btnLastPagePeng');
+      if (btnLastPagePeng) btnLastPagePeng.disabled = currentPengPage === totalPages;
+
+      const totalDataInfoPeng = document.getElementById('totalDataInfoPeng');
+      if (totalDataInfoPeng) {
+        const actualEndIdx = Math.min(endIdx, totalItems);
+        totalDataInfoPeng.innerText = `${startIdx + 1} - ${actualEndIdx} dari ${totalItems}`;
+      }
 
       let html = '';
       let pNo = startIdx + 1;
@@ -2741,6 +2801,27 @@
           renderPaginatedPengecualianTable();
         }
       });
+
+      const btnFirstPage = document.getElementById('btnFirstPagePeng');
+      if (btnFirstPage) {
+        btnFirstPage.addEventListener('click', () => {
+          if (currentPengPage > 1) {
+            currentPengPage = 1;
+            renderPaginatedPengecualianTable();
+          }
+        });
+      }
+
+      const btnLastPage = document.getElementById('btnLastPagePeng');
+      if (btnLastPage) {
+        btnLastPage.addEventListener('click', () => {
+          const totalPages = parseInt(document.getElementById('totalPagesInfoPeng').innerText);
+          if (currentPengPage < totalPages) {
+            currentPengPage = totalPages;
+            renderPaginatedPengecualianTable();
+          }
+        });
+      }
 
       inputPage.addEventListener('change', () => {
         const totalPages = parseInt(document.getElementById('totalPagesInfoPeng').innerText);
