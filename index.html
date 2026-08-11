@@ -1684,19 +1684,57 @@
       gradient.addColorStop(0, 'rgba(96, 165, 250, 0.8)'); // light blue
       gradient.addColorStop(1, 'rgba(167, 139, 250, 0.2)'); // light purple
 
+      let chartDatasets = [];
+
+      if (gt.trenNilai) {
+        const colorPalette = [
+          '#10b981', // green
+          '#3b82f6', // blue
+          '#f59e0b', // amber
+          '#ef4444', // red
+          '#8b5cf6', // purple
+          '#06b6d4', // cyan
+          '#f97316'  // orange
+        ];
+        
+        let colorIndex = 0;
+        // Urutkan kategori agar lebih rapi (optional, tapi Object.entries bergantung pada urutan insert)
+        const kategoriList = Object.keys(gt.trenNilai).sort();
+        
+        kategoriList.forEach(kategori => {
+          const color = colorPalette[colorIndex % colorPalette.length];
+          chartDatasets.push({
+            type: 'line',
+            label: kategori,
+            data: gt.trenNilai[kategori],
+            borderColor: color,
+            backgroundColor: color,
+            borderWidth: 3,
+            fill: false,
+            tension: 0.4,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          });
+          colorIndex++;
+        });
+      }
+
+      chartDatasets.push({
+        type: 'bar',
+        label: 'Total Keseluruhan',
+        data: gt.bulanan,
+        backgroundColor: gradient,
+        borderColor: 'rgba(96, 165, 250, 1)',
+        borderWidth: 1,
+        borderRadius: 6,
+        hoverBackgroundColor: 'rgba(96, 165, 250, 1)'
+      });
+
       new Chart(ctx, {
         type: 'bar',
         data: {
           labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Tahunan'],
-          datasets: [{
-            label: 'Pegawai Dinilai',
-            data: gt.bulanan,
-            backgroundColor: gradient,
-            borderColor: 'rgba(96, 165, 250, 1)',
-            borderWidth: 1,
-            borderRadius: 6,
-            hoverBackgroundColor: 'rgba(96, 165, 250, 1)'
-          }]
+          datasets: chartDatasets
         },
         options: {
           responsive: true,

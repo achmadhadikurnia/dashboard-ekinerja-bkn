@@ -744,8 +744,41 @@ function getDashboardData() {
     grandTotal.bulanan = [0,0,0,0,0,0,0,0,0,0,0,0,0];
   }
 
-  // Data pegawai tidak ditarik di sini agar Dashboard muncul instan (Lazy Loading)
 
+
+  // BACA DATA DINAMIS TREN NILAI DARI SHEET PEGAWAI
+  const sheetPegawai = ss.getSheetByName('pegawai');
+  let trenNilai = {};
+  
+  if (sheetPegawai) {
+    const rawPegawai = sheetPegawai.getDataRange().getDisplayValues();
+    if (rawPegawai.length > 1) {
+      const headerPegawai = rawPegawai[0].map(h => h.toString().toLowerCase().trim());
+      const daftarBulanStr = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
+      const idxBulanArr = daftarBulanStr.map(b => headerPegawai.indexOf(b));
+      
+      for (let i = 1; i < rawPegawai.length; i++) {
+        const row = rawPegawai[i];
+        idxBulanArr.forEach((idxB, monthIndex) => {
+          if (idxB !== -1) {
+            let val = row[idxB] ? row[idxB].toString().trim() : "";
+            if (val !== "" && val !== "-") {
+              // Title Case standardisation
+              val = val.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+              
+              if (!trenNilai[val]) {
+                trenNilai[val] = [0,0,0,0,0,0,0,0,0,0,0,0,0];
+              }
+              trenNilai[val][monthIndex]++;
+            }
+          }
+        });
+      }
+    }
+  }
+  grandTotal.trenNilai = trenNilai;
+
+  // Data pegawai (seluruh row) tidak ditarik di sini agar Dashboard muncul instan (Lazy Loading)
   // ===============================================
   // BACA WAKTU UPDATE (SEL A6) DARI MASING-MASING SHEET
   // ===============================================
