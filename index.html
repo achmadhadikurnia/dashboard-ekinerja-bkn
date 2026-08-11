@@ -167,6 +167,39 @@
       border-top: 1px solid var(--border);
     }
 
+    /* Collapsed Sidebar Styles */
+    .sidebar.collapsed {
+      width: 80px;
+    }
+    .sidebar.collapsed .sidebar-brand {
+      justify-content: center;
+      padding: 1.5rem 0;
+    }
+    .sidebar.collapsed .sidebar-brand-text {
+      display: none;
+    }
+    .sidebar.collapsed .nav-item {
+      justify-content: center;
+      padding: 0.75rem 0;
+    }
+    .sidebar.collapsed .nav-item span {
+      display: none;
+    }
+    .sidebar.collapsed .nav-item.active {
+      border-radius: 8px;
+      border-left: none;
+    }
+    .sidebar.collapsed .sidebar-bottom .btn span {
+      display: none;
+    }
+    .sidebar.collapsed .sidebar-bottom .btn {
+      padding: 0.75rem 0;
+    }
+    .sidebar.collapsed .sidebar-bottom .btn svg {
+      margin: 0;
+    }
+
+
     /* Main Content */
     .main-content {
       flex: 1;
@@ -194,7 +227,7 @@
     }
 
     .hamburger-btn {
-      display: none;
+      display: block;
       background: none;
       border: none;
       color: var(--text-primary);
@@ -739,30 +772,30 @@
       <nav class="sidebar-nav">
         <button class="nav-item active nav-btn" onclick="switchTab('panelDashboard', this); updateBreadcrumb('Dashboard'); closeSidebarMobile();">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-          Dashboard
+          <span>Dashboard</span>
         </button>
         <button id="navPegawai" class="nav-item nav-btn" style="display: none;" onclick="switchTab('panelPegawai', this); updateBreadcrumb('Data Pegawai'); closeSidebarMobile();">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-          Data Pegawai
+          <span>Data Pegawai</span>
         </button>
         <button id="navPengecualian" class="nav-item nav-btn" style="display: none;" onclick="switchTab('panelPengecualian', this); updateBreadcrumb('Data Pengecualian'); closeSidebarMobile();">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><line x1="9" y1="10" x2="15" y2="10"></line><line x1="12" y1="7" x2="12" y2="13"></line></svg>
-          Data Pengecualian
+          <span>Data Pengecualian</span>
         </button>
         <button id="navUpload" class="nav-item nav-btn" style="display: none;" onclick="switchTab('panelUpload', this); updateBreadcrumb('Upload Laporan'); closeSidebarMobile();">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-          Upload Laporan
+          <span>Upload Laporan</span>
         </button>
       </nav>
 
       <div class="sidebar-bottom">
         <button id="btnLogin" class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="promptLogin()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
-          Login Admin
+          <span>Login Admin</span>
         </button>
         <button id="btnLogout" class="btn" style="display: none; width: 100%; justify-content: center; background: rgba(239, 68, 68, 0.1); color: #ef4444;" onclick="logout()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-          Logout
+          <span>Logout</span>
         </button>
       </div>
     </aside>
@@ -1320,7 +1353,21 @@
 
     // Sidebar Mobile Toggle
     function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('open');
+      if (window.innerWidth <= 1024) {
+        document.getElementById('sidebar').classList.toggle('open');
+      } else {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('collapsed');
+        localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed'));
+      }
+    }
+    
+    function initSidebar() {
+      if (window.innerWidth > 1024) {
+        if (localStorage.getItem('sidebar-collapsed') === 'true') {
+          document.getElementById('sidebar').classList.add('collapsed');
+        }
+      }
     }
     
     function closeSidebarMobile() {
@@ -1335,6 +1382,7 @@
 
     // Run init
     initTheme();
+    initSidebar();
   </script>
 
 <script>
