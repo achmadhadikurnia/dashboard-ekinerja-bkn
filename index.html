@@ -1788,11 +1788,6 @@
 
       const gt = data.grandTotal;
 
-      // Fix statistik: pastikan total pegawai hanya menghitung 3 jenis ini
-      if (gt.metrikJenis) {
-        gt.totalPegawai = gt.metrikJenis.pns + gt.metrikJenis.pppk + gt.metrikJenis.pppk_paruh_waktu;
-      }
-
       const pct = gt.totalPegawai > 0 ? Math.round((gt.skpDisetujui / gt.totalPegawai) * 100) : 0;
 
       const tahunanDinilai = gt.bulanan[12] || 0;

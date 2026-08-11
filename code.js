@@ -753,7 +753,11 @@ function getDashboardData() {
   
   if (sheetPegawai) {
     const rawPegawai = sheetPegawai.getDataRange().getDisplayValues();
+    
     if (rawPegawai.length > 1) {
+      // Ambil total pegawai langsung dari total sebenarnya (tanpa filter OPD)
+      grandTotal.totalPegawai = rawPegawai.length - 1;
+      
       const headerPegawai = rawPegawai[0].map(h => h.toString().toLowerCase().trim());
       const idxJenis = headerPegawai.indexOf('jenis_pegawai');
       const daftarBulanStr = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
