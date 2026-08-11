@@ -512,8 +512,16 @@
       text-align: left;
     }
 
-    #pegawaiTable th:nth-child(n+7), #pegawaiTable td:nth-child(n+7) {
+    #pegawaiTable th:nth-child(7), #pegawaiTable td:nth-child(7) {
+      text-align: left;
+    }
+
+    #pegawaiTable th:nth-child(n+8), #pegawaiTable td:nth-child(n+8) {
       text-align: center;
+      padding-left: 0.2rem;
+      padding-right: 0.2rem;
+      min-width: 30px;
+      font-size: 0.7rem;
     }
 
     #pegawaiTable td:nth-child(3) {
@@ -523,7 +531,8 @@
     #pegawaiTable td:nth-child(3),
     #pegawaiTable td:nth-child(4),
     #pegawaiTable td:nth-child(5),
-    #pegawaiTable td:nth-child(6) {
+    #pegawaiTable td:nth-child(6),
+    #pegawaiTable td:nth-child(7) {
       white-space: normal;
       min-width: 120px;
     }
@@ -904,7 +913,7 @@
 
           <!-- Panel Dashboard -->
           <div id="panelDashboard" class="nav-panel active">
-            <!-- Top Cards -->
+            <!-- Demografi Pegawai -->
             <div class="summary-grid">
               <div class="summary-card border-blue">
                 <div class="card-content-wrapper">
@@ -918,6 +927,45 @@
                 </div>
               </div>
 
+              <div class="summary-card border-blue">
+                <div class="card-content-wrapper">
+                  <div class="card-icon-wrapper bg-blue-light">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  </div>
+                  <div class="card-info">
+                    <div class="card-title">PNS</div>
+                    <div class="card-value val-blue" id="val-pns">0</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="summary-card border-green">
+                <div class="card-content-wrapper">
+                  <div class="card-icon-wrapper bg-green-light">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                  </div>
+                  <div class="card-info">
+                    <div class="card-title">PPPK</div>
+                    <div class="card-value val-green" id="val-pppk">0</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="summary-card border-amber">
+                <div class="card-content-wrapper">
+                  <div class="card-icon-wrapper bg-amber-light">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                  </div>
+                  <div class="card-info">
+                    <div class="card-title">PPPK Paruh Waktu</div>
+                    <div class="card-value val-warning" id="val-pppk-paruh-waktu" style="color: var(--warning);">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Progres SKP -->
+            <div class="summary-grid">
               <div class="summary-card border-green">
                 <div class="card-content-wrapper">
                   <div class="card-icon-wrapper bg-green-light">
@@ -941,10 +989,7 @@
                   </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Tahunan Cards -->
-            <div class="summary-grid">
               <div class="summary-card border-amber">
                 <div class="card-content-wrapper">
                   <div class="card-icon-wrapper bg-amber-light">
@@ -1023,7 +1068,7 @@
                       <th id="opd-th-9" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 9)">Okt <span class="sort-icon"></span></th>
                       <th id="opd-th-10" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 10)">Nov <span class="sort-icon"></span></th>
                       <th id="opd-th-11" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 11)">Des <span class="sort-icon"></span></th>
-                      <th id="opd-th-12" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 12)">Tahunan <span class="sort-icon"></span></th>
+                      <th id="opd-th-12" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 12)">THN <span class="sort-icon"></span></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1050,6 +1095,9 @@
               <div id="pegawai-content" style="display: none;">
                 <div class="filter-container">
                   <input type="text" id="searchPegawai" class="search-box" style="flex: 1; min-width: 200px;" placeholder="Cari Nama / NIP...">
+                  <select id="filterJenisPegawai" class="search-box select-box" style="flex: 1; min-width: 130px;">
+                    <option value="semua">Semua Jenis Pegawai</option>
+                  </select>
                   <select id="filterOpd" class="search-box select-box" style="flex: 1; min-width: 150px;">
                     <option value="semua">Semua OPD</option>
                   </select>
@@ -1102,6 +1150,7 @@
                         <th width="1%">No.</th>
                         <th width="1%">NIP</th>
                         <th>Nama</th>
+                        <th width="1%" style="white-space: nowrap;">Jenis Pegawai</th>
                         <th>Jabatan</th>
                         <th>Unit Kerja</th>
                         <th>OPD</th>
@@ -1117,7 +1166,7 @@
                         <th id="th-9" width="1%">Okt</th>
                         <th id="th-10" width="1%">Nov</th>
                         <th id="th-11" width="1%">Des</th>
-                        <th id="th-12" width="1%">Tahunan</th>
+                        <th id="th-12" width="1%">THN</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1738,6 +1787,12 @@
       }
 
       const gt = data.grandTotal;
+
+      // Fix statistik: pastikan total pegawai hanya menghitung 3 jenis ini
+      if (gt.metrikJenis) {
+        gt.totalPegawai = gt.metrikJenis.pns + gt.metrikJenis.pppk + gt.metrikJenis.pppk_paruh_waktu;
+      }
+
       const pct = gt.totalPegawai > 0 ? Math.round((gt.skpDisetujui / gt.totalPegawai) * 100) : 0;
 
       const tahunanDinilai = gt.bulanan[12] || 0;
@@ -1750,6 +1805,12 @@
 
       document.getElementById('val-tahunan-dinilai').innerText = formatNumber(tahunanDinilai);
       document.getElementById('val-persentase-tahunan').innerText = pctTahunan + "%";
+
+      if (gt.metrikJenis) {
+        document.getElementById('val-pns').innerText = formatNumber(gt.metrikJenis.pns);
+        document.getElementById('val-pppk').innerText = formatNumber(gt.metrikJenis.pppk);
+        document.getElementById('val-pppk-paruh-waktu').innerText = formatNumber(gt.metrikJenis.pppk_paruh_waktu);
+      }
 
       // 2. Render Chart (Chart.js)
       const ctx = document.getElementById('laporanChart').getContext('2d');
@@ -2120,12 +2181,15 @@
       let itemsPerPage = parseInt(itemsPerPageSelect.value) || 10;
 
       const filterOpd = document.getElementById('filterOpd');
+      const filterJenisPegawai = document.getElementById('filterJenisPegawai');
       // Populate dropdown OPD & SKP Status
       const opdSet = new Set();
       const skpStatusSet = new Set();
+      const jenisPegawaiSet = new Set();
       globalPegawaiData.forEach(p => {
          if (p.opd && p.opd !== '-') opdSet.add(p.opd);
          if (p.skp_status && p.skp_status !== '-') skpStatusSet.add(p.skp_status);
+         if (p.jenis_pegawai && p.jenis_pegawai !== '-') jenisPegawaiSet.add(p.jenis_pegawai);
       });
 
       Array.from(opdSet).sort().forEach(opd => {
@@ -2142,9 +2206,17 @@
          filterSkpStatus.appendChild(opt);
       });
 
+      Array.from(jenisPegawaiSet).sort().forEach(jp => {
+         const opt = document.createElement('option');
+         opt.value = jp;
+         opt.innerText = jp;
+         filterJenisPegawai.appendChild(opt);
+      });
+
       const applyFilters = () => {
         const searchVal = document.getElementById('searchPegawai').value.toLowerCase();
         const opdVal = document.getElementById('filterOpd').value;
+        const jenisPegawaiVal = document.getElementById('filterJenisPegawai').value;
         const bulanVal = document.getElementById('filterBulan').value;
         const statusVal = document.getElementById('filterStatus').value;
         const predikatVal = document.getElementById('filterPredikat').value;
@@ -2164,8 +2236,9 @@
           const mNama = p.nama.toLowerCase().includes(searchVal);
           const mNip = p.nip.toLowerCase().includes(searchVal);
           const mOpd = opdVal === 'semua' || p.opd === opdVal;
+          const mJenis = jenisPegawaiVal === 'semua' || p.jenis_pegawai === jenisPegawaiVal;
           const mSkpStatus = skpStatusVal === 'semua' || p.skp_status === skpStatusVal;
-          return (mNama || mNip) && mOpd && mSkpStatus;
+          return (mNama || mNip) && mOpd && mJenis && mSkpStatus;
         });
 
         // B. Filter Bulan & Status Dinilai & Predikat
@@ -2264,6 +2337,7 @@
               <td>${pNo++}</td>
               <td style="white-space: nowrap; text-align: left; font-size: 0.75rem;">${p.nip}</td>
               <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 120px; font-size: 0.75rem;"><strong>${p.nama}</strong></td>
+              <td style="white-space: nowrap; text-align: left; font-size: 0.75rem; text-transform: capitalize;">${p.jenis_pegawai ? p.jenis_pegawai.replace(/_/g, ' ') : '-'}</td>
               <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 140px; font-size: 0.75rem;">${p.jabatan}</td>
               <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 140px; font-size: 0.75rem;">${p.unit_kerja}</td>
               <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 150px; font-size: 0.7rem;">${p.opd}</td>
@@ -2283,6 +2357,7 @@
 
       searchInput.addEventListener('input', applyFilters);
       filterOpd.addEventListener('change', applyFilters);
+      filterJenisPegawai.addEventListener('change', applyFilters);
       filterBulan.addEventListener('change', applyFilters);
       filterStatus.addEventListener('change', applyFilters);
       filterPredikat.addEventListener('change', applyFilters);
@@ -2385,12 +2460,12 @@
         let tableStartY = currentY + 10;
         doc.setFont('helvetica', 'normal');
 
-        let headers = [['No', 'NIP', 'Nama', 'Jabatan', 'Unit Kerja', 'OPD', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Tahunan']];
+        let headers = [['No', 'NIP', 'Nama', 'Jenis Pegawai', 'Jabatan', 'Unit Kerja', 'OPD', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'THN']];
         const isBulanFiltered = activeBulanVal !== 'semua';
         const selectedMonthIdx = isBulanFiltered ? parseInt(activeBulanVal) : -1;
 
         if (isBulanFiltered) {
-            const newHeaders = ['No', 'NIP', 'Nama', 'Jabatan', 'Unit Kerja', 'OPD', headers[0][selectedMonthIdx + 6]];
+            const newHeaders = ['No', 'NIP', 'Nama', 'Jenis Pegawai', 'Jabatan', 'Unit Kerja', 'OPD', headers[0][selectedMonthIdx + 7]];
             headers = [newHeaders];
         }
 
@@ -2406,10 +2481,12 @@
              return s.toUpperCase();
            };
 
+           const jpDisplay = p.jenis_pegawai ? p.jenis_pegawai.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : '-';
            const fullRow = [
              index + 1,
              p.nip,
              p.nama,
+             jpDisplay,
              p.jabatan,
              p.unit_kerja,
              p.opd,
@@ -2417,7 +2494,7 @@
            ];
 
            if (isBulanFiltered) {
-             return [fullRow[0], fullRow[1], fullRow[2], fullRow[3], fullRow[4], fullRow[5], fullRow[selectedMonthIdx + 6]];
+             return [fullRow[0], fullRow[1], fullRow[2], fullRow[3], fullRow[4], fullRow[5], fullRow[6], fullRow[selectedMonthIdx + 7]];
            }
            return fullRow;
         });
@@ -2428,10 +2505,10 @@
         };
 
         if (isBulanFiltered) {
-          colStyles[6] = { cellWidth: 50, halign: 'center' };
+          colStyles[7] = { cellWidth: 50, halign: 'center' };
         } else {
-          for (let i = 6; i <= 17; i++) { colStyles[i] = { cellWidth: 20, halign: 'center' }; }
-          colStyles[18] = { cellWidth: 35, halign: 'center' };
+          for (let i = 7; i <= 18; i++) { colStyles[i] = { cellWidth: 20, halign: 'center' }; }
+          colStyles[19] = { cellWidth: 35, halign: 'center' };
         }
 
         doc.autoTable({
@@ -2864,7 +2941,7 @@
 
         doc.autoTable({
           startY: currentY,
-          head: [['No.', 'OPD', 'Pegawai', 'SKP', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Tahunan']],
+          head: [['No.', 'OPD', 'Pegawai', 'SKP', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'THN']],
           body: tableBody,
           theme: 'grid',
           styles: { font: 'helvetica', fontSize: 6, textColor: [0, 0, 0], cellPadding: 2, lineColor: [0, 0, 0], lineWidth: 0.1, halign: 'right', cellWidth: 'wrap', valign: 'top' },

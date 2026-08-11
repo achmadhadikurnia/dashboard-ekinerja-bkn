@@ -749,16 +749,26 @@ function getDashboardData() {
   // BACA DATA DINAMIS TREN NILAI DARI SHEET PEGAWAI
   const sheetPegawai = ss.getSheetByName('pegawai');
   let trenNilai = {};
+  let metrikJenis = { pns: 0, pppk: 0, pppk_paruh_waktu: 0 };
   
   if (sheetPegawai) {
     const rawPegawai = sheetPegawai.getDataRange().getDisplayValues();
     if (rawPegawai.length > 1) {
       const headerPegawai = rawPegawai[0].map(h => h.toString().toLowerCase().trim());
+      const idxJenis = headerPegawai.indexOf('jenis_pegawai');
       const daftarBulanStr = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
       const idxBulanArr = daftarBulanStr.map(b => headerPegawai.indexOf(b));
       
       for (let i = 1; i < rawPegawai.length; i++) {
         const row = rawPegawai[i];
+
+        if (idxJenis !== -1 && row[idxJenis]) {
+          const jp = row[idxJenis].toString().trim().toLowerCase();
+          if (jp === 'pns') metrikJenis.pns++;
+          else if (jp === 'pppk') metrikJenis.pppk++;
+          else if (jp === 'pppk_paruh_waktu') metrikJenis.pppk_paruh_waktu++;
+        }
+
         idxBulanArr.forEach((idxB, monthIndex) => {
           if (idxB !== -1) {
             let val = row[idxB] ? row[idxB].toString().trim() : "";
@@ -777,6 +787,7 @@ function getDashboardData() {
     }
   }
   grandTotal.trenNilai = trenNilai;
+  grandTotal.metrikJenis = metrikJenis;
 
   // Data pegawai (seluruh row) tidak ditarik di sini agar Dashboard muncul instan (Lazy Loading)
   // ===============================================
@@ -887,6 +898,7 @@ function getPegawaiData() {
 
     let idxOpd = headerPegawai.indexOf('skp_unor_induk');
     let idxSkpStatus = headerPegawai.indexOf('skp_status');
+    let idxJenisPegawai = headerPegawai.indexOf('jenis_pegawai');
 
     const daftarBulan = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
     const idxBulanPegawai = {};
@@ -911,6 +923,7 @@ function getPegawaiData() {
           unit_kerja: idxUnitKerja !== -1 && pRow[idxUnitKerja] ? pRow[idxUnitKerja].toString().trim() : "-",
           opd: idxOpd !== -1 && pRow[idxOpd] ? pRow[idxOpd].toString().trim() : "-",
           skp_status: idxSkpStatus !== -1 && pRow[idxSkpStatus] ? pRow[idxSkpStatus].toString().trim() : "-",
+          jenis_pegawai: idxJenisPegawai !== -1 && pRow[idxJenisPegawai] ? pRow[idxJenisPegawai].toString().trim() : "-",
           bulanan: bData
         });
       }
