@@ -949,7 +949,7 @@
               <div style="position: relative; height: 350px; width: 100%;">
                 <canvas id="laporanChart"></canvas>
               </div>
-              
+
               <!-- Tabel Ringkasan Legenda -->
               <div id="ringkasanPredikatContainer" style="margin-top: 2rem;"></div>
             </div>
@@ -1718,9 +1718,9 @@
           '#06b6d4', // cyan
           '#f97316'  // orange
         ];
-        
+
         let colorIndex = 0;
-        
+
         // Urutkan kategori sesuai hierarki BKN
         const customOrder = [
           "Sangat Baik",
@@ -1729,19 +1729,19 @@
           "Butuh Perbaikan",
           "Sangat Kurang"
         ];
-        
+
         const kategoriList = Object.keys(gt.trenNilai).sort((a, b) => {
           let idxA = customOrder.indexOf(a);
           let idxB = customOrder.indexOf(b);
           if (idxA === -1) idxA = 999;
           if (idxB === -1) idxB = 999;
-          
+
           if (idxA !== idxB) return idxA - idxB;
           return a.localeCompare(b);
         });
-        
+
         let tableRowsHtml = '';
-        
+
         kategoriList.forEach(kategori => {
           const color = colorPalette[colorIndex % colorPalette.length];
           chartDatasets.push({
@@ -1756,13 +1756,13 @@
             pointRadius: 4,
             pointHoverRadius: 6
           });
-          
+
           // Buat baris tabel ringkasan
           let tds = '';
           gt.trenNilai[kategori].forEach(val => {
              tds += `<td style="padding: 0.5rem; border-bottom: 1px solid var(--border-light);">${formatNumber(val)}</td>`;
           });
-          
+
           tableRowsHtml += `
             <tr>
               <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-light); text-align: left; white-space: nowrap;">
@@ -1772,10 +1772,10 @@
               ${tds}
             </tr>
           `;
-          
+
           colorIndex++;
         });
-        
+
         // Buat baris Total
         let totalTds = '';
         gt.bulanan.forEach(val => {
@@ -1792,9 +1792,9 @@
         const bulanHeaders = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Tahunan'];
         let ths = '';
         bulanHeaders.forEach(b => ths += `<th style="padding: 0.5rem; border-bottom: 2px solid var(--border);">${b}</th>`);
-        
+
         document.getElementById('ringkasanPredikatContainer').innerHTML = `
-          <h3 style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Rincian Angka per Predikat (Bulan ke Bulan):</h3>
+          <h3 style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Rincian Angka per Predikat</h3>
           <div class="table-responsive">
             <table style="width: 100%; min-width: 600px; text-align: center; font-size: 0.875rem; border-collapse: collapse;">
               <thead>
@@ -2133,7 +2133,7 @@
                const isDinilai = (val && val !== '-') ? true : false;
                if (statusVal === 'sudah' && !isDinilai) return false;
                if (statusVal === 'belum' && isDinilai) return false;
-               
+
                if (predikatVal !== 'semua') {
                  if (!isDinilai) return false;
                  if (val.toLowerCase() !== predikatVal) return false;
@@ -2144,7 +2144,7 @@
                const reportedCount = reportedVals.length;
                if (statusVal === 'sudah' && reportedCount === 0) return false;
                if (statusVal === 'belum' && reportedCount > 0) return false;
-               
+
                if (predikatVal !== 'semua') {
                  const hasPredikat = reportedVals.some(v => v.toLowerCase() === predikatVal);
                  if (!hasPredikat) return false;
