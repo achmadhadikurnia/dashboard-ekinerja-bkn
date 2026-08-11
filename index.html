@@ -18,15 +18,43 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <style>
+    /* CSS Variables for Light/Dark Mode */
     :root {
-      --bg-color: #0f172a;
-      --glass-bg: rgba(30, 41, 59, 0.7);
-      --glass-border: rgba(255, 255, 255, 0.1);
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent-1: #3b82f6; /* Blue */
-      --accent-2: #10b981; /* Green */
-      --accent-3: #8b5cf6; /* Purple */
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8fafc;
+      --bg-sidebar: #ffffff;
+      --text-primary: #0f172a;
+      --text-secondary: #64748b;
+      --border: #e2e8f0;
+      --accent: #2563eb;
+      --success: #059669;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --surface: #ffffff;
+      --hover: #f1f5f9;
+      --sidebar-text: #64748b;
+      --sidebar-text-active: #2563eb;
+      --sidebar-hover: #f1f5f9;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    html.dark {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-sidebar: #0f172a;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --border: #334155;
+      --accent: #3b82f6;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --surface: #1e293b;
+      --hover: #334155;
+      --sidebar-text: #94a3b8;
+      --sidebar-text-active: #ffffff;
+      --sidebar-hover: rgba(255, 255, 255, 0.05);
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
     }
 
     * {
@@ -37,268 +65,317 @@
     }
 
     body {
-      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-      color: var(--text-main);
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
       min-height: 100vh;
-      padding: 2rem;
-      background-attachment: fixed;
+      overflow-x: hidden;
+      transition: background-color 0.2s, color 0.2s;
     }
 
-    .container {
-      max-width: 1200px;
+    /* Layout */
+    .app-layout {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      background-color: var(--bg-sidebar);
+      color: var(--sidebar-text);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: transform 0.3s ease, background-color 0.2s, color 0.2s;
+      z-index: 50;
+      border-right: 1px solid var(--border);
+    }
+
+    .sidebar-brand {
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-brand-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    .sidebar-brand-text {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.025em;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 1.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+
+    .nav-item:hover {
+      background-color: var(--sidebar-hover);
+      color: var(--sidebar-text-active);
+    }
+
+    .nav-item.active {
+      background-color: rgba(59, 130, 246, 0.15);
+      color: var(--accent);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .nav-item svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+    }
+
+    .sidebar-bottom {
+      padding: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* Header Bar */
+    .header-bar {
+      height: 64px;
+      background-color: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      z-index: 40;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .hamburger-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      cursor: pointer;
+      padding: 0.5rem;
+    }
+
+    .breadcrumb {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .theme-toggle {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .theme-toggle:hover {
+      background-color: var(--hover);
+      color: var(--text-primary);
+    }
+
+    .content-area {
+      flex: 1;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    .content-container {
+      width: 100%;
       margin: 0 auto;
     }
 
-    header {
-      margin-bottom: 2rem;
-      text-align: center;
-      animation: fadeInDown 0.8s ease;
-    }
-
+    /* Headings */
     h1 {
-      font-size: 2.5rem;
+      font-size: 1.8rem;
       font-weight: 700;
-      background: linear-gradient(to right, #60a5fa, #a78bfa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--text-primary);
       margin-bottom: 0.5rem;
     }
 
     p.subtitle {
-      color: var(--text-muted);
-      font-size: 1.1rem;
-    }
-
-    /* Glassmorphism Panel */
-    .glass-panel {
-      background: var(--glass-bg);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    }
-
-    /* Loading Screen */
-    #loading {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 50vh;
-    }
-
-    .spinner {
-      width: 50px;
-      height: 50px;
-      border: 4px solid var(--glass-border);
-      border-top-color: var(--accent-1);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 1rem;
-    }
-
-    /* Dashboard Content */
-    #dashboard-content {
-      display: none;
-      animation: fadeIn 0.8s ease;
-    }
-
-    /* Summary Cards */
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
       margin-bottom: 2rem;
     }
 
+    /* Panels */
+    .nav-panel {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .nav-panel.active {
+      display: block;
+    }
+
+    /* Cards */
+    .card {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Summary Grid */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
     .summary-card {
-      text-align: center;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
 
     .summary-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     }
 
-    .card-icon {
-      font-size: 2rem;
-      margin-bottom: 1rem;
+    .summary-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
     }
+
+    .summary-card.border-blue::before { background-color: var(--accent); }
+    .summary-card.border-green::before { background-color: var(--success); }
+    .summary-card.border-purple::before { background-color: #8b5cf6; }
+    .summary-card.border-amber::before { background-color: var(--warning); }
+
+    .card-content-wrapper {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .card-icon-wrapper {
+      padding: 0.75rem;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bg-blue-light { background-color: rgba(59, 130, 246, 0.1); color: var(--accent); }
+    .bg-green-light { background-color: rgba(16, 185, 129, 0.1); color: var(--success); }
+    .bg-purple-light { background-color: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+    .bg-amber-light { background-color: rgba(245, 158, 11, 0.1); color: var(--warning); }
+
+    .card-info { flex: 1; }
 
     .card-title {
-      font-size: 0.9rem;
-      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-secondary);
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
       margin-bottom: 0.5rem;
     }
 
     .card-value {
-      font-size: 2.5rem;
+      font-size: 2rem;
       font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.2;
     }
 
-    .val-blue { color: #60a5fa; }
-    .val-green { color: #34d399; }
-    .val-purple { color: #a78bfa; }
-    .val-red { color: #f87171; } /* Merah */
-    .val-muted { color: var(--text-muted); }
+    /* Utility Classes */
+    .val-blue { color: var(--accent); }
+    .val-green { color: var(--success); }
+    .val-purple { color: #8b5cf6; }
+    .val-red { color: var(--danger); }
+    .val-muted { color: var(--text-secondary); }
 
-    /* Chart Section */
-    .chart-container {
-      margin-bottom: 2rem;
-    }
-
-    .section-title {
-      font-size: 1.2rem;
-      margin-bottom: 1rem;
-      font-weight: 600;
-      color: var(--text-main);
-      border-bottom: 1px solid var(--glass-border);
-      padding-bottom: 0.5rem;
-    }
-
-    .loading-text {
-      margin-top: 1rem;
-      font-weight: 500;
-      color: var(--accent-1);
-    }
-
-    /* Modal Styles */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(5px);
-      z-index: 9999;
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-box {
-      background: rgba(30, 41, 59, 0.95);
-      border: 1px solid var(--glass-border);
-      border-radius: 12px;
-      padding: 2rem;
-      max-width: 400px;
-      width: 90%;
-      text-align: center;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    }
-    .modal-box h3 {
-      color: var(--accent-1);
-      margin-bottom: 1rem;
-      font-size: 1.5rem;
-    }
-    .modal-box p {
-      margin-bottom: 0.5rem;
-      font-size: 0.95rem;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
-    .modal-box .contact-info {
-      background: rgba(15, 23, 42, 0.5);
-      padding: 1rem;
-      border-radius: 8px;
-      margin: 1.5rem 0;
-      border: 1px solid var(--glass-border);
-    }
-    .modal-box .contact-info p {
-      color: #f8fafc;
-      font-weight: 500;
-      margin-bottom: 0.2rem;
-    }
-    .modal-close {
-      background: var(--accent-1);
-      color: white;
-      border: none;
-      padding: 0.5rem 1.5rem;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: background 0.3s ease;
-    }
-    .modal-close:hover {
-      background: var(--accent-2);
-    }
-
-    /* Search Box */
-    .search-box {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      margin-bottom: 1rem;
-      border: 1px solid var(--glass-border);
-      border-radius: 8px;
-      background: rgba(15, 23, 42, 0.5);
-      color: var(--text-main);
-      font-size: 1rem;
-    }
-    .search-box:focus {
-      outline: none;
-      border-color: var(--accent-1);
-    }
-    .search-box:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .filter-container {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-    .filter-container .search-box {
-      margin-bottom: 0;
-    }
-    .select-box {
-      width: 220px;
-      cursor: pointer;
-      appearance: none;
-      background-image: url('data:image/svg+xml;utf8,<svg fill="%2394a3b8" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
-      background-repeat: no-repeat;
-      background-position: right 10px center;
-      padding-right: 30px;
-    }
-
-    /* Perbaikan Warna Dropdown Options */
-    .select-box option {
-      background-color: #1e293b; /* Warna solid (bukan transparan) agar terbaca jelas */
-      color: #f8fafc;
-    }
-
-    @media (max-width: 768px) {
-      .filter-container {
-        flex-direction: column;
-      }
-      .select-box {
-        width: 100%;
-      }
-    }
-
-    /* Table Section */
+    /* Table Styles */
     .table-responsive {
       overflow-x: auto;
-      max-height: 80vh;
+      max-height: 60vh;
       overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      border: 1px solid var(--glass-border);
+      border: 1px solid var(--border);
       border-radius: 8px;
-    }
-
-    /* Membuat Header Sticky */
-    thead th {
-      position: sticky;
-      top: 0;
-      background-color: #1e293b; /* Warna latar solid agak gelap agar teks di bawahnya tertutup */
-      z-index: 10;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Sedikit bayangan pembatas */
     }
 
     table {
@@ -307,36 +384,62 @@
       text-align: left;
     }
 
-    th, td {
-      padding: 0.5rem 0.3rem;
-      border-bottom: 1px solid var(--glass-border);
-      font-size: 0.85rem;
-      text-align: center; /* Default rata tengah */
-      vertical-align: top;
+    thead th {
+      position: sticky;
+      top: 0;
+      background-color: var(--surface);
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+      box-shadow: 0 1px 0 var(--border);
     }
 
-    /* Kolom angka pada tabel OPD (Jumlah Pegawai sampai Tahunan) rata kanan */
+    th, td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.875rem;
+      vertical-align: middle;
+      color: var(--text-primary);
+    }
+
+    tbody tr {
+      background-color: var(--surface);
+      transition: background-color 0.15s;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: var(--bg-secondary);
+    }
+
+    tbody tr:hover {
+      background-color: var(--hover);
+    }
+
+    /* Specific Table Alignments */
     #opdTable th:nth-child(n+3), #opdTable td:nth-child(n+3),
     #opdTable tr.total-row td:nth-child(n+2) {
-      text-align: right !important;
+      text-align: right;
     }
 
-    /* Kolom OPD (kolom ke-2) pada tabel OPD harus rata kiri dan bisa turun baris (wrap) */
     #opdTable th:nth-child(2), #opdTable td:nth-child(2) {
       text-align: left;
     }
 
-    #opdTable th:nth-child(2) {
-      width: 100%; /* Memaksa kolom OPD mengambil seluruh sisa ruang yang ada */
-    }
-
     #opdTable td:nth-child(2) {
       white-space: normal;
-      min-width: 200px;
-      line-height: 1.4;
+      min-width: 250px;
+      font-weight: 500;
+    }
+    
+    #opdTable th:nth-child(1), #opdTable td:nth-child(1) {
+      text-align: center;
     }
 
-    /* Rata kiri khusus tabel pegawai (NIP, Nama, Jabatan, Unit Kerja, OPD) - Kolom 2 s/d 6 */
     #pegawaiTable th:nth-child(2), #pegawaiTable td:nth-child(2),
     #pegawaiTable th:nth-child(3), #pegawaiTable td:nth-child(3),
     #pegawaiTable th:nth-child(4), #pegawaiTable td:nth-child(4),
@@ -345,44 +448,161 @@
       text-align: left;
     }
 
-    /* Rata kiri khusus tabel pengecualian (semua kolom selain No.) */
     #pengecualianTable th:not(:first-child), #pengecualianTable td:not(:first-child) {
       text-align: left;
     }
 
-    /* Agar kolom teks panjang bisa turun ke baris baru dan tidak membuat tabel terlalu lebar */
+    #pegawaiTable th:nth-child(n+7), #pegawaiTable td:nth-child(n+7) {
+      text-align: center;
+    }
+
+    #pegawaiTable td:nth-child(3) {
+      font-weight: 500;
+    }
+
     #pegawaiTable td:nth-child(3),
     #pegawaiTable td:nth-child(4),
     #pegawaiTable td:nth-child(5),
     #pegawaiTable td:nth-child(6) {
       white-space: normal;
       min-width: 120px;
-      line-height: 1.4;
     }
 
-    /* Kolom No (kolom pertama) rata kanan di semua tabel */
     th:nth-child(1), td:nth-child(1) {
-      text-align: right !important;
+      text-align: center;
+      color: var(--text-secondary);
     }
 
-    /* Kembalikan rata tengah khusus untuk sel TOTAL (karena colspan) */
-    #opdTable tr.total-row td:nth-child(1) {
-      text-align: center !important;
-    }
-
-    /* Highlight Kolom Periode Aktif */
+    /* Highlight Column */
     .highlight-col {
-      background-color: rgba(59, 130, 246, 0.25) !important;
-      border-left: 2px solid var(--accent-1) !important;
-      border-right: 2px solid var(--accent-1) !important;
+      background-color: rgba(59, 130, 246, 0.05) !important;
+      border-left: 2px solid var(--accent) !important;
+      border-right: 2px solid var(--accent) !important;
     }
 
-    /* Khusus untuk Header, gunakan warna solid agar tidak transparan saat scroll */
     thead th.highlight-col {
-      background-color: #1e3a8a !important;
+      background-color: rgba(59, 130, 246, 0.1) !important;
+      color: var(--accent);
     }
 
-    /* Pagination */
+    /* Form Elements & Filters */
+    .filter-container {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background-color: var(--surface);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .search-box:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .search-box:disabled {
+      background-color: var(--bg-secondary);
+      color: var(--text-secondary);
+      cursor: not-allowed;
+    }
+
+    .select-box {
+      cursor: pointer;
+      appearance: none;
+      background-image: url('data:image/svg+xml;utf8,<svg fill="%2364748b" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 30px;
+      min-width: 140px;
+    }
+
+    html.dark .select-box {
+      background-image: url('data:image/svg+xml;utf8,<svg fill="%2394a3b8" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      background-color: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background-color: #2563eb;
+      box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-secondary {
+      background-color: var(--surface);
+      border-color: var(--border);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background-color: var(--hover);
+    }
+
+    .btn-danger {
+      background-color: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .btn-pagination {
+        /* map old class to new btn class */
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+        border: 1px solid var(--border);
+        background-color: var(--surface);
+        color: var(--text-primary);
+    }
+    .btn-pagination:hover:not(:disabled) {
+        background-color: var(--hover);
+    }
+    .btn-pagination:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    /* Pagination UI */
     .pagination-container {
       display: flex;
       justify-content: space-between;
@@ -390,496 +610,734 @@
       margin-top: 1rem;
       flex-wrap: wrap;
       gap: 1rem;
+      padding: 1rem 0 0;
+      border-top: 1px solid var(--border);
     }
+
     .pagination-info {
-      color: var(--text-muted);
+      color: var(--text-secondary);
       font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
+
     .pagination-controls {
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
-    .btn-pagination {
-      background: rgba(96, 165, 250, 0.1);
-      color: var(--accent-1);
-      border: 1px solid rgba(96, 165, 250, 0.3);
-      padding: 0.4rem 0.8rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.2s;
-    }
-    .btn-pagination:hover:not(:disabled) {
-      background: rgba(96, 165, 250, 0.2);
-    }
-    .btn-pagination:disabled {
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text-muted);
-      border-color: transparent;
-      cursor: not-allowed;
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      animation: fadeIn 0.2s forwards;
     }
 
-    th {
-      font-weight: 600;
-      color: var(--text-muted);
-      background: rgba(255, 255, 255, 0.02);
-      text-transform: uppercase;
-      font-size: 0.75rem;
-      letter-spacing: 0.5px;
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+      transform: scale(0.95);
+      animation: scaleIn 0.2s forwards;
     }
 
-    tbody tr {
-      transition: background 0.2s ease;
+    .modal-box h3 {
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      font-size: 1.25rem;
     }
 
-    /* Efek Zebra (belang-belang) untuk baris genap */
-    tbody tr:nth-child(even) {
-      background: rgba(255, 255, 255, 0.02);
-    }
-
-    tbody tr:hover {
-      background: rgba(255, 255, 255, 0.06);
+    .modal-box p {
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
     }
 
     /* Animations */
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes fadeInDown {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    /* Loading Screen */
+    #loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: calc(100vh - 64px);
+      background-color: var(--bg-secondary);
     }
 
-    /* Error Message */
-    .error-msg {
-      color: #ef4444;
-      text-align: center;
-      padding: 2rem;
-      font-size: 1.2rem;
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
     }
-    /* Navbar Navigation */
-    .navbar {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 2rem;
-      background: rgba(15, 23, 42, 0.4);
-      padding: 0.5rem;
-      border-radius: 12px;
-      border: 1px solid var(--glass-border);
-      overflow-x: auto;
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar {
+        position: fixed;
+        left: -240px;
+        height: 100vh;
+        box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+      }
+      
+      .sidebar.open {
+        left: 0;
+      }
+      
+      .hamburger-btn {
+        display: block;
+      }
     }
-    .nav-btn {
-      background: transparent;
-      color: var(--text-muted);
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      white-space: nowrap;
-    }
-    .nav-btn:hover {
-      color: var(--text-main);
-      background: rgba(255, 255, 255, 0.05);
-    }
-    .nav-btn.active {
-      background: var(--accent-1);
-      color: white;
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    }
-    .nav-panel {
-      display: none;
-      animation: fadeIn 0.3s ease-in-out;
-    }
-    .nav-panel.active {
-      display: block;
+
+    @media (max-width: 768px) {
+      .filter-container { flex-direction: column; }
+      .select-box, .search-box { width: 100%; }
+      .header-bar { padding: 0 1rem; }
+      .content-area { padding: 1rem; }
+      
+      .summary-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <header>
-      <p class="subtitle" id="headerInstansi" style="margin-bottom: 0.2rem; color: #60a5fa; font-weight: 500; font-size: 1.2rem; display: none;"></p>
-      <h1 id="headerTitle">Ekinerja BKN</h1>
-      <p class="subtitle">Dashboard Monitoring SKP & Penilaian Kinerja Pegawai</p>
-    </header>
-
-    <div id="loading">
-      <div class="spinner"></div>
-      <p>Mengambil data real-time dari Spreadsheet...</p>
-    </div>
-
-    <div id="error-container" style="display: none;" class="glass-panel error-msg"></div>
-
-    <div id="dashboard-content">
-      <!-- Navigation Bar -->
-      <nav class="navbar">
-        <button class="nav-btn active" onclick="switchTab('panelDashboard', this)">Dashboard</button>
-        <button id="navPegawai" class="nav-btn" style="display: none;" onclick="switchTab('panelPegawai', this)">Data Pegawai</button>
-        <button id="navPengecualian" class="nav-btn" style="display: none;" onclick="switchTab('panelPengecualian', this)">Data Pengecualian</button>
-        <button id="navUpload" class="nav-btn" style="display: none;" onclick="switchTab('panelUpload', this)">Upload Laporan</button>
-        <button id="btnLogin" class="nav-btn" style="margin-left: auto; background: #3b82f6; color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);" onclick="promptLogin()">Login</button>
-        <button id="btnLogout" class="nav-btn" style="display: none; margin-left: auto; background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.5);" onclick="logout()">Logout</button>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <span class="sidebar-brand-text">E-Kinerja BKN</span>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <button class="nav-item active nav-btn" onclick="switchTab('panelDashboard', this); updateBreadcrumb('Dashboard'); closeSidebarMobile();">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          Dashboard
+        </button>
+        <button id="navPegawai" class="nav-item nav-btn" style="display: none;" onclick="switchTab('panelPegawai', this); updateBreadcrumb('Data Pegawai'); closeSidebarMobile();">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          Data Pegawai
+        </button>
+        <button id="navPengecualian" class="nav-item nav-btn" style="display: none;" onclick="switchTab('panelPengecualian', this); updateBreadcrumb('Data Pengecualian'); closeSidebarMobile();">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><line x1="9" y1="10" x2="15" y2="10"></line><line x1="12" y1="7" x2="12" y2="13"></line></svg>
+          Data Pengecualian
+        </button>
+        <button id="navUpload" class="nav-item nav-btn" style="display: none;" onclick="switchTab('panelUpload', this); updateBreadcrumb('Upload Laporan'); closeSidebarMobile();">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          Upload Laporan
+        </button>
       </nav>
 
-      <div id="panelDashboard" class="nav-panel active">
-      <!-- Top Cards -->
-      <div class="summary-grid">
-        <div class="glass-panel summary-card">
-          <div class="card-icon">👥</div>
-          <div class="card-title">Total Pegawai</div>
-          <div class="card-value val-blue" id="val-total-pegawai">0</div>
-        </div>
-        <div class="glass-panel summary-card">
-          <div class="card-icon">✅</div>
-          <div class="card-title">SKP Disetujui</div>
-          <div class="card-value val-green" id="val-skp-disetujui">0</div>
-        </div>
-        <div class="glass-panel summary-card">
-          <div class="card-icon">📊</div>
-          <div class="card-title">Persentase Persetujuan</div>
-          <div class="card-value val-purple" id="val-persentase">0%</div>
-        </div>
+      <div class="sidebar-bottom">
+        <button id="btnLogin" class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="promptLogin()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+          Login Admin
+        </button>
+        <button id="btnLogout" class="btn" style="display: none; width: 100%; justify-content: center; background: rgba(239, 68, 68, 0.1); color: #ef4444;" onclick="logout()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          Logout
+        </button>
       </div>
+    </aside>
 
-      <!-- Tahunan Cards -->
-      <div class="summary-grid" style="margin-top: -1rem;">
-        <div class="glass-panel summary-card">
-          <div class="card-icon">🎯</div>
-          <div class="card-title">SKP Tahunan Dinilai</div>
-          <div class="card-value val-green" id="val-tahunan-dinilai">0</div>
-        </div>
-        <div class="glass-panel summary-card">
-          <div class="card-icon">📈</div>
-          <div class="card-title">Persentase Tahunan</div>
-          <div class="card-value val-purple" id="val-persentase-tahunan">0%</div>
-        </div>
-      </div>
-
-      <!-- Chart -->
-      <div class="glass-panel chart-container">
-        <h2 class="section-title">Tren Pegawai Melapor</h2>
-        <div style="position: relative; height: 350px; width: 100%;">
-          <canvas id="laporanChart"></canvas>
-        </div>
-      </div>
-
-      <!-- Table OPD (Moved from bottom) -->
-      <div class="glass-panel" style="margin-bottom: 2rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
-          <h2 class="section-title" style="margin: 0; padding: 0; border: none;">Rekap Penilaian Per OPD</h2>
-          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-            <select id="opdFormatToggle" class="search-box select-box" style="margin-bottom: 0; width: auto;" onchange="opdFormat = this.value; buildOpdTableBody();">
-              <option value="persen">Tampilkan: Persentase (%)</option>
-              <option value="angka">Tampilkan: Angka Mutlak</option>
-            </select>
-            <button id="btnDownloadPdfOpd" class="btn-pagination" style="display: flex; align-items: center; gap: 0.4rem; background: #64748b; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(100, 116, 139, 0.4); transition: opacity 0.2s;" title="Unduh Rincian OPD ke PDF">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              Unduh PDF
-            </button>
-          </div>
-        </div>
-        <div class="table-responsive">
-          <table id="opdTable">
-            <thead>
-              <tr>
-                <th width="1%">No.</th>
-                <th style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'opd')">OPD <span class="sort-icon"></span></th>
-                <th width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'totalPegawai')">Pegawai <span class="sort-icon"></span></th>
-                <th width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'skpDisetujui')">SKP <span class="sort-icon"></span></th>
-                <th id="opd-th-0" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 0)">Jan <span class="sort-icon"></span></th>
-                <th id="opd-th-1" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 1)">Feb <span class="sort-icon"></span></th>
-                <th id="opd-th-2" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 2)">Mar <span class="sort-icon"></span></th>
-                <th id="opd-th-3" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 3)">Apr <span class="sort-icon"></span></th>
-                <th id="opd-th-4" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 4)">Mei <span class="sort-icon"></span></th>
-                <th id="opd-th-5" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 5)">Jun <span class="sort-icon"></span></th>
-                <th id="opd-th-6" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 6)">Jul <span class="sort-icon"></span></th>
-                <th id="opd-th-7" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 7)">Agu <span class="sort-icon"></span></th>
-                <th id="opd-th-8" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 8)">Sep <span class="sort-icon"></span></th>
-                <th id="opd-th-9" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 9)">Okt <span class="sort-icon"></span></th>
-                <th id="opd-th-10" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 10)">Nov <span class="sort-icon"></span></th>
-                <th id="opd-th-11" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 11)">Des <span class="sort-icon"></span></th>
-                <th id="opd-th-12" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 12)">Tahunan <span class="sort-icon"></span></th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Data akan diinject via JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-      </div> <!-- End of panelDashboard -->
-
-      <div id="panelPegawai" class="nav-panel">
-      <!-- Pegawai Table Widget -->
-      <div class="glass-panel" style="margin-bottom: 2rem;">
-        <h2 class="section-title">Daftar Pegawai</h2>
-
-        <div id="pegawai-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem; color: #94a3b8;">
-          <div class="spinner" style="margin-bottom: 1rem; width: 35px; height: 35px; border-width: 3px;"></div>
-          <p id="pegawai-loading-text">Sedang memuat rincian pegawai dari server...</p>
-        </div>
-
-        <div id="pegawai-content" style="display: none;">
-          <div class="filter-container" style="padding-bottom: 5px;">
-          <input type="text" id="searchPegawai" class="search-box" style="flex: 1; min-width: 150px;" placeholder="🔍 Cari Nama / NIP...">
-          <select id="filterOpd" class="search-box select-box" style="flex: 1; min-width: 120px;">
-            <option value="semua">Semua OPD</option>
-          </select>
-          <select id="filterSkpStatus" class="search-box select-box">
-            <option value="semua">Semua Status SKP</option>
-          </select>
-          <select id="filterBulan" class="search-box select-box">
-            <option value="semua">Semua Bulan</option>
-            <option value="0">Januari</option>
-            <option value="1">Februari</option>
-            <option value="2">Maret</option>
-            <option value="3">April</option>
-            <option value="4">Mei</option>
-            <option value="5">Juni</option>
-            <option value="6">Juli</option>
-            <option value="7">Agustus</option>
-            <option value="8">September</option>
-            <option value="9">Oktober</option>
-            <option value="10">November</option>
-            <option value="11">Desember</option>
-            <option value="12">Tahunan</option>
-          </select>
-          <select id="filterStatus" class="search-box select-box">
-            <option value="semua">Semua Status Penilaian</option>
-            <option value="sudah">Sudah Dinilai</option>
-            <option value="belum">Belum Dinilai</option>
-          </select>
-          <button id="btnDownloadPdf" title="Download Daftar Pegawai (PDF)" style="background: transparent; color: #60a5fa; border: 1px solid transparent; padding: 0.75rem 0.5rem; margin: 0; font-size: 1.5rem; line-height: 1; flex-shrink: 0; display: flex; align-items: center; justify-content: center; align-self: stretch; cursor: pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">⬇️</button>
-        </div>
-
-        <!-- Info tarikan data dipindah ke luar filter-container -->
-        <div id="timestampInfo" style="display: none; align-items: center; background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 0 1rem; font-size: 0.85rem; min-height: 42px; margin-bottom: 1rem; max-width: max-content;">
-          🕒 <span style="margin-left: 0.5rem; white-space: nowrap;"></span>
-        </div>
-
-        <div class="table-responsive">
-          <table id="pegawaiTable">
-            <thead>
-              <tr>
-                <th width="1%">No.</th>
-                <th width="1%">NIP</th>
-                <th>Nama</th>
-                <th>Jabatan</th>
-                <th>Unit Kerja</th>
-                <th>OPD</th>
-                <th id="th-0" width="1%">Jan</th>
-                <th id="th-1" width="1%">Feb</th>
-                <th id="th-2" width="1%">Mar</th>
-                <th id="th-3" width="1%">Apr</th>
-                <th id="th-4" width="1%">Mei</th>
-                <th id="th-5" width="1%">Jun</th>
-                <th id="th-6" width="1%">Jul</th>
-                <th id="th-7" width="1%">Agu</th>
-                <th id="th-8" width="1%">Sep</th>
-                <th id="th-9" width="1%">Okt</th>
-                <th id="th-10" width="1%">Nov</th>
-                <th id="th-11" width="1%">Des</th>
-                <th id="th-12" width="1%">Tahunan</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Data akan diinject via JS -->
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Pagination UI -->
-        <div class="pagination-container">
-          <div class="pagination-info">
-            <label for="itemsPerPage">Tampilkan:</label>
-            <select id="itemsPerPage" class="search-box select-box" style="width: 80px; padding: 0.4rem; margin: 0 0.5rem; display: inline-block;">
-              <option value="10" selected>10</option>
-              <option value="25">25</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
-            </select>
-            baris per halaman
-          </div>
-          <div class="pagination-controls">
-            <button id="btnPrevPage" class="btn-pagination" disabled>&larr; Prev</button>
-            <span id="pageInfo" class="pagination-info" style="margin: 0 0.5rem;">
-              Hal <input type="number" id="inputPage" class="search-box" style="width: 60px; padding: 0.2rem; text-align: center; margin: 0; display: inline-block; -moz-appearance: textfield;" min="1" value="1"> dari <span id="totalPagesInfo">1</span>
-            </span>
-            <button id="btnNextPage" class="btn-pagination">Next &rarr;</button>
-          </div>
-        </div> <!-- End of pagination-container -->
-      </div> <!-- End of pegawai-content -->
-    </div> <!-- End of Daftar Pegawai glass-panel -->
-    </div> <!-- End of panelPegawai -->
-
-    <div id="panelPengecualian" class="nav-panel">
-      <!-- Pengecualian Card -->
-      <div class="glass-panel" style="margin-bottom: 2rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 1rem; padding-bottom: 0.5rem; flex-wrap: wrap; gap: 1rem;">
-          <h2 class="section-title" style="margin: 0; padding: 0; border: none;">Daftar Pegawai Pengecualian</h2>
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button id="btnSyncPengecualian" class="btn-pagination" disabled style="display: flex; align-items: center; gap: 0.4rem; background: #64748b; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: not-allowed; box-shadow: 0 4px 6px -1px rgba(100, 116, 139, 0.4); transition: opacity 0.2s; opacity: 0.5;" title="Jalankan Sinkronisasi Pengecualian (Hapus Pegawai Pengecualian)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-              Sync
-            </button>
-            <button id="btnDownloadPdfPengecualian" class="btn-pagination" disabled style="display: flex; align-items: center; gap: 0.4rem; background: #64748b; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: not-allowed; box-shadow: 0 4px 6px -1px rgba(100, 116, 139, 0.4); transition: opacity 0.2s; opacity: 0.5;" title="Unduh Data Pengecualian ke PDF">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              Unduh PDF
-            </button>
-            <button id="btnAddPengecualian" class="btn-pagination" disabled style="display: flex; align-items: center; gap: 0.4rem; background: #3b82f6; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: not-allowed; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4); transition: opacity 0.2s; opacity: 0.5;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              Tambah Data
-            </button>
-          </div>
-        </div>
-
-        <div id="pengecualian-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem; color: #94a3b8;">
-          <div class="spinner" style="margin-bottom: 1rem; width: 35px; height: 35px; border-width: 3px;"></div>
-          <p>Sedang memuat data pengecualian...</p>
-        </div>
-
-        <div id="pengecualian-content" style="display: none;">
-          <div class="filter-container" style="padding-bottom: 5px;">
-            <input type="text" id="searchPengecualian" class="search-box" style="flex: 1; min-width: 150px;" placeholder="🔍 Cari Nama / NIP...">
-            <select id="filterKeteranganPengecualian" class="search-box select-box" style="flex: 1; min-width: 120px;">
-              <option value="semua">Semua Keterangan</option>
-              <option value="Pensiun">Pensiun</option>
-              <option value="Meninggal">Meninggal</option>
-              <option value="Mutasi">Mutasi</option>
-              <option value="Hukdis">Hukdis</option>
-              <option value="Cuti">Cuti</option>
-              <option value="Lainnya">Lainnya</option>
-            </select>
-          </div>
-
-          <div class="table-responsive">
-            <table id="pengecualianTable">
-            <thead>
-              <tr>
-                <th width="1%" style="text-align: right;">No.</th>
-                <th width="1%">NIP</th>
-                <th>Nama</th>
-                <th>Jabatan</th>
-                <th>Unit Kerja</th>
-                <th>OPD</th>
-                <th width="1%">Keterangan</th>
-                <th width="1%">Aksi</th>
-              </tr>
-            </thead>
-            <tbody id="pengecualianBody">
-              <tr><td colspan="8" style="text-align:center;">Memuat data...</td></tr>
-            </tbody>
-            </table>
-          </div>
-
-          <!-- Pagination UI Pengecualian -->
-          <div class="pagination-container">
-            <div class="pagination-info">
-              <label for="itemsPerPagePeng">Tampilkan:</label>
-              <select id="itemsPerPagePeng" class="search-box select-box" style="width: 80px; padding: 0.4rem; margin: 0 0.5rem; display: inline-block;">
-                <option value="10" selected>10</option>
-                <option value="25">25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-              </select>
-              baris per halaman
-            </div>
-            <div class="pagination-controls">
-              <button id="btnPrevPagePeng" class="btn-pagination" disabled>&larr; Prev</button>
-              <span id="pageInfoPeng" class="pagination-info" style="margin: 0 0.5rem;">
-                Hal <input type="number" id="inputPagePeng" class="search-box" style="width: 60px; padding: 0.2rem; text-align: center; margin: 0; display: inline-block; -moz-appearance: textfield;" min="1" value="1"> dari <span id="totalPagesInfoPeng">1</span>
-              </span>
-              <button id="btnNextPagePeng" class="btn-pagination" disabled>Next &rarr;</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div> <!-- End of panelPengecualian -->
-
-    <!-- Panel Upload Laporan -->
-    <div id="panelUpload" class="nav-panel">
-      <div class="glass-panel" style="margin-bottom: 2rem;">
-        <h2 class="section-title">Upload Laporan Penilaian Kinerja (BKN)</h2>
-        <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.95rem;">
-          Pilih file laporan Excel (.xlsx, .xls) yang diunduh dari sistem BKN. Sistem akan otomatis mendeteksi Bulan/Tahun dari dalam file dan menyimpannya secara otomatis ke database bulanan/tahunan.
-        </p>
-
-        <div id="uploadInputContainer" style="background: rgba(15, 23, 42, 0.4); padding: 1.5rem; border-radius: 8px; border: 1px dashed rgba(255, 255, 255, 0.2); text-align: center; margin-bottom: 1.5rem;">
-          <input type="file" id="fileUploadInput" accept=".xlsx, .xls, .csv" style="display: none;" onchange="handleFileSelect(event)">
-          <button class="btn-pagination" onclick="document.getElementById('fileUploadInput').click()" style="background: var(--accent-1); color: white; border: none; padding: 0.75rem 2rem; font-size: 1rem; border-radius: 6px;">
-            Pilih File Laporan
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="header-bar">
+        <div class="header-left">
+          <button class="hamburger-btn" onclick="toggleSidebar()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
           </button>
-          <div id="fileUploadName" style="margin-top: 1rem; font-weight: 500; color: var(--accent-2);"></div>
+          <div class="breadcrumb" id="breadcrumb">Dashboard</div>
         </div>
-
-        <div id="uploadParsingLoading" style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; color: #94a3b8;">
-          <div class="spinner" style="margin-bottom: 1rem; width: 35px; height: 35px; border-width: 3px;"></div>
-          <p>Sedang membaca dan menganalisis file Excel...</p>
-        </div>
-
-        <div id="uploadConfirmationContainer" style="display: none; background: rgba(30, 41, 59, 0.6); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--glass-border); margin-bottom: 1.5rem; text-align: left;">
-          <h3 style="margin-bottom: 1rem; color: #f8fafc; font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">Informasi Data Terdeteksi</h3>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-            <div>
-              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Target Periode / Sheet</p>
-              <p id="confTargetSheet" style="color: var(--accent-1); font-weight: 600; font-size: 1.1rem;">-</p>
-            </div>
-            <div>
-              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Tahun Laporan</p>
-              <p id="confTahun" style="color: #f59e0b; font-weight: 600; font-size: 1.1rem;">-</p>
-            </div>
-            <div>
-              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem;">Jumlah Data Pegawai</p>
-              <p id="confDataCount" style="color: var(--accent-2); font-weight: 600; font-size: 1.1rem;">-</p>
-            </div>
-          </div>
-
-          <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-            <button class="btn-pagination" onclick="batalUpload()" style="background: transparent; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2); padding: 0.6rem 1.5rem; font-size: 0.95rem; border-radius: 6px; cursor: pointer;">
-              Batal
-            </button>
-            <button class="btn-pagination" onclick="startUploadProcess()" style="background: var(--accent-1); color: white; border: none; padding: 0.6rem 1.5rem; font-size: 0.95rem; border-radius: 6px; font-weight: 600; cursor: pointer;">
-              Proses
-            </button>
-          </div>
-        </div>
-
-        <div id="uploadStatusContainer" style="display: none; background: rgba(30, 41, 59, 0.6); padding: 1rem; border-radius: 8px; border: 1px solid var(--glass-border);">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-            <span id="uploadMetaInfo" style="font-weight: 600;">Memeriksa metadata...</span>
-            <span id="uploadPercentage">0%</span>
-          </div>
-          <div style="width: 100%; background: rgba(15, 23, 42, 0.6); border-radius: 4px; overflow: hidden; height: 10px; margin-bottom: 0.5rem;">
-            <div id="uploadProgressBar" style="width: 0%; height: 100%; background: var(--accent-2); transition: width 0.3s ease;"></div>
-          </div>
-          <div id="uploadDetails" style="font-size: 0.85rem; color: var(--text-muted);"></div>
-        </div>
-
-        <!-- Reset Database Section -->
-        <div class="glass-panel" style="margin-top: 2rem; border: 1px solid rgba(239, 68, 68, 0.3);">
-          <h3 style="color: #ef4444; margin-bottom: 0.5rem; font-size: 1.1rem;">⚠️ Reset Seluruh Database</h3>
-          <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.95rem;">
-            Fitur ini akan <strong>menghapus seluruh data pegawai, laporan bulanan, tahunan, dan pengecualian</strong> pada spreadsheet secara permanen.
-          </p>
-          <button class="btn-pagination" onclick="promptReset()" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.5); padding: 0.6rem 1.5rem; font-size: 0.95rem; border-radius: 6px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.2)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'">
-            Reset
+        <div class="header-right">
+          <button class="theme-toggle" onclick="toggleTheme()" id="themeToggleBtn" title="Toggle Dark/Light Mode">
+            <svg id="themeIconLight" style="display: none;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            <svg id="themeIconDark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
           </button>
         </div>
+      </header>
+
+      <!-- Content Area -->
+      <div class="content-area">
+        
+        <div id="loading">
+          <div class="spinner"></div>
+          <p style="color: var(--text-secondary); font-weight: 500;">Mengambil data real-time...</p>
+        </div>
+
+        <div id="error-container" style="display: none;" class="card" style="border-color: var(--danger); text-align: center;">
+          <p style="color: var(--danger); font-size: 1.1rem; font-weight: 500;" id="error-msg-text"></p>
+        </div>
+
+        <div id="dashboard-content" style="display: none;" class="content-container">
+          
+          <div style="margin-bottom: 2rem;">
+            <p class="subtitle" id="headerInstansi" style="margin-bottom: 0.25rem; color: var(--accent); font-weight: 600; font-size: 1rem; display: none;"></p>
+            <h1 id="headerTitle">Ekinerja BKN</h1>
+            <p class="subtitle" style="margin-bottom: 0;">Dashboard Monitoring SKP & Penilaian Kinerja Pegawai</p>
+          </div>
+
+          <!-- Panel Dashboard -->
+          <div id="panelDashboard" class="nav-panel active">
+            <!-- Top Cards -->
+            <div class="summary-grid">
+              <div class="summary-card border-blue">
+                <div class="card-content-wrapper">
+                  <div class="card-icon-wrapper bg-blue-light">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                  </div>
+                  <div class="card-info">
+                    <div class="card-title">Total Pegawai</div>
+                    <div class="card-value val-blue" id="val-total-pegawai">0</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="summary-card border-green">
+                <div class="card-content-wrapper">
+                  <div class="card-icon-wrapper bg-green-light">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                  </div>
+                  <div class="card-info">
+                    <div class="card-title">SKP Disetujui</div>
+                    <div class="card-value val-green" id="val-skp-disetujui">0</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="summary-card border-purple">
+                <div class="card-content-wrapper">
+                  <div class="card-icon-wrapper bg-purple-light">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                  </div>
+                  <div class="card-info">
+                    <div class="card-title">Persentase Persetujuan</div>
+                    <div class="card-value val-purple" id="val-persentase">0%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tahunan Cards -->
+            <div class="summary-grid">
+              <div class="summary-card border-amber">
+                <div class="card-content-wrapper">
+                  <div class="card-icon-wrapper bg-amber-light">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                  </div>
+                  <div class="card-info">
+                    <div class="card-title">SKP Tahunan Dinilai</div>
+                    <div class="card-value val-warning" id="val-tahunan-dinilai" style="color: var(--warning);">0</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="summary-card border-purple">
+                <div class="card-content-wrapper">
+                  <div class="card-icon-wrapper bg-purple-light">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>
+                  </div>
+                  <div class="card-info">
+                    <div class="card-title">Persentase Tahunan</div>
+                    <div class="card-value val-purple" id="val-persentase-tahunan">0%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="card">
+              <h2 class="section-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                Tren Pegawai Melapor
+              </h2>
+              <div style="position: relative; height: 350px; width: 100%;">
+                <canvas id="laporanChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Table OPD -->
+            <div class="card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+                <h2 class="section-title" style="margin: 0;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                  Rekap Penilaian Per OPD
+                </h2>
+                <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                  <select id="opdFormatToggle" class="search-box select-box" style="margin-bottom: 0; width: auto;" onchange="opdFormat = this.value; buildOpdTableBody();">
+                    <option value="persen">Tampilkan: Persentase (%)</option>
+                    <option value="angka">Tampilkan: Angka Mutlak</option>
+                  </select>
+                  <button id="btnDownloadPdfOpd" class="btn btn-secondary" title="Unduh Rincian OPD ke PDF">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    PDF
+                  </button>
+                </div>
+              </div>
+              
+              <div class="table-responsive">
+                <table id="opdTable">
+                  <thead>
+                    <tr>
+                      <th width="1%">No.</th>
+                      <th style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'opd')">OPD <span class="sort-icon"></span></th>
+                      <th width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'totalPegawai')">Pegawai <span class="sort-icon"></span></th>
+                      <th width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'skpDisetujui')">SKP <span class="sort-icon"></span></th>
+                      <th id="opd-th-0" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 0)">Jan <span class="sort-icon"></span></th>
+                      <th id="opd-th-1" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 1)">Feb <span class="sort-icon"></span></th>
+                      <th id="opd-th-2" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 2)">Mar <span class="sort-icon"></span></th>
+                      <th id="opd-th-3" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 3)">Apr <span class="sort-icon"></span></th>
+                      <th id="opd-th-4" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 4)">Mei <span class="sort-icon"></span></th>
+                      <th id="opd-th-5" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 5)">Jun <span class="sort-icon"></span></th>
+                      <th id="opd-th-6" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 6)">Jul <span class="sort-icon"></span></th>
+                      <th id="opd-th-7" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 7)">Agu <span class="sort-icon"></span></th>
+                      <th id="opd-th-8" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 8)">Sep <span class="sort-icon"></span></th>
+                      <th id="opd-th-9" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 9)">Okt <span class="sort-icon"></span></th>
+                      <th id="opd-th-10" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 10)">Nov <span class="sort-icon"></span></th>
+                      <th id="opd-th-11" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 11)">Des <span class="sort-icon"></span></th>
+                      <th id="opd-th-12" width="1%" style="cursor:pointer; white-space:nowrap;" onclick="sortOpdData(this, 'bulan', 12)">Tahunan <span class="sort-icon"></span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Data diinject via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div> <!-- End panelDashboard -->
+
+          <!-- Panel Pegawai -->
+          <div id="panelPegawai" class="nav-panel">
+            <div class="card">
+              <h2 class="section-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Daftar Pegawai
+              </h2>
+
+              <div id="pegawai-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; color: var(--text-secondary);">
+                <div class="spinner"></div>
+                <p id="pegawai-loading-text" style="font-weight: 500;">Sedang memuat rincian pegawai dari server...</p>
+              </div>
+
+              <div id="pegawai-content" style="display: none;">
+                <div class="filter-container">
+                  <input type="text" id="searchPegawai" class="search-box" style="flex: 1; min-width: 200px;" placeholder="Cari Nama / NIP...">
+                  <select id="filterOpd" class="search-box select-box" style="flex: 1; min-width: 150px;">
+                    <option value="semua">Semua OPD</option>
+                  </select>
+                  <select id="filterSkpStatus" class="search-box select-box">
+                    <option value="semua">Semua Status SKP</option>
+                  </select>
+                  <select id="filterBulan" class="search-box select-box">
+                    <option value="semua">Semua Bulan</option>
+                    <option value="0">Januari</option>
+                    <option value="1">Februari</option>
+                    <option value="2">Maret</option>
+                    <option value="3">April</option>
+                    <option value="4">Mei</option>
+                    <option value="5">Juni</option>
+                    <option value="6">Juli</option>
+                    <option value="7">Agustus</option>
+                    <option value="8">September</option>
+                    <option value="9">Oktober</option>
+                    <option value="10">November</option>
+                    <option value="11">Desember</option>
+                    <option value="12">Tahunan</option>
+                  </select>
+                  <select id="filterStatus" class="search-box select-box">
+                    <option value="semua">Semua Penilaian</option>
+                    <option value="sudah">Sudah Dinilai</option>
+                    <option value="belum">Belum Dinilai</option>
+                  </select>
+                  <button id="btnDownloadPdf" class="btn btn-secondary" title="Download PDF">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  </button>
+                </div>
+
+                <div id="timestampInfo" style="display: none; align-items: center; gap: 0.5rem; background-color: rgba(59, 130, 246, 0.1); color: var(--accent); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.875rem; margin-bottom: 1.5rem; font-weight: 500;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  <span></span>
+                </div>
+
+                <div class="table-responsive">
+                  <table id="pegawaiTable">
+                    <thead>
+                      <tr>
+                        <th width="1%">No.</th>
+                        <th width="1%">NIP</th>
+                        <th>Nama</th>
+                        <th>Jabatan</th>
+                        <th>Unit Kerja</th>
+                        <th>OPD</th>
+                        <th id="th-0" width="1%">Jan</th>
+                        <th id="th-1" width="1%">Feb</th>
+                        <th id="th-2" width="1%">Mar</th>
+                        <th id="th-3" width="1%">Apr</th>
+                        <th id="th-4" width="1%">Mei</th>
+                        <th id="th-5" width="1%">Jun</th>
+                        <th id="th-6" width="1%">Jul</th>
+                        <th id="th-7" width="1%">Agu</th>
+                        <th id="th-8" width="1%">Sep</th>
+                        <th id="th-9" width="1%">Okt</th>
+                        <th id="th-10" width="1%">Nov</th>
+                        <th id="th-11" width="1%">Des</th>
+                        <th id="th-12" width="1%">Tahunan</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- Data diinject via JS -->
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="pagination-container">
+                  <div class="pagination-info">
+                    <label for="itemsPerPage">Tampilkan:</label>
+                    <select id="itemsPerPage" class="search-box select-box" style="width: auto; padding: 0.4rem 2rem 0.4rem 0.75rem;">
+                      <option value="10" selected>10</option>
+                      <option value="25">25</option>
+                      <option value="50">50</option>
+                      <option value="100">100</option>
+                    </select>
+                    baris
+                  </div>
+                  <div class="pagination-controls">
+                    <button id="btnPrevPage" class="btn btn-secondary" disabled>Sebelumnya</button>
+                    <span id="pageInfo" class="pagination-info">
+                      Hal <input type="number" id="inputPage" class="search-box" style="width: 60px; padding: 0.3rem; text-align: center;" min="1" value="1"> dari <span id="totalPagesInfo">1</span>
+                    </span>
+                    <button id="btnNextPage" class="btn btn-secondary">Selanjutnya</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div> <!-- End panelPegawai -->
+
+          <!-- Panel Pengecualian -->
+          <div id="panelPengecualian" class="nav-panel">
+            <div class="card">
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                <h2 class="section-title" style="margin: 0; border: none; padding: 0;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><line x1="9" y1="10" x2="15" y2="10"></line><line x1="12" y1="7" x2="12" y2="13"></line></svg>
+                  Daftar Pegawai Pengecualian
+                </h2>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                  <button id="btnSyncPengecualian" class="btn btn-secondary" disabled title="Jalankan Sinkronisasi Pengecualian">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    Sync
+                  </button>
+                  <button id="btnDownloadPdfPengecualian" class="btn btn-secondary" disabled title="Unduh PDF">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    PDF
+                  </button>
+                  <button id="btnAddPengecualian" class="btn btn-primary" disabled>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Tambah Data
+                  </button>
+                </div>
+              </div>
+
+              <div id="pengecualian-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; color: var(--text-secondary);">
+                <div class="spinner"></div>
+                <p style="font-weight: 500;">Sedang memuat data pengecualian...</p>
+              </div>
+
+              <div id="pengecualian-content" style="display: none;">
+                <div class="filter-container">
+                  <input type="text" id="searchPengecualian" class="search-box" style="flex: 1; min-width: 200px;" placeholder="Cari Nama / NIP...">
+                  <select id="filterKeteranganPengecualian" class="search-box select-box" style="flex: 1; min-width: 150px;">
+                    <option value="semua">Semua Keterangan</option>
+                    <option value="Pensiun">Pensiun</option>
+                    <option value="Meninggal">Meninggal</option>
+                    <option value="Mutasi">Mutasi</option>
+                    <option value="Hukdis">Hukdis</option>
+                    <option value="Cuti">Cuti</option>
+                    <option value="Lainnya">Lainnya</option>
+                  </select>
+                </div>
+
+                <div class="table-responsive">
+                  <table id="pengecualianTable">
+                  <thead>
+                    <tr>
+                      <th width="1%" style="text-align: center;">No.</th>
+                      <th width="1%">NIP</th>
+                      <th>Nama</th>
+                      <th>Jabatan</th>
+                      <th>Unit Kerja</th>
+                      <th>OPD</th>
+                      <th width="1%">Keterangan</th>
+                      <th width="1%">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pengecualianBody">
+                    <tr><td colspan="8" style="text-align:center;">Memuat data...</td></tr>
+                  </tbody>
+                  </table>
+                </div>
+
+                <div class="pagination-container">
+                  <div class="pagination-info">
+                    <label for="itemsPerPagePeng">Tampilkan:</label>
+                    <select id="itemsPerPagePeng" class="search-box select-box" style="width: auto; padding: 0.4rem 2rem 0.4rem 0.75rem;">
+                      <option value="10" selected>10</option>
+                      <option value="25">25</option>
+                      <option value="50">50</option>
+                      <option value="100">100</option>
+                    </select>
+                    baris
+                  </div>
+                  <div class="pagination-controls">
+                    <button id="btnPrevPagePeng" class="btn btn-secondary" disabled>Sebelumnya</button>
+                    <span id="pageInfoPeng" class="pagination-info">
+                      Hal <input type="number" id="inputPagePeng" class="search-box" style="width: 60px; padding: 0.3rem; text-align: center;" min="1" value="1"> dari <span id="totalPagesInfoPeng">1</span>
+                    </span>
+                    <button id="btnNextPagePeng" class="btn btn-secondary" disabled>Selanjutnya</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div> <!-- End panelPengecualian -->
+
+          <!-- Panel Upload -->
+          <div id="panelUpload" class="nav-panel">
+            <div class="card">
+              <h2 class="section-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                Upload Laporan Penilaian Kinerja (BKN)
+              </h2>
+              <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem; line-height: 1.5;">
+                Pilih file laporan Excel (.xlsx, .xls) yang diunduh dari sistem BKN. Sistem akan otomatis mendeteksi Bulan/Tahun dari dalam file dan menyimpannya secara otomatis ke database bulanan/tahunan.
+              </p>
+
+              <div id="uploadInputContainer" style="background-color: var(--bg-secondary); padding: 2.5rem 1.5rem; border-radius: 12px; border: 2px dashed var(--border); text-align: center; margin-bottom: 1.5rem; transition: border-color 0.2s;">
+                <input type="file" id="fileUploadInput" accept=".xlsx, .xls, .csv" style="display: none;" onchange="handleFileSelect(event)">
+                <button class="btn btn-primary" onclick="document.getElementById('fileUploadInput').click()" style="padding: 0.75rem 2rem; font-size: 1rem;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                  Pilih File Laporan Excel
+                </button>
+                <div id="fileUploadName" style="margin-top: 1rem; font-weight: 500; color: var(--accent);"></div>
+              </div>
+
+              <div id="uploadParsingLoading" style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 2rem; color: var(--text-secondary);">
+                <div class="spinner"></div>
+                <p style="font-weight: 500;">Sedang membaca dan menganalisis file Excel...</p>
+              </div>
+
+              <div id="uploadConfirmationContainer" style="display: none; background-color: var(--bg-secondary); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1.5rem;">
+                <h3 style="margin-bottom: 1.25rem; color: var(--text-primary); font-size: 1.1rem; font-weight: 600; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
+                  Informasi Data Terdeteksi
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                  <div>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem; font-weight: 500;">Target Periode / Sheet</p>
+                    <p id="confTargetSheet" style="color: var(--accent); font-weight: 700; font-size: 1.25rem;">-</p>
+                  </div>
+                  <div>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem; font-weight: 500;">Tahun Laporan</p>
+                    <p id="confTahun" style="color: var(--warning); font-weight: 700; font-size: 1.25rem;">-</p>
+                  </div>
+                  <div>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.35rem; font-weight: 500;">Jumlah Data Pegawai</p>
+                    <p id="confDataCount" style="color: var(--success); font-weight: 700; font-size: 1.25rem;">-</p>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                  <button class="btn btn-secondary" onclick="batalUpload()">Batal</button>
+                  <button class="btn btn-primary" onclick="startUploadProcess()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Proses Upload
+                  </button>
+                </div>
+              </div>
+
+              <div id="uploadStatusContainer" style="display: none; background-color: var(--bg-secondary); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; color: var(--text-primary);">
+                  <span id="uploadMetaInfo" style="font-weight: 600;">Memeriksa metadata...</span>
+                  <span id="uploadPercentage" style="font-weight: 600; color: var(--accent);">0%</span>
+                </div>
+                <div style="width: 100%; background-color: var(--border); border-radius: 6px; overflow: hidden; height: 12px; margin-bottom: 0.75rem;">
+                  <div id="uploadProgressBar" style="width: 0%; height: 100%; background-color: var(--accent); transition: width 0.3s ease;"></div>
+                </div>
+                <div id="uploadDetails" style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 500;"></div>
+              </div>
+
+              <!-- Reset Database Section -->
+              <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border);">
+                <h3 style="color: var(--danger); margin-bottom: 0.5rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                  Reset Seluruh Database
+                </h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1.25rem; font-size: 0.95rem;">
+                  Fitur ini akan <strong>menghapus seluruh data pegawai, laporan bulanan, tahunan, dan pengecualian</strong> pada spreadsheet secara permanen.
+                </p>
+                <button class="btn btn-danger" onclick="promptReset()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                  Reset Database
+                </button>
+              </div>
+            </div>
+          </div> <!-- End panelUpload -->
+
+        </div> <!-- End of dashboard-content -->
+      </div> <!-- End content-area -->
+    </main>
+  </div>
+
+  <!-- Modal Peringatan Lisensi -->
+  <div id="licenseModal" class="modal-overlay">
+    <div class="modal-box">
+      <h3>⚠️ Peringatan Lisensi</h3>
+      <div id="licenseMsg"></div>
+      <button class="btn btn-primary" style="margin-top: 1rem; width: 100%;" onclick="document.getElementById('licenseModal').style.display='none'">Tutup</button>
+    </div>
+  </div>
+
+  <!-- Modal Pengecualian -->
+  <div id="pengecualianModal" class="modal-overlay" style="display: none;">
+    <div class="modal-box" style="max-width: 700px; padding: 2rem; text-align: left;">
+      <h3 id="pengecualianModalTitle" style="margin-top: 0; margin-bottom: 1.5rem; color: var(--text-primary); font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">Tambah Pengecualian</h3>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem 1rem; align-items: start; margin-bottom: 1.5rem;">
+        <div>
+          <label style="display: block; font-size: 0.85rem; margin-bottom: 0.35rem; font-weight: 500; color: var(--text-secondary);">NIP</label>
+          <input type="text" id="pengNip" class="search-box" style="width: 100%; box-sizing: border-box; margin-bottom: 0;" placeholder="Ketik NIP untuk mencari...">
+          <div id="pengError" style="margin-top: 0.35rem; color: var(--danger); font-size: 0.75rem; display: none; line-height: 1.3;">NIP tidak ditemukan di data pegawai (Sinkronkan data jika perlu).</div>
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 0.85rem; margin-bottom: 0.35rem; font-weight: 500; color: var(--text-secondary);">Nama</label>
+          <input type="text" id="pengNama" class="search-box" style="width: 100%; box-sizing: border-box; margin-bottom: 0;" disabled>
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 0.85rem; margin-bottom: 0.35rem; font-weight: 500; color: var(--text-secondary);">Jabatan</label>
+          <input type="text" id="pengJab" class="search-box" style="width: 100%; box-sizing: border-box; margin-bottom: 0;" disabled>
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 0.85rem; margin-bottom: 0.35rem; font-weight: 500; color: var(--text-secondary);">Unit Kerja</label>
+          <input type="text" id="pengUnit" class="search-box" style="width: 100%; box-sizing: border-box; margin-bottom: 0;" disabled>
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 0.85rem; margin-bottom: 0.35rem; font-weight: 500; color: var(--text-secondary);">OPD</label>
+          <input type="text" id="pengOpd" class="search-box" style="width: 100%; box-sizing: border-box; margin-bottom: 0;" disabled>
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 0.85rem; margin-bottom: 0.35rem; font-weight: 500; color: var(--text-secondary);">Keterangan</label>
+          <select id="pengKet" class="search-box select-box" style="width: 100%; box-sizing: border-box; margin-bottom: 0;" disabled>
+            <option value="">-- Pilih Keterangan --</option>
+            <option value="Pensiun">Pensiun</option>
+            <option value="Meninggal">Meninggal</option>
+            <option value="Mutasi">Mutasi</option>
+            <option value="Hukdis">Hukdis</option>
+            <option value="Cuti">Cuti</option>
+            <option value="Lainnya">Lainnya</option>
+          </select>
+        </div>
       </div>
-    </div> <!-- End of panelUpload -->
 
-    </div> <!-- End of dashboard-content -->
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+        <button id="btnBatalPengecualian" class="btn btn-secondary">Batal</button>
+        <button id="btnSimpanPengecualian" class="btn btn-primary" disabled>Simpan</button>
+      </div>
+    </div>
+  </div>
 
-    <script>
+  <script>
+    // Theme logic
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      updateThemeIcon(isDark);
+      
+      // Update Chart.js if exists
+      if (window.Chart) {
+        Chart.helpers.each(Chart.instances, function(instance) {
+          instance.options.scales.x.ticks.color = isDark ? '#94a3b8' : '#64748b';
+          instance.options.scales.y.ticks.color = isDark ? '#94a3b8' : '#64748b';
+          instance.options.plugins.legend.labels.color = isDark ? '#94a3b8' : '#64748b';
+          
+          instance.options.plugins.tooltip.backgroundColor = isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+          instance.options.plugins.tooltip.titleColor = isDark ? '#f8fafc' : '#0f172a';
+          instance.options.plugins.tooltip.bodyColor = isDark ? '#f8fafc' : '#0f172a';
+          instance.options.plugins.tooltip.borderColor = isDark ? '#334155' : '#e2e8f0';
+          
+          instance.update();
+        });
+      }
+    }
+
+    function updateThemeIcon(isDark) {
+      document.getElementById('themeIconDark').style.display = isDark ? 'none' : 'block';
+      document.getElementById('themeIconLight').style.display = isDark ? 'block' : 'none';
+    }
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      
+      const isDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      updateThemeIcon(isDark);
+    }
+
+    // Sidebar Mobile Toggle
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+    
+    function closeSidebarMobile() {
+      if (window.innerWidth <= 1024) {
+        document.getElementById('sidebar').classList.remove('open');
+      }
+    }
+
+    function updateBreadcrumb(text) {
+      document.getElementById('breadcrumb').innerText = text;
+    }
+
+    // Run init
+    initTheme();
+  </script>
+
+<script>
       function switchTab(panelId, btnElement) {
         _doSwitchTab(panelId, btnElement);
       }
@@ -1037,70 +1495,7 @@
         });
       }
     </script>
-  </div>
-
-  <!-- Modal Peringatan Lisensi -->
-  <div id="licenseModal" class="modal-overlay">
-    <div class="modal-box">
-      <h3>⚠️ Peringatan Lisensi</h3>
-      <div id="licenseMsg"></div>
-    </div>
-  </div>
-
-  <!-- Modal Pengecualian -->
-  <div id="pengecualianModal" class="modal-overlay" style="display: none;">
-    <div class="modal-box" style="max-width: 700px; padding: 2rem; text-align: left;">
-      <h3 id="pengecualianModalTitle" style="margin-top: 0; margin-bottom: 1.5rem; color: #f8fafc; font-size: 1.25rem;">Tambah Pengecualian</h3>
-
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem 1rem; align-items: start; margin-bottom: 1.5rem;">
-        <div>
-          <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #cbd5e1;">NIP</label>
-          <input type="text" id="pengNip" class="search-box" style="width: 100%; box-sizing: border-box; margin-bottom: 0;" placeholder="Ketik NIP untuk mencari...">
-          <div id="pengError" style="margin-top: 0.35rem; color: #ef4444; font-size: 0.75rem; display: none; line-height: 1.3;">NIP tidak ditemukan di data pegawai (Sinkronkan data jika perlu).</div>
-        </div>
-
-        <div>
-          <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #cbd5e1;">Nama</label>
-          <input type="text" id="pengNama" class="search-box" style="width: 100%; box-sizing: border-box; margin-bottom: 0;" disabled>
-        </div>
-
-        <div>
-          <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #cbd5e1;">Jabatan</label>
-          <input type="text" id="pengJab" class="search-box" style="width: 100%; box-sizing: border-box; margin-bottom: 0;" disabled>
-        </div>
-
-        <div>
-          <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #cbd5e1;">Unit Kerja</label>
-          <input type="text" id="pengUnit" class="search-box" style="width: 100%; box-sizing: border-box; margin-bottom: 0;" disabled>
-        </div>
-
-        <div>
-          <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #cbd5e1;">OPD</label>
-          <input type="text" id="pengOpd" class="search-box" style="width: 100%; box-sizing: border-box; margin-bottom: 0;" disabled>
-        </div>
-
-        <div>
-          <label style="display: block; font-size: 0.875rem; margin-bottom: 0.25rem; font-weight: 500; color: #cbd5e1;">Keterangan</label>
-          <select id="pengKet" class="search-box select-box" style="width: 100%; box-sizing: border-box; margin-bottom: 0;" disabled>
-            <option value="">-- Pilih Keterangan --</option>
-            <option value="Pensiun">Pensiun</option>
-            <option value="Meninggal">Meninggal</option>
-            <option value="Mutasi">Mutasi</option>
-            <option value="Hukdis">Hukdis</option>
-            <option value="Cuti">Cuti</option>
-            <option value="Lainnya">Lainnya</option>
-          </select>
-        </div>
-      </div>
-
-      <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
-        <button id="btnBatalPengecualian" class="btn-pagination" style="background: transparent; color: #cbd5e1; border: 1px solid rgba(255,255,255,0.2); cursor: pointer;">Batal</button>
-        <button id="btnSimpanPengecualian" class="btn-pagination" style="background: #3b82f6; color: white; border: none;" disabled>Simpan</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
+<script>
     // Inisialisasi format angka
     const formatNumber = (num) => {
       return new Intl.NumberFormat('id-ID').format(num);
@@ -1240,10 +1635,10 @@
               labels: { color: '#94a3b8' }
             },
             tooltip: {
-              backgroundColor: 'rgba(15, 23, 42, 0.9)',
-              titleColor: '#f8fafc',
-              bodyColor: '#f8fafc',
-              borderColor: 'rgba(255, 255, 255, 0.1)',
+              backgroundColor: document.documentElement.classList.contains('dark') ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+              titleColor: document.documentElement.classList.contains('dark') ? '#f8fafc' : '#0f172a',
+              bodyColor: document.documentElement.classList.contains('dark') ? '#f8fafc' : '#0f172a',
+              borderColor: document.documentElement.classList.contains('dark') ? '#334155' : '#e2e8f0',
               borderWidth: 1
             }
           },
