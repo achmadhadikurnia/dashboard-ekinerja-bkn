@@ -1701,8 +1701,25 @@
         ];
         
         let colorIndex = 0;
-        // Urutkan kategori agar lebih rapi (optional, tapi Object.entries bergantung pada urutan insert)
-        const kategoriList = Object.keys(gt.trenNilai).sort();
+        
+        // Urutkan kategori sesuai hierarki BKN
+        const customOrder = [
+          "Sangat Baik",
+          "Baik",
+          "Kurang",
+          "Butuh Perbaikan",
+          "Sangat Kurang"
+        ];
+        
+        const kategoriList = Object.keys(gt.trenNilai).sort((a, b) => {
+          let idxA = customOrder.indexOf(a);
+          let idxB = customOrder.indexOf(b);
+          if (idxA === -1) idxA = 999;
+          if (idxB === -1) idxB = 999;
+          
+          if (idxA !== idxB) return idxA - idxB;
+          return a.localeCompare(b);
+        });
         
         let tableRowsHtml = '';
         
