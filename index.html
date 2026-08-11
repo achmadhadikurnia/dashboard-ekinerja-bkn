@@ -2575,6 +2575,7 @@
           return;
         }
 
+        const proceedDownload = () => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('l', 'pt', 'a4');
 
@@ -2738,6 +2739,26 @@
 
         const fileName = `kinerja_${strBulan}_${strStatus}_${strOpd}.pdf`;
         doc.save(fileName);
+        };
+
+        if (globalFilteredPegawaiData.length > 1000) {
+          Swal.fire({
+            title: 'Terlalu Banyak Data',
+            text: `Terdapat ${formatNumber(globalFilteredPegawaiData.length)} baris data. Proses pembuatan PDF untuk lebih dari 1.000 baris dapat membuat browser lambat (macet sementara). Tetap lanjutkan?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Lanjutkan',
+            cancelButtonText: 'Batal'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              proceedDownload();
+            }
+          });
+        } else {
+          proceedDownload();
+        }
       });
     }
 
@@ -2965,6 +2986,7 @@
           return;
         }
 
+        const proceedDownload = () => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('landscape', 'pt', 'a4');
 
@@ -3050,6 +3072,26 @@
         });
 
         doc.save(`Laporan_PLT_PLH_${Date.now()}.pdf`);
+        };
+
+        if (dataToExport.length > 1000) {
+          Swal.fire({
+            title: 'Terlalu Banyak Data',
+            text: `Terdapat ${formatNumber(dataToExport.length)} baris data. Proses pembuatan PDF untuk lebih dari 1.000 baris dapat membuat browser lambat (macet sementara). Tetap lanjutkan?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Lanjutkan',
+            cancelButtonText: 'Batal'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              proceedDownload();
+            }
+          });
+        } else {
+          proceedDownload();
+        }
       });
 
       applyFilters(); // Trigger render pertama kali
