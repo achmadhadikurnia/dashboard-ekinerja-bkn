@@ -2703,13 +2703,13 @@
             if (data.section === 'head' && data.column.index === 0) {
               data.cell.styles.halign = 'right';
             }
-            if (isBulanFiltered && data.column.index === 6) {
+            if (isBulanFiltered && data.column.index === 7) {
               if (data.section === 'head') {
                 data.cell.styles.fillColor = [59, 130, 246]; // Blue-500
               } else if (data.section === 'body') {
                 data.cell.styles.fillColor = [219, 234, 254]; // Blue-100
               }
-            } else if (!isBulanFiltered && data.column.index === (selectedMonthIdx + 6)) {
+            } else if (!isBulanFiltered && data.column.index === (selectedMonthIdx + 7)) {
               if (data.section === 'head') {
                 data.cell.styles.fillColor = [59, 130, 246]; // Blue-500
               } else if (data.section === 'body') {
@@ -2992,17 +2992,48 @@
 
         const activeBulanVal = filterBulan.value;
         const isBulanSelected = activeBulanVal !== 'semua';
-        let judulBulan = '';
+        
+        const pageWidth = doc.internal.pageSize.getWidth();
+        let currentY = 30;
 
-        if(isBulanSelected) {
-           const namaBulanMap = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember', 'Tahunan'];
-           judulBulan = ` - Bulan ${namaBulanMap[parseInt(activeBulanVal)]}`;
+        if (globalReportInstansi) {
+          doc.setFontSize(14);
+          doc.setFont('helvetica', 'bold');
+          const upperInstansi = globalReportInstansi.toUpperCase();
+          const instWidth = doc.getTextWidth(upperInstansi);
+          doc.text(upperInstansi, (pageWidth - instWidth) / 2, currentY);
+          currentY += 15;
         }
 
-        doc.setFontSize(14);
-        doc.text("Laporan Rekapitulasi SKP PLT & PLH" + judulBulan, 40, 40);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        const titleText = "Laporan Rekapitulasi SKP PLT & PLH";
+        const titleWidth = doc.getTextWidth(titleText);
+        doc.text(titleText, (pageWidth - titleWidth) / 2, currentY);
+        currentY += 15;
+
         doc.setFontSize(10);
-        doc.text(`Instansi: ${globalReportInstansi || '-'}`, 40, 55);
+        const selBulan = document.getElementById('filterBulan');
+        const textBulan = selBulan.options[selBulan.selectedIndex].text;
+        
+        doc.setFont('helvetica', 'normal');
+        const printCenter = (text) => {
+           const w = doc.getTextWidth(text);
+           doc.text(text, (pageWidth - w) / 2, currentY);
+           currentY += 14;
+        };
+
+        if (isBulanSelected) {
+           let txtBulan = 'Periode Bulan ' + textBulan;
+           const idxBulan = parseInt(activeBulanVal);
+           if (globalTimestamps[idxBulan]) {
+             let tstamp = globalTimestamps[idxBulan].replace('Data ditarik pada: ', '').trim();
+             txtBulan += ' (Update: ' + tstamp + ')';
+           }
+           printCenter(txtBulan);
+        }
+
+        let tableStartY = currentY + 10;
 
         let headCols = ["No", "NIP", "Nama", "Jabatan", "Unit Kerja", "OPD"];
         if(isBulanSelected) {
@@ -3036,39 +3067,47 @@
            return row;
         });
 
-        let columnStyles = {};
+        let columnStyles = {
+          0: { cellWidth: 'auto', halign: 'right' },
+          1: { cellWidth: 'auto', halign: 'left' }
+        };
+
         if (isBulanSelected) {
-          columnStyles = {
-            0: { cellWidth: 30 },
-            1: { cellWidth: 90 },
-            2: { cellWidth: 100 },
-            3: { cellWidth: 120 },
-            4: { cellWidth: 120 },
-            5: { cellWidth: 150 },
-            6: { cellWidth: 70, halign: 'center' }
-          };
+          columnStyles[6] = { cellWidth: 50, halign: 'center' };
         } else {
-          columnStyles = {
-            0: { cellWidth: 30 },
-            1: { cellWidth: 80 },
-            2: { cellWidth: 80 },
-            3: { cellWidth: 80 },
-            4: { cellWidth: 80 },
-            5: { cellWidth: 90 },
-          };
-          for(let i=6; i<=18; i++) {
-            columnStyles[i] = { halign: 'center' };
-          }
+          for (let i = 6; i <= 17; i++) { columnStyles[i] = { cellWidth: 20, halign: 'center' }; }
+          columnStyles[18] = { cellWidth: 35, halign: 'center' };
         }
+        
+        const selectedMonthIdx = isBulanSelected ? parseInt(activeBulanVal) : -1;
 
         doc.autoTable({
-          startY: 65,
           head: [headCols],
           body: bodyData,
-          theme: 'grid',
-          headStyles: { fillColor: [15, 23, 42], textColor: 255 },
-          styles: { fontSize: 7, cellPadding: 3 },
-          columnStyles: columnStyles
+          startY: tableStartY,
+          styles: { fontSize: 7, cellPadding: 2, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1 },
+          headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], lineColor: [0, 0, 0], lineWidth: 0.1 },
+          columnStyles: columnStyles,
+          margin: { top: 30, right: 30, bottom: 20, left: 30 },
+          tableWidth: 'auto',
+          didParseCell: function(data) {
+            if (data.section === 'head' && data.column.index === 0) {
+              data.cell.styles.halign = 'right';
+            }
+            if (isBulanSelected && data.column.index === 6) {
+              if (data.section === 'head') {
+                data.cell.styles.fillColor = [59, 130, 246]; // Blue-500
+              } else if (data.section === 'body') {
+                data.cell.styles.fillColor = [219, 234, 254]; // Blue-100
+              }
+            } else if (!isBulanSelected && data.column.index === (selectedMonthIdx + 6)) {
+              if (data.section === 'head') {
+                data.cell.styles.fillColor = [59, 130, 246]; // Blue-500
+              } else if (data.section === 'body') {
+                data.cell.styles.fillColor = [219, 234, 254]; // Blue-100
+              }
+            }
+          }
         });
 
         doc.save(`Laporan_PLT_PLH_${Date.now()}.pdf`);
