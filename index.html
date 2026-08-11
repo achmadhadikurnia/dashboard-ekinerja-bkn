@@ -543,6 +543,15 @@
       color: var(--accent);
     }
 
+    /* Sticky Total Row */
+    tr.total-row td {
+      position: sticky;
+      bottom: -1px; /* To prevent gap */
+      background-color: var(--bg-highlight) !important;
+      border-top: 2px solid var(--accent) !important;
+      z-index: 5;
+    }
+
     /* Form Elements & Filters */
     .filter-container {
       display: flex;
@@ -2011,7 +2020,7 @@
       if (gt.skpDisetujui === 0) gtDisplaySkp = '-';
 
       tableHTML += `
-        <tr class="total-row" style="background: rgba(59, 130, 246, 0.1); border-top: 2px solid var(--accent-1);">
+        <tr class="total-row">
           <td style="text-align: right;"><strong></strong></td>
           <td style="text-align: center;"><strong>TOTAL</strong></td>
           <td class="val-blue"><strong>${formatNumber(gt.totalPegawai)}</strong></td>
