@@ -1047,6 +1047,14 @@
                     <option value="sudah">Sudah Dinilai</option>
                     <option value="belum">Belum Dinilai</option>
                   </select>
+                  <select id="filterPredikat" class="search-box select-box">
+                    <option value="semua">Semua Predikat</option>
+                    <option value="sangat baik">Sangat Baik</option>
+                    <option value="baik">Baik</option>
+                    <option value="kurang">Kurang</option>
+                    <option value="butuh perbaikan">Butuh Perbaikan</option>
+                    <option value="sangat kurang">Sangat Kurang</option>
+                  </select>
                   <button id="btnDownloadPdf" class="btn btn-secondary" title="Download PDF">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                   </button>
@@ -2049,6 +2057,7 @@
       const searchInput = document.getElementById('searchPegawai');
       const filterBulan = document.getElementById('filterBulan');
       const filterStatus = document.getElementById('filterStatus');
+      const filterPredikat = document.getElementById('filterPredikat');
 
       const itemsPerPageSelect = document.getElementById('itemsPerPage');
       const btnPrevPage = document.getElementById('btnPrevPage');
@@ -2085,6 +2094,7 @@
         const opdVal = document.getElementById('filterOpd').value;
         const bulanVal = document.getElementById('filterBulan').value;
         const statusVal = document.getElementById('filterStatus').value;
+        const predikatVal = document.getElementById('filterPredikat').value;
         const skpStatusVal = document.getElementById('filterSkpStatus').value;
 
         // Highlight Header Bulan Aktif
@@ -2105,9 +2115,9 @@
           return (mNama || mNip) && mOpd && mSkpStatus;
         });
 
-        // B. Filter Bulan & Status Dinilai
+        // B. Filter Bulan & Status Dinilai & Predikat
         const tsDiv = document.getElementById('timestampInfo');
-        if (bulanVal !== 'semua' || statusVal !== 'semua') {
+        if (bulanVal !== 'semua' || statusVal !== 'semua' || predikatVal !== 'semua') {
            const idxBulan = bulanVal === 'semua' ? -1 : parseInt(bulanVal);
 
            if (idxBulan !== -1 && globalTimestamps[idxBulan]) {
@@ -2120,14 +2130,25 @@
           displayData = displayData.filter(p => {
              if (idxBulan !== -1) {
                const val = p.bulanan[idxBulan];
-               const isDinilai = val ? true : false;
+               const isDinilai = (val && val !== '-') ? true : false;
                if (statusVal === 'sudah' && !isDinilai) return false;
                if (statusVal === 'belum' && isDinilai) return false;
+               
+               if (predikatVal !== 'semua') {
+                 if (!isDinilai) return false;
+                 if (val.toLowerCase() !== predikatVal) return false;
+               }
                return true;
              } else {
-               const reportedCount = p.bulanan.filter(v => v !== "").length;
+               const reportedVals = p.bulanan.filter(v => v && v !== "" && v !== "-");
+               const reportedCount = reportedVals.length;
                if (statusVal === 'sudah' && reportedCount === 0) return false;
                if (statusVal === 'belum' && reportedCount > 0) return false;
+               
+               if (predikatVal !== 'semua') {
+                 const hasPredikat = reportedVals.some(v => v.toLowerCase() === predikatVal);
+                 if (!hasPredikat) return false;
+               }
                return true;
              }
           });
@@ -2211,6 +2232,7 @@
       filterOpd.addEventListener('change', applyFilters);
       filterBulan.addEventListener('change', applyFilters);
       filterStatus.addEventListener('change', applyFilters);
+      filterPredikat.addEventListener('change', applyFilters);
       filterSkpStatus.addEventListener('change', applyFilters);
 
       itemsPerPageSelect.addEventListener('change', (e) => {
