@@ -938,6 +938,9 @@
               <div style="position: relative; height: 350px; width: 100%;">
                 <canvas id="laporanChart"></canvas>
               </div>
+              
+              <!-- Tabel Ringkasan Legenda -->
+              <div id="ringkasanPredikatContainer" style="margin-top: 2rem;"></div>
             </div>
 
             <!-- Table OPD -->
@@ -1701,6 +1704,8 @@
         // Urutkan kategori agar lebih rapi (optional, tapi Object.entries bergantung pada urutan insert)
         const kategoriList = Object.keys(gt.trenNilai).sort();
         
+        let tableRowsHtml = '';
+        
         kategoriList.forEach(kategori => {
           const color = colorPalette[colorIndex % colorPalette.length];
           chartDatasets.push({
@@ -1715,8 +1720,61 @@
             pointRadius: 4,
             pointHoverRadius: 6
           });
+          
+          // Buat baris tabel ringkasan
+          let tds = '';
+          gt.trenNilai[kategori].forEach(val => {
+             tds += `<td style="padding: 0.5rem; border-bottom: 1px solid var(--border-light);">${formatNumber(val)}</td>`;
+          });
+          
+          tableRowsHtml += `
+            <tr>
+              <td style="padding: 0.5rem; border-bottom: 1px solid var(--border-light); text-align: left; white-space: nowrap;">
+                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${color}; margin-right: 0.5rem;"></span>
+                <strong>${kategori}</strong>
+              </td>
+              ${tds}
+            </tr>
+          `;
+          
           colorIndex++;
         });
+        
+        // Buat baris Total
+        let totalTds = '';
+        gt.bulanan.forEach(val => {
+           totalTds += `<td style="padding: 0.5rem; font-weight: bold; color: var(--text-primary); border-top: 2px solid var(--border);">${formatNumber(val)}</td>`;
+        });
+        tableRowsHtml += `
+          <tr style="background-color: var(--bg-hover);">
+            <td style="padding: 0.5rem; font-weight: bold; color: var(--text-primary); border-top: 2px solid var(--border); text-align: left;">Total Jumlah</td>
+            ${totalTds}
+          </tr>
+        `;
+
+        // Render tabel ringkasan ke DOM
+        const bulanHeaders = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Tahunan'];
+        let ths = '';
+        bulanHeaders.forEach(b => ths += `<th style="padding: 0.5rem; border-bottom: 2px solid var(--border);">${b}</th>`);
+        
+        document.getElementById('ringkasanPredikatContainer').innerHTML = `
+          <h3 style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Rincian Angka per Predikat (Bulan ke Bulan):</h3>
+          <div class="table-responsive">
+            <table style="width: 100%; min-width: 600px; text-align: center; font-size: 0.875rem; border-collapse: collapse;">
+              <thead>
+                <tr>
+                  <th style="padding: 0.5rem; border-bottom: 2px solid var(--border); text-align: left;">Predikat</th>
+                  ${ths}
+                </tr>
+              </thead>
+              <tbody>
+                ${tableRowsHtml}
+              </tbody>
+            </table>
+          </div>
+        `;
+      } else {
+        document.getElementById('ringkasanPredikatContainer').innerHTML = '';
       }
 
       chartDatasets.push({
