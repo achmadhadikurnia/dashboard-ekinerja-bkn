@@ -36,6 +36,7 @@
       --sidebar-text-active: #2563eb;
       --sidebar-hover: #f1f5f9;
       --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --bg-highlight: #e0e7ff;
     }
 
     html.dark {
@@ -55,6 +56,7 @@
       --sidebar-text-active: #ffffff;
       --sidebar-hover: rgba(255, 255, 255, 0.05);
       --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+      --bg-highlight: #1e3a8a;
     }
 
     * {
@@ -537,7 +539,7 @@
     }
 
     thead th.highlight-col {
-      background-color: rgba(59, 130, 246, 0.1) !important;
+      background-color: var(--bg-highlight) !important;
       color: var(--accent);
     }
 
