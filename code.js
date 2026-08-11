@@ -329,49 +329,53 @@ function hapusPengecualian() {
     return { status: 'info', message: 'Tidak ada NIP di daftar pengecualian (atau sheet tidak ditemukan).' };
   }
 
-  // 2. Baca sheet pegawai
-  const dataPegawai = sheetPegawai.getDataRange().getValues();
-  if (dataPegawai.length <= 1) return { status: 'info', message: 'Data pegawai kosong.' };
+  // Fungsi helper untuk membersihkan satu sheet
+  const hapusPengecualianDariSheet = (sheetName) => {
+    const sheetTarget = ss.getSheetByName(sheetName);
+    if (!sheetTarget) return 0;
 
-  const headerPegawai = dataPegawai[0].map(h => h.toString().trim().toLowerCase());
+    const dataTarget = sheetTarget.getDataRange().getValues();
+    if (dataTarget.length <= 1) return 0;
 
-  let idxId = headerPegawai.indexOf('nip_baru');
-  if (idxId === -1) idxId = headerPegawai.indexOf('nip');
-  if (idxId === -1) idxId = headerPegawai.indexOf('id');
+    const header = dataTarget[0].map(h => h.toString().trim().toLowerCase());
+    let idx = header.indexOf('nip_baru');
+    if (idx === -1) idx = header.indexOf('nip');
+    if (idx === -1) idx = header.indexOf('id');
+    if (idx === -1) return 0;
 
-  if (idxId === -1) {
-    if(ui) ui.alert('Kolom NIP tidak ditemukan di sheet pegawai.');
-    return { status: 'error', message: 'Kolom NIP tidak ditemukan di sheet pegawai.' };
-  }
+    const output = [dataTarget[0]];
+    let deletedCount = 0;
 
-  // 3. Filter data
-  const outputData = [dataPegawai[0]]; // Masukkan header
-  let countDihapus = 0;
-
-  for (let i = 1; i < dataPegawai.length; i++) {
-    const nip = dataPegawai[i][idxId];
-    const nipStr = nip ? nip.toString().trim() : "";
-
-    if (blacklistNip.has(nipStr)) {
-      countDihapus++;
-    } else {
-      outputData.push(dataPegawai[i]);
+    for (let i = 1; i < dataTarget.length; i++) {
+      const nip = dataTarget[i][idx];
+      const nipStr = nip ? nip.toString().trim() : "";
+      if (blacklistNip.has(nipStr)) {
+        deletedCount++;
+      } else {
+        output.push(dataTarget[i]);
+      }
     }
-  }
 
-  if (countDihapus === 0) {
-    if(ui) ui.alert('Tidak ada pegawai di sheet "pegawai" yang cocok dengan daftar pengecualian.');
-    return { status: 'info', message: 'Tidak ada pegawai di sheet "pegawai" yang cocok dengan daftar pengecualian.' };
-  }
+    if (deletedCount > 0) {
+      sheetTarget.clearContents();
+      sheetTarget.getRange(1, 1, output.length, output[0].length).setValues(output);
+    }
+    return deletedCount;
+  };
 
-  // 4. Tulis ulang
-  sheetPegawai.clearContents();
-  sheetPegawai.getRange(1, 1, outputData.length, outputData[0].length).setValues(outputData);
+  const hapusPegawai = hapusPengecualianDariSheet('pegawai');
+  const hapusPlt = hapusPengecualianDariSheet('pegawai_plt_plh');
+  const totalHapus = hapusPegawai + hapusPlt;
+
+  if (totalHapus === 0) {
+    if(ui) ui.alert('Tidak ada pegawai di sheet "pegawai" atau "pegawai_plt_plh" yang cocok dengan daftar pengecualian.');
+    return { status: 'info', message: 'Tidak ada pegawai yang cocok dengan daftar pengecualian.' };
+  }
 
   // 5. Update Rekap OPD
   _generateLaporanOPD(false);
 
-  const finalMsg = 'Selesai! Sebanyak ' + countDihapus + ' pegawai telah dihapus dari sheet "pegawai". Nilai bulanan tetap aman dan Rekap OPD sudah diperbarui otomatis.';
+  const finalMsg = `Selesai! Sebanyak ${totalHapus} pegawai (Reguler: ${hapusPegawai}, PLT/PLH: ${hapusPlt}) telah dihapus. Nilai bulanan aman dan Rekap OPD sudah diperbarui otomatis.`;
   if(ui) ui.alert(finalMsg);
   return { status: 'success', message: finalMsg };
 }
@@ -383,7 +387,7 @@ function onOpen() {
   menu.addItem('1. Ambil Data Pegawai', 'generateMasterPegawai');
   menu.addSeparator();
 
-  const subMenu = ui.createMenu('3. Ambil Nilai Kinerja');
+  const subMenu = ui.createMenu('4. Ambil Nilai Kinerja');
   subMenu.addItem('Bulan Januari', 'syncJan');
   subMenu.addItem('Bulan Februari', 'syncFeb');
   subMenu.addItem('Bulan Maret', 'syncMar');
@@ -403,7 +407,8 @@ function onOpen() {
 
   ui.createMenu('Report Kinerja')
     .addItem('1. Ambil Data Pegawai', 'generateMasterPegawai')
-    .addItem('2. Hapus Pegawai Pengecualian', 'hapusPengecualian')
+    .addItem('2. Ambil Data Pegawai PLT/PLH', 'generateDataPltPlh')
+    .addItem('3. Hapus Pegawai Pengecualian', 'hapusPengecualian')
     .addSubMenu(subMenu)
     .addToUi();
 }
@@ -491,49 +496,60 @@ function _updateNilaiBulan(targetBulan) {
     }
   }
 
-  // 2. Baca Sheet Pegawai
-  // Gunakan getDisplayValues() untuk mencocokkan format NIP yang identik
-  const dataPegawai = sheetPegawai.getDataRange().getDisplayValues();
-  if (dataPegawai.length <= 1) {
-    _alert('Error: Sheet "pegawai" kosong. Jalankan menu ke-1 dulu.');
-    return;
-  }
+  // Fungsi internal untuk mengupdate sheet target dengan nilai kinerja
+  const updateSheetTarget = (sheetName) => {
+    const sheetTarget = ss.getSheetByName(sheetName);
+    if (!sheetTarget) return { isUpdated: false, count: 0, err: `Sheet ${sheetName} tidak ada` };
 
-  const headerPegawai = dataPegawai[0];
-  const idxId = headerPegawai.indexOf('id');
-  const posisiKolomBulan = headerPegawai.indexOf(targetBulan);
+    const dataTarget = sheetTarget.getDataRange().getDisplayValues();
+    if (dataTarget.length <= 1) return { isUpdated: false, count: 0, err: `Sheet ${sheetName} kosong` };
 
-  if(idxId === -1) {
-    _alert('Error: Kolom "id" tidak ditemukan di sheet pegawai.');
-    return;
-  }
-  if (posisiKolomBulan === -1) {
-    _alert('Error: Kolom "' + targetBulan + '" tidak ditemukan di sheet pegawai. Pastikan Anda sudah menjalankan menu ke-1.');
-    return;
-  }
+    const header = dataTarget[0].map(h => h.toString().toLowerCase().trim());
+    let idxId = header.indexOf('id');
+    if (idxId === -1) idxId = header.indexOf('nip');
+    if (idxId === -1) idxId = header.indexOf('nip_baru');
+    
+    const posisiKolomBulan = header.indexOf(targetBulan);
 
-  // 3. Masukkan Nilai Hanya Pada Kolom Bulan Tersebut
-  let jumlahUpdate = 0;
-  for (let i = 1; i < dataPegawai.length; i++) {
-    const idPegawai = dataPegawai[i][idxId] ? dataPegawai[i][idxId].toString().trim() : null;
+    if (idxId === -1) return { isUpdated: false, count: 0, err: `Kolom NIP/ID tidak ditemukan di sheet ${sheetName}` };
+    if (posisiKolomBulan === -1) return { isUpdated: false, count: 0, err: `Kolom ${targetBulan} tidak ditemukan di sheet ${sheetName}` };
 
-    if (idPegawai) {
-      if (mapNilai[idPegawai] !== undefined && mapNilai[idPegawai] !== "") {
-        dataPegawai[i][posisiKolomBulan] = mapNilai[idPegawai];
-        jumlahUpdate++;
-      } else {
-        dataPegawai[i][posisiKolomBulan] = "";
+    let updateCount = 0;
+    for (let i = 1; i < dataTarget.length; i++) {
+      const idTarget = dataTarget[i][idxId] ? dataTarget[i][idxId].toString().trim() : null;
+
+      if (idTarget) {
+        if (mapNilai[idTarget] !== undefined && mapNilai[idTarget] !== "") {
+          dataTarget[i][posisiKolomBulan] = mapNilai[idTarget];
+          updateCount++;
+        } else {
+          dataTarget[i][posisiKolomBulan] = "";
+        }
       }
     }
+
+    sheetTarget.getRange(1, 1, dataTarget.length, dataTarget[0].length).setValues(dataTarget);
+    return { isUpdated: true, count: updateCount, err: '' };
+  };
+
+  // 2 & 3 & 4. Update Sheet Pegawai
+  const resPegawai = updateSheetTarget('pegawai');
+  if (!resPegawai.isUpdated) {
+    _alert(`Error: ${resPegawai.err}. Jalankan menu ke-1 (Ambil Data Pegawai) dulu.`);
+    return;
+  }
+  let totalUpdate = resPegawai.count;
+
+  // Coba Update Sheet PLT/PLH (opsional, tidak error jika tidak ada)
+  const resPlt = updateSheetTarget('pegawai_plt_plh');
+  if (resPlt.isUpdated) {
+    totalUpdate += resPlt.count;
   }
 
-  // 4. Timpa Kembali ke Spreadsheet
-  sheetPegawai.getRange(1, 1, dataPegawai.length, dataPegawai[0].length).setValues(dataPegawai);
-
-  // Update otomatis sheet OPD
+  // Update otomatis sheet OPD sheet OPD
   _generateLaporanOPD(false);
 
-  _alert('Berhasil! Menarik nilai kinerja bulan [' + targetBulan.toUpperCase() + '] (' + jumlahUpdate + ' pegawai lapor). Sheet OPD ikut diperbarui.', true);
+  _alert('Berhasil! Menarik nilai kinerja bulan [' + targetBulan.toUpperCase() + '] (' + totalUpdate + ' riwayat diperbarui). Sheet OPD ikut diperbarui.', true);
 }
 
 /**
@@ -1246,4 +1262,230 @@ function resetDatabase() {
   });
   
   return { status: 'success', message: 'Seluruh database telah berhasil direset!' };
+}
+
+// ==========================================
+// FUNGSI DATA PLT / PLH
+// ==========================================
+
+function generateDataPltPlh() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let ui = null;
+  try { ui = SpreadsheetApp.getUi(); } catch(e) {}
+
+  const _alert = (msg, isSuccess = false) => {
+    if(ui) ui.alert(msg);
+    else if(!isSuccess) throw new Error(msg);
+  };
+
+  const sheetSkp = ss.getSheetByName('skp');
+  
+  if (!sheetSkp) {
+    _alert('Error: Pastikan sheet "skp" ada di file ini.');
+    return;
+  }
+
+  // Cek Lisensi
+  if (!cekLisensi(sheetSkp, ui)) return;
+
+  const dataSkpRaw = sheetSkp.getDataRange().getDisplayValues();
+
+  let barisHeaderSkp = -1;
+  for (let i = 0; i < 20; i++) {
+    if (dataSkpRaw[i] && dataSkpRaw[i].indexOf('nip') !== -1) {
+      barisHeaderSkp = i;
+      break;
+    }
+  }
+
+  if (barisHeaderSkp === -1) {
+    _alert('Error: Kolom "nip" tidak ditemukan di 20 baris pertama sheet "skp".');
+    return;
+  }
+
+  const headerSkp = dataSkpRaw[barisHeaderSkp];
+  const idxNip = headerSkp.indexOf('nip');
+  const idxIsPlt = headerSkp.indexOf('is_plt_plh');
+  const idxPeriodeAkhir = headerSkp.indexOf('periode_akhir'); 
+
+  if (idxNip === -1 || idxIsPlt === -1 || idxPeriodeAkhir === -1) {
+    _alert('Error: Kolom "nip", "is_plt_plh", atau "periode_akhir" tidak ditemukan di baris header sheet "skp".');
+    return;
+  }
+
+  const masterPltPlhMap = {};
+
+  // Baca data pengecualian
+  const sheetPengecualian = ss.getSheetByName('pengecualian');
+  const blacklistNip = new Set();
+  if (sheetPengecualian) {
+    const dataPengecualian = sheetPengecualian.getDataRange().getDisplayValues();
+    if (dataPengecualian.length > 0) {
+      const headerPengecualian = dataPengecualian[0].map(h => h.toString().toLowerCase().trim());
+      const idxNipPengecualian = headerPengecualian.indexOf('nip');
+      if (idxNipPengecualian !== -1) {
+        for (let i = 1; i < dataPengecualian.length; i++) {
+          const nip = dataPengecualian[i][idxNipPengecualian];
+          if (nip) blacklistNip.add(nip.toString().trim());
+        }
+      }
+    }
+  }
+
+  // Looping mulai dari baris SETELAH header
+  for (let i = barisHeaderSkp + 1; i < dataSkpRaw.length; i++) {
+    const row = dataSkpRaw[i];
+    const nipStr = row[idxNip] ? row[idxNip].toString().trim() : null;
+    const isPlt = row[idxIsPlt];
+
+    if (nipStr && isPlt !== 0 && isPlt !== '0' && isPlt !== '') {
+      // Pastikan NIP tidak ada di daftar pengecualian (pensiun/mutasi)
+      if (blacklistNip.has(nipStr)) {
+        continue;
+      }
+
+      const tglPeriodeAkhirBaru = row[idxPeriodeAkhir] ? new Date(row[idxPeriodeAkhir]).getTime() : 0;
+
+      if (masterPltPlhMap[nipStr]) {
+        const rowLama = masterPltPlhMap[nipStr];
+        const tglPeriodeAkhirLama = rowLama[idxPeriodeAkhir] ? new Date(rowLama[idxPeriodeAkhir]).getTime() : 0;
+
+        if (tglPeriodeAkhirBaru > tglPeriodeAkhirLama) {
+          masterPltPlhMap[nipStr] = row;
+        }
+      } else {
+        masterPltPlhMap[nipStr] = row;
+      }
+    }
+  }
+
+  let sheetPltPlh = ss.getSheetByName('pegawai_plt_plh');
+  if (!sheetPltPlh) {
+    sheetPltPlh = ss.insertSheet('pegawai_plt_plh');
+  }
+
+  const daftarBulan = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
+  const oldBulanMap = {};
+
+  if (sheetPltPlh.getLastRow() > 1) {
+    const oldData = sheetPltPlh.getDataRange().getDisplayValues();
+    const oldHeader = oldData[0].map(h => h.toString().toLowerCase().trim());
+
+    let oldIdxNip = oldHeader.indexOf('nip_baru');
+    if (oldIdxNip === -1) oldIdxNip = oldHeader.indexOf('nip');
+    if (oldIdxNip === -1) oldIdxNip = oldHeader.indexOf('id');
+
+    if (oldIdxNip !== -1) {
+      for (let i = 1; i < oldData.length; i++) {
+        const oldRow = oldData[i];
+        const nipLama = oldRow[oldIdxNip] ? oldRow[oldIdxNip].toString().trim() : "";
+        if (nipLama) {
+          const oldScores = {};
+          daftarBulan.forEach(b => {
+             const idxB = oldHeader.indexOf(b);
+             oldScores[b] = idxB !== -1 ? oldRow[idxB] : "";
+          });
+          oldBulanMap[nipLama] = oldScores;
+        }
+      }
+    }
+  }
+
+  const outputData = [];
+  const headerOutput = [...headerSkp];
+  daftarBulan.forEach(b => headerOutput.push(b)); 
+
+  outputData.push(headerOutput);
+
+  const daftarNip = Object.keys(masterPltPlhMap);
+  daftarNip.forEach(nip => {
+    const barisPegawai = [...masterPltPlhMap[nip]];
+
+    daftarBulan.forEach(b => {
+      let val = "";
+      if (oldBulanMap[nip] && oldBulanMap[nip][b]) {
+        val = oldBulanMap[nip][b];
+      }
+      barisPegawai.push(val);
+    });
+
+    outputData.push(barisPegawai);
+  });
+
+  sheetPltPlh.clearContents();
+
+  if(outputData.length <= 1) {
+    _alert('Tidak ada data PLT/PLH yang ditemukan (kosong).');
+    return;
+  }
+
+  sheetPltPlh.getRange(1, 1, outputData.length, outputData[0].length).setValues(outputData);
+  _alert('Sukses! Ditemukan ' + (outputData.length - 1) + ' pegawai berstatus PLT/PLH. Data dicetak ke sheet "pegawai_plt_plh".', true);
+}
+
+function getPltPlhData() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetPltPlh = ss.getSheetByName('pegawai_plt_plh');
+  
+  if (!sheetPltPlh) {
+    return { status: 'error', message: 'Sheet "pegawai_plt_plh" belum ada. Silakan jalankan menu Ambil Data Pegawai PLT/PLH terlebih dahulu di Spreadsheet.' };
+  }
+
+  const sheetSkp = ss.getSheetByName('skp');
+  if (sheetSkp) {
+    const judulLaporan = sheetSkp.getRange('A1').getValue().toString().trim();
+    const yearMatch = judulLaporan.match(/20\d{2}/);
+    let tahunLaporan = new Date().getFullYear();
+    if (yearMatch) tahunLaporan = parseInt(yearMatch[0]);
+    if (tahunLaporan > _getValidTahunLisensi()) {
+      return { status: 'error', message: 'Masa lisensi berakhir.' };
+    }
+  }
+
+  let pltPlhData = [];
+  const rawPltPlh = sheetPltPlh.getDataRange().getDisplayValues();
+  if (rawPltPlh.length > 1) {
+    const header = rawPltPlh[0].map(h => h.toString().toLowerCase().trim());
+    const idxNip = header.indexOf('nip');
+    const idxNama = header.indexOf('nama');
+    
+    let idxJabatan = header.indexOf('skp_jabatan');
+
+    let idxUnitKerja = header.indexOf('unit_kerja');
+    if (idxUnitKerja === -1) idxUnitKerja = header.indexOf('skp_unor');
+    if (idxUnitKerja === -1) idxUnitKerja = header.indexOf('skp_unor_nama');
+
+    const idxOpd = header.indexOf('skp_unor_induk');
+    const idxStatus = header.indexOf('skp_status');
+    const idxAtasan = header.indexOf('nama_atasan');
+
+    const daftarBulanStr = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
+    const idxBulanArr = daftarBulanStr.map(b => header.indexOf(b));
+
+    for (let i = 1; i < rawPltPlh.length; i++) {
+      const row = rawPltPlh[i];
+      let rowData = {
+        nip: idxNip !== -1 ? row[idxNip].toString().trim() : "",
+        nama: idxNama !== -1 ? row[idxNama].toString().trim() : "",
+        jabatan: idxJabatan !== -1 ? row[idxJabatan].toString().trim() : "",
+        unitKerja: idxUnitKerja !== -1 ? row[idxUnitKerja].toString().trim() : "",
+        opd: idxOpd !== -1 ? row[idxOpd].toString().trim() : "",
+        status: idxStatus !== -1 ? row[idxStatus].toString().trim() : "",
+        atasan: idxAtasan !== -1 ? row[idxAtasan].toString().trim() : "",
+        bulanan: []
+      };
+
+      idxBulanArr.forEach(idxB => {
+        if (idxB !== -1) {
+          rowData.bulanan.push(row[idxB].toString().trim());
+        } else {
+          rowData.bulanan.push("");
+        }
+      });
+
+      pltPlhData.push(rowData);
+    }
+  }
+
+  return { status: 'success', data: pltPlhData };
 }
