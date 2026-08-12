@@ -1864,13 +1864,13 @@
         this.inputPage = document.getElementById(config.elements.inputPage);
         this.totalPagesInfo = document.getElementById(config.elements.totalPagesInfo);
         this.totalDataInfo = document.getElementById(config.elements.totalDataInfo);
-        
+
         this.onRender = config.onRender;
         this.onEmpty = config.onEmpty;
 
         this.currentPage = 1;
         this.itemsPerPage = this.itemsPerPageSelect ? (parseInt(this.itemsPerPageSelect.value) || 10) : 10;
-        
+
         this.initListeners();
         this.render();
       }
@@ -1943,7 +1943,7 @@
 
       render() {
         const totalItems = this.data.length;
-        
+
         if (totalItems === 0) {
           if (this.totalPagesInfo) this.totalPagesInfo.innerText = '1';
           if (this.btnFirst) this.btnFirst.disabled = true;
@@ -1951,7 +1951,7 @@
           if (this.btnNext) this.btnNext.disabled = true;
           if (this.btnLast) this.btnLast.disabled = true;
           if (this.totalDataInfo) this.totalDataInfo.innerText = '(0 data)';
-          
+
           if (this.onEmpty) this.onEmpty();
           return;
         }
@@ -1966,7 +1966,7 @@
 
         if (this.inputPage) this.inputPage.value = this.currentPage;
         if (this.totalPagesInfo) this.totalPagesInfo.innerText = totalPages;
-        
+
         if (this.btnFirst) this.btnFirst.disabled = this.currentPage === 1;
         if (this.btnPrev) this.btnPrev.disabled = this.currentPage === 1;
         if (this.btnNext) this.btnNext.disabled = this.currentPage === totalPages;
@@ -2599,13 +2599,13 @@
               let pHTML = '';
               let pNo = startIdx + 1;
               const activeBulan = document.getElementById('filterBulan').value;
-      
+
               pageData.forEach(p => {
                 let pBulan = '';
                 p.bulanan.forEach((val, idx) => {
                    let mClass = val ? 'val-green' : 'val-red';
                    let displayVal = val ? val.toString().trim() : '-';
-      
+
                    if (displayVal !== '-') {
                      if (displayVal.length > 2) {
                        const parts = displayVal.split(' ');
@@ -2618,12 +2618,12 @@
                        displayVal = displayVal.toUpperCase();
                      }
                    }
-      
+
                    let hlClass = (activeBulan !== 'semua' && parseInt(activeBulan) === idx) ? ' highlight-col' : '';
-      
+
                    pBulan += `<td class="${mClass}${hlClass}" title="${val}" style="cursor:help;">${displayVal}</td>`;
                 });
-      
+
                 pHTML += `
                   <tr>
                     <td>${pNo++}</td>
@@ -2637,7 +2637,7 @@
                   </tr>
                 `;
               });
-      
+
               document.querySelector('#pegawaiTable tbody').innerHTML = pHTML;
             },
             onEmpty: () => {
@@ -2722,8 +2722,8 @@
            let txtBulan = 'Periode Bulan ' + textBulan;
            const idxBulan = parseInt(activeBulanVal);
            if (globalTimestamps[idxBulan]) {
-             let tstamp = globalTimestamps[idxBulan].replace('Data ditarik pada: ', '').trim();
-             txtBulan += ' (Update: ' + tstamp + ')';
+             let tstamp = globalTimestamps[idxBulan].trim();
+             txtBulan += ' (' + tstamp + ')';
            }
            printCenter(txtBulan);
         }
@@ -2986,11 +2986,11 @@
               const tbody = document.querySelector('#pltPlhTable tbody');
               tbody.innerHTML = '';
               const bulanVal = document.getElementById('filterPltPlhBulan').value;
-      
+
               pageData.forEach((p, index) => {
                 const actualIndex = startIdx + index + 1;
                 const tr = document.createElement('tr');
-      
+
                 let html = `
                   <td class="text-center">${actualIndex}</td>
                   <td style="white-space: nowrap; text-align: left; font-size: 0.75rem;">${p.nip}</td>
@@ -3000,12 +3000,12 @@
                   <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 140px; font-size: 0.75rem;">${p.unitKerja}</td>
                   <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 150px; font-size: 0.7rem;">${p.opd}</td>
                 `;
-      
+
                 for(let i=0; i<=12; i++) {
                    let val = p.bulanan[i] || "";
                    let mClass = val ? 'val-green' : 'val-red';
                    let displayVal = val ? val.toString().trim() : '-';
-      
+
                    if (displayVal !== '-') {
                      if (displayVal.length > 2) {
                        const parts = displayVal.split(' ');
@@ -3018,11 +3018,11 @@
                        displayVal = displayVal.toUpperCase();
                      }
                    }
-      
+
                    let hlClass = (bulanVal === i.toString()) ? ' highlight-col' : '';
                    html += `<td class="${mClass}${hlClass}" title="${val}" style="cursor:help; text-align:center;">${displayVal}</td>`;
                 }
-      
+
                 tr.innerHTML = html;
                 tbody.appendChild(tr);
               });
@@ -3113,8 +3113,8 @@
            let txtBulan = 'Periode Bulan ' + textBulan;
            const idxBulan = parseInt(activeBulanVal);
            if (globalTimestamps[idxBulan]) {
-             let tstamp = globalTimestamps[idxBulan].replace('Data ditarik pada: ', '').trim();
-             txtBulan += ' (Update: ' + tstamp + ')';
+             let tstamp = globalTimestamps[idxBulan].trim();
+             txtBulan += ' (' + tstamp + ')';
            }
            printCenter(txtBulan);
         }
