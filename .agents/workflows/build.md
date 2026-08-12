@@ -1,11 +1,11 @@
 ---
 name: build
-description: Standar operasional bagi agen AI untuk melakukan proses build (tahap pengujian) dengan mengumpulkan file-file spesifik ke dalam folder build.
+description: Standar operasional bagi agen AI untuk melakukan proses build dengan mengumpulkan file-file spesifik ke dalam folder build.
 ---
 
-# Panduan Workflow: Melakukan Build (Test Mode)
+# Panduan Workflow: Melakukan Build
 
-Dokumen ini mendefinisikan standar operasional (SOP) bagi Agen AI ketika pengguna meminta untuk melakukan proses *build* (menggunakan perintah `/build` atau "tolong di build"). Saat ini *build* berjalan dalam mode *test* tanpa sistem *versioning* maupun kompresi file *zip*.
+Dokumen ini mendefinisikan standar operasional (SOP) bagi Agen AI ketika pengguna meminta untuk melakukan proses *build* (menggunakan perintah `/build` atau "tolong di build"). Inti dari proses *build* ini hanyalah menyalin (*copy*) file-file utama ke dalam folder `build`.
 
 ## Langkah-langkah (SOP)
 
