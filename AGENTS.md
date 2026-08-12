@@ -42,6 +42,7 @@ Proyek ini sangat sensitif terhadap penamaan *Sheet*. Jangan asal mengubah nama 
 - **Sheet Mentah BKN**: `skp` (Master data), `jan`, `feb`, `mar`, `apr`, `mei`, `jun`, `jul`, `agu`, `sep`, `okt`, `nov`, `des`, `tahunan` (Data Penilaian Bulanan/Tahunan).
 - **Sheet Agregasi (Dibuat otomatis oleh Script)**:
   - `pegawai`: Ringkasan seluruh nilai dari setiap bulan dan master data.
+  - `pltplh`: Daftar Pejabat Pelaksana Tugas (PLT) dan Pelaksana Harian (PLH).
   - `opd`: Rekap persentase capaian per Instansi/OPD.
   - `pengecualian`: Daftar pegawai (Pensiun, Mutasi, Cuti, dll) yang tidak masuk ke penilaian dinas.
 

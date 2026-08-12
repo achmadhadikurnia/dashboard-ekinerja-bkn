@@ -10,7 +10,7 @@ Aplikasi Web terintegrasi berbasis **Google Apps Script (GAS)** dan **Google She
 - **Sinkronisasi Otomatis**: Secara cerdas membedakan antara file "Laporan SKP" (Data Master) dan "Laporan Penilaian SKP" (Data Bulanan), lalu otomatis memperbarui lembar kerja (*sheet*) yang sesuai di database.
 - **Pengiriman Data Bertahap (Chunking)**: Mencegah batas waktu eksekusi (timeout) Google Apps Script saat memproses ribuan baris data pegawai dengan membagi data menjadi pecahan kecil (500 baris per kirim).
 - **Dashboard Analitik Dinamis**: Menampilkan ringkasan statistik secara *real-time* dengan antarmuka modern (Glassmorphism) dan notifikasi interaktif (SweetAlert2).
-- **Filter Canggih**: Mendukung pencarian dan penyaringan berdasarkan Nama/NIP, Unit Kerja/OPD, Status Kinerja (Sudah/Belum), dan Periode Bulan.
+- **Filter & Kategori Canggih**: Mendukung pencarian dan penyaringan berdasarkan Nama/NIP, Unit Kerja/OPD, Status Kinerja (Sudah/Belum), Periode Bulan, **serta pemisahan khusus untuk data Pejabat PLT/PLH**.
 - **Ekspor PDF Cerdas**: Terintegrasi dengan *jsPDF* & *autoTable*. Kolom tabel PDF menyesuaikan secara dinamis—jika difilter 1 bulan, hanya kolom nilai bulan tersebut yang dicetak, meminimalisir teks terpotong dan membuat desain lebih elegan.
 - **Fitur Pengecualian**: Menyaring pegawai dengan status khusus (Pensiun, Mutasi, Hukdis, dsb) agar terpisah dan tidak tercatat secara keliru sebagai pegawai yang belum menyusun SKP.
 - **Reset Database**: Fitur pengosongan data secara cepat dan permanen dengan satu klik, sambil tetap mempertahankan konfigurasi utama (Pengaturan) agar aplikasi siap digunakan ulang kapan saja.
