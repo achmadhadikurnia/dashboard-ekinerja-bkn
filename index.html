@@ -792,13 +792,13 @@
       align-items: center;
       gap: 1rem;
     }
-    
+
     .footer-left {
       margin: 0;
       line-height: 1.5;
       text-align: left;
     }
-    
+
     .footer-right {
       margin: 0;
       text-align: right;
@@ -826,13 +826,13 @@
       .content-area { padding: 1rem; }
 
       .summary-grid { grid-template-columns: 1fr; }
-      
+
       .footer-container {
         flex-direction: column;
         justify-content: center;
         text-align: center;
       }
-      
+
       .footer-left, .footer-right {
         text-align: center;
       }
@@ -1229,6 +1229,9 @@
               <div id="pltPlh-content" style="display: none;">
                 <div class="filter-container">
                   <input type="text" id="searchPltPlh" class="search-box" style="flex: 1; min-width: 200px;" placeholder="Cari Nama / NIP...">
+                  <select id="filterPltPlhJenisPegawai" class="search-box select-box" style="flex: 1; min-width: 130px;">
+                    <option value="semua">Semua Jenis Pegawai</option>
+                  </select>
                   <select id="filterPltPlhOpd" class="search-box select-box" style="flex: 1; min-width: 150px;">
                     <option value="semua">Semua OPD</option>
                   </select>
@@ -1269,6 +1272,11 @@
                   </button>
                 </div>
 
+                <div id="timestampInfoPltPlh" style="display: none; align-items: center; gap: 0.5rem; background-color: rgba(59, 130, 246, 0.1); color: var(--accent); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.875rem; margin-bottom: 1.5rem; font-weight: 500;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  <span></span>
+                </div>
+
                 <div class="table-responsive">
                   <table id="pltPlhTable">
                     <thead>
@@ -1276,6 +1284,7 @@
                         <th width="1%">No.</th>
                         <th width="1%">NIP</th>
                         <th>Nama</th>
+                        <th width="1%" style="white-space: nowrap;">Jenis Pegawai</th>
                         <th>Jabatan</th>
                         <th>Unit Kerja</th>
                         <th>OPD</th>
@@ -1619,7 +1628,7 @@
       }
       updateThemeIcon(isDark);
     }
-    
+
     document.addEventListener('DOMContentLoaded', () => {
       const yearEl = document.getElementById('currentYear');
       if (yearEl) {
@@ -1852,6 +1861,11 @@
       const totalPegawai = data.grandTotal ? data.grandTotal.totalPegawai : 0;
       if (totalPegawai > 0) {
         document.getElementById('pegawai-loading-text').innerText = `Sedang mengunduh ${formatNumber(totalPegawai)} rincian pegawai dari server...`;
+      }
+
+      const totalPltPlh = data.grandTotal ? data.grandTotal.totalPltPlh : 0;
+      if (totalPltPlh > 0) {
+        document.getElementById('pltPlh-loading-text').innerText = `Sedang mengunduh ${formatNumber(totalPltPlh)} rincian PLT/PLH dari server...`;
       }
 
       // Panggil asinkron tabel pegawai
@@ -2503,7 +2517,7 @@
         });
 
         if (totalItems === 0) {
-           pHTML += `<tr><td colspan="17" class="val-muted" style="text-align:center; padding: 1rem;">Tidak ada data pegawai yang cocok dengan filter.</td></tr>`;
+           pHTML += `<tr><td colspan="20" class="val-muted" style="text-align:center; padding: 1rem;">Tidak ada data yang cocok dengan filter.</td></tr>`;
         }
 
         document.querySelector('#pegawaiTable tbody').innerHTML = pHTML;
@@ -2797,15 +2811,19 @@
       const inputPage = document.getElementById('inputPagePltPlh');
       const totalPagesInfo = document.getElementById('totalPagesInfoPltPlh');
       const totalDataInfo = document.getElementById('totalDataInfoPltPlh');
-      
+
+      const filterJenisPegawai = document.getElementById('filterPltPlhJenisPegawai');
+
       let itemsPerPage = parseInt(itemsPerPageSelect.value) || 10;
 
       const opdSet = new Set();
       const skpStatusSet = new Set();
-      
+      const jenisPegawaiSet = new Set();
+
       globalPltPlhData.forEach(p => {
          if (p.opd && p.opd !== '-') opdSet.add(p.opd);
          if (p.status && p.status !== '-') skpStatusSet.add(p.status);
+         if (p.jenis_pegawai && p.jenis_pegawai !== '-') jenisPegawaiSet.add(p.jenis_pegawai);
       });
 
       Array.from(opdSet).sort().forEach(opd => {
@@ -2822,9 +2840,17 @@
          filterSkpStatus.appendChild(opt);
       });
 
+      Array.from(jenisPegawaiSet).sort().forEach(jp => {
+         const opt = document.createElement('option');
+         opt.value = jp;
+         opt.innerText = jp;
+         filterJenisPegawai.appendChild(opt);
+      });
+
       const applyFilters = () => {
         const searchVal = searchInput.value.toLowerCase();
         const opdVal = filterOpd.value;
+        const jenisPegawaiVal = filterJenisPegawai.value;
         const bulanVal = filterBulan.value;
         const statusVal = filterStatus.value;
         const predikatVal = filterPredikat.value;
@@ -2839,32 +2865,59 @@
            if(activeTh) activeTh.classList.add('highlight-col');
         }
 
+        const tsDiv = document.getElementById('timestampInfoPltPlh');
+        if (bulanVal !== 'semua' || statusVal !== 'semua' || predikatVal !== 'semua') {
+           const idxBulan = bulanVal === 'semua' ? -1 : parseInt(bulanVal);
+           if (idxBulan !== -1 && globalTimestamps[idxBulan]) {
+             tsDiv.style.display = 'flex';
+             tsDiv.querySelector('span').innerText = globalTimestamps[idxBulan];
+           } else {
+             tsDiv.style.display = 'none';
+           }
+        } else {
+           tsDiv.style.display = 'none';
+        }
+
         let displayData = globalPltPlhData.filter(p => {
           const mNama = p.nama.toLowerCase().includes(searchVal);
           const mNip = p.nip.toLowerCase().includes(searchVal);
           const mOpd = opdVal === 'semua' || p.opd === opdVal;
+          const mJenis = jenisPegawaiVal === 'semua' || p.jenis_pegawai === jenisPegawaiVal;
           const mSkpStatus = skpStatusVal === 'semua' || p.status === skpStatusVal;
-
-          let mStatus = true;
-          let mPredikat = true;
-          
-          if(bulanVal !== 'semua') {
-            const bIdx = parseInt(bulanVal);
-            const nilaiBulanan = p.bulanan[bIdx] || "";
-
-            if(statusVal === 'sudah') mStatus = nilaiBulanan !== "";
-            else if(statusVal === 'belum') mStatus = nilaiBulanan === "";
-
-            if(predikatVal !== 'semua') {
-               mPredikat = nilaiBulanan.toLowerCase() === predikatVal;
-            }
-          }
-
-          return (mNama || mNip) && mOpd && mSkpStatus && mStatus && mPredikat;
+          return (mNama || mNip) && mOpd && mJenis && mSkpStatus;
         });
 
+        if (bulanVal !== 'semua' || statusVal !== 'semua' || predikatVal !== 'semua') {
+           const idxBulan = bulanVal === 'semua' ? -1 : parseInt(bulanVal);
+
+          displayData = displayData.filter(p => {
+             if (idxBulan !== -1) {
+               const val = p.bulanan[idxBulan];
+               const isDinilai = (val && val !== '-') ? true : false;
+               if (statusVal === 'sudah' && !isDinilai) return false;
+               if (statusVal === 'belum' && isDinilai) return false;
+
+               if (predikatVal !== 'semua') {
+                 if (!isDinilai) return false;
+                 if (val.toLowerCase() !== predikatVal) return false;
+               }
+               return true;
+             } else {
+               const reportedVals = p.bulanan.filter(v => v && v !== "" && v !== "-");
+               const reportedCount = reportedVals.length;
+               if (statusVal === 'sudah' && reportedCount === 0) return false;
+               if (statusVal === 'belum' && reportedCount > 0) return false;
+
+               if (predikatVal !== 'semua') {
+                 const hasPredikat = reportedVals.some(v => v.toLowerCase() === predikatVal);
+                 if (!hasPredikat) return false;
+               }
+               return true;
+             }
+          });
+        }
+
         globalFilteredPltPlhData = displayData;
-        totalDataInfo.innerText = `(Total: ${displayData.length} Data)`;
         currentPltPlhPage = 1;
         inputPage.value = 1;
         renderTableChunk();
@@ -2873,10 +2926,10 @@
       const renderTableChunk = () => {
         const totalRows = globalFilteredPltPlhData.length;
         const totalPages = Math.ceil(totalRows / itemsPerPage) || 1;
-        
+
         if (currentPltPlhPage < 1) currentPltPlhPage = 1;
         if (currentPltPlhPage > totalPages) currentPltPlhPage = totalPages;
-        
+
         inputPage.value = currentPltPlhPage;
         totalPagesInfo.innerText = totalPages;
 
@@ -2889,9 +2942,18 @@
         const endIdx = startIdx + itemsPerPage;
         const pageData = globalFilteredPltPlhData.slice(startIdx, endIdx);
 
+        if (totalDataInfo) {
+          const actualEndIdx = Math.min(endIdx, totalRows);
+          if (totalRows > 0) {
+            totalDataInfo.innerText = `${startIdx + 1} - ${actualEndIdx} dari ${totalRows}`;
+          } else {
+            totalDataInfo.innerText = `(0 data)`;
+          }
+        }
+
         tbody.innerHTML = '';
         if(pageData.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="19" class="text-center">Tidak ada data ditemukan</td></tr>';
+          tbody.innerHTML = `<tr><td colspan="20" class="val-muted" style="text-align:center; padding: 1rem;">Tidak ada data yang cocok dengan filter.</td></tr>`;
           return;
         }
 
@@ -2900,11 +2962,12 @@
         pageData.forEach((p, index) => {
           const actualIndex = startIdx + index + 1;
           const tr = document.createElement('tr');
-          
+
           let html = `
             <td class="text-center">${actualIndex}</td>
             <td style="white-space: nowrap; text-align: left; font-size: 0.75rem;">${p.nip}</td>
             <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 120px; font-size: 0.75rem;"><strong>${p.nama}</strong></td>
+            <td style="white-space: nowrap; text-align: left; font-size: 0.75rem; text-transform: capitalize;">${p.jenis_pegawai ? p.jenis_pegawai.replace(/_/g, ' ') : '-'}</td>
             <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 140px; font-size: 0.75rem;">${p.jabatan}</td>
             <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 140px; font-size: 0.75rem;">${p.unitKerja}</td>
             <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 150px; font-size: 0.7rem;">${p.opd}</td>
@@ -2939,10 +3002,11 @@
 
       searchInput.addEventListener('input', applyFilters);
       filterOpd.addEventListener('change', applyFilters);
-      filterSkpStatus.addEventListener('change', applyFilters);
+      filterJenisPegawai.addEventListener('change', applyFilters);
       filterBulan.addEventListener('change', applyFilters);
       filterStatus.addEventListener('change', applyFilters);
       filterPredikat.addEventListener('change', applyFilters);
+      filterSkpStatus.addEventListener('change', applyFilters);
 
       itemsPerPageSelect.addEventListener('change', (e) => {
         itemsPerPage = parseInt(e.target.value);
@@ -2990,9 +3054,10 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('landscape', 'pt', 'a4');
 
-        const activeBulanVal = filterBulan.value;
+        const selBulan = document.getElementById('filterPltPlhBulan');
+        const activeBulanVal = selBulan.value;
         const isBulanSelected = activeBulanVal !== 'semua';
-        
+
         const pageWidth = doc.internal.pageSize.getWidth();
         let currentY = 30;
 
@@ -3007,15 +3072,18 @@
 
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
-        const titleText = "Laporan Rekapitulasi SKP PLT & PLH";
+        const titleText = globalReportTitle + ' (PLT/PLH)';
         const titleWidth = doc.getTextWidth(titleText);
         doc.text(titleText, (pageWidth - titleWidth) / 2, currentY);
         currentY += 15;
 
         doc.setFontSize(10);
-        const selBulan = document.getElementById('filterBulan');
+        const selOpd = document.getElementById('filterPltPlhOpd');
+        const textOpd = selOpd.options[selOpd.selectedIndex].text;
         const textBulan = selBulan.options[selBulan.selectedIndex].text;
-        
+        const selStatus = document.getElementById('filterPltPlhStatus');
+        const textStatus = selStatus.options[selStatus.selectedIndex].text;
+
         doc.setFont('helvetica', 'normal');
         const printCenter = (text) => {
            const w = doc.getTextWidth(text);
@@ -3023,6 +3091,12 @@
            currentY += 14;
         };
 
+        if (selOpd.value !== 'semua') {
+           printCenter(textOpd);
+        }
+        if (selStatus.value !== 'semua') {
+           printCenter('Status Penilaian: ' + textStatus);
+        }
         if (isBulanSelected) {
            let txtBulan = 'Periode Bulan ' + textBulan;
            const idxBulan = parseInt(activeBulanVal);
@@ -3035,18 +3109,34 @@
 
         let tableStartY = currentY + 10;
 
-        let headCols = ["No", "NIP", "Nama", "Jabatan", "Unit Kerja", "OPD"];
+        let headCols = ["No", "NIP", "Nama", "Jenis Pegawai", "Jabatan", "Unit Kerja", "OPD"];
+        const bulanLabels = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des", "THN"];
+
         if(isBulanSelected) {
-           headCols.push("Nilai");
+           const idxBulan = parseInt(activeBulanVal);
+           headCols.push(bulanLabels[idxBulan]);
         } else {
-           headCols.push("Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des", "THN");
+           headCols.push(...bulanLabels);
         }
 
         const bodyData = dataToExport.map((p, index) => {
+           const getDisplay = (val) => {
+             if(!val) return '-';
+             let s = val.toString().trim();
+             if (s.length > 2) {
+               const parts = s.split(' ');
+               if (parts.length > 1) return parts.map(kata => kata[0].toUpperCase()).join('');
+               return s.substring(0, 1).toUpperCase();
+             }
+             return s.toUpperCase();
+           };
+
+           const jpDisplay = p.jenis_pegawai ? p.jenis_pegawai.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : '-';
            let row = [
              index + 1,
              p.nip,
              p.nama,
+             jpDisplay,
              p.jabatan,
              p.unitKerja,
              p.opd
@@ -3054,14 +3144,10 @@
 
            if(isBulanSelected) {
              const bIdx = parseInt(activeBulanVal);
-             let n = p.bulanan[bIdx] || "-";
-             if(n !== "-") n = n.charAt(0).toUpperCase() + n.slice(1);
-             row.push(n);
+             row.push(getDisplay(p.bulanan[bIdx]));
            } else {
              for(let i=0; i<=12; i++) {
-               let n = p.bulanan[i] || "-";
-               if(n !== "-") n = n.charAt(0).toUpperCase() + n.slice(1);
-               row.push(n);
+               row.push(getDisplay(p.bulanan[i]));
              }
            }
            return row;
@@ -3073,12 +3159,12 @@
         };
 
         if (isBulanSelected) {
-          columnStyles[6] = { cellWidth: 50, halign: 'center' };
+          columnStyles[7] = { cellWidth: 50, halign: 'center' };
         } else {
-          for (let i = 6; i <= 17; i++) { columnStyles[i] = { cellWidth: 20, halign: 'center' }; }
-          columnStyles[18] = { cellWidth: 35, halign: 'center' };
+          for (let i = 7; i <= 18; i++) { columnStyles[i] = { cellWidth: 20, halign: 'center' }; }
+          columnStyles[19] = { cellWidth: 35, halign: 'center' };
         }
-        
+
         const selectedMonthIdx = isBulanSelected ? parseInt(activeBulanVal) : -1;
 
         doc.autoTable({
@@ -3094,13 +3180,13 @@
             if (data.section === 'head' && data.column.index === 0) {
               data.cell.styles.halign = 'right';
             }
-            if (isBulanSelected && data.column.index === 6) {
+            if (isBulanSelected && data.column.index === 7) {
               if (data.section === 'head') {
                 data.cell.styles.fillColor = [59, 130, 246]; // Blue-500
               } else if (data.section === 'body') {
                 data.cell.styles.fillColor = [219, 234, 254]; // Blue-100
               }
-            } else if (!isBulanSelected && data.column.index === (selectedMonthIdx + 6)) {
+            } else if (!isBulanSelected && data.column.index === (selectedMonthIdx + 7)) {
               if (data.section === 'head') {
                 data.cell.styles.fillColor = [59, 130, 246]; // Blue-500
               } else if (data.section === 'body') {
@@ -3110,7 +3196,26 @@
           }
         });
 
-        doc.save(`Laporan_PLT_PLH_${Date.now()}.pdf`);
+        // Bentuk Nama File Dinamis
+        let strBulan = "semua_bulan";
+        if (activeBulanVal !== 'semua') {
+          if (activeBulanVal === '12') strBulan = "tahunan";
+          else strBulan = (parseInt(activeBulanVal) + 1).toString().padStart(2, '0');
+        }
+
+        let strStatus = "semua_status";
+        const valStatus = document.getElementById('filterPltPlhStatus').value;
+        if (valStatus === 'sudah') strStatus = "1";
+        else if (valStatus === 'belum') strStatus = "0";
+
+        let strOpd = "semua_opd";
+        const valOpd = document.getElementById('filterPltPlhOpd').value;
+        if (valOpd !== 'semua') {
+          strOpd = valOpd.replace(/[^a-zA-Z0-9]+/g, '_').toLowerCase();
+        }
+
+        const fileName = `kinerja_pltplh_${strBulan}_${strStatus}_${strOpd}.pdf`;
+        doc.save(fileName);
         };
 
         if (dataToExport.length > 1000) {
@@ -3248,15 +3353,15 @@
         document.getElementById('totalPagesInfoPeng').innerText = '1';
         btnPrevPage.disabled = true;
         btnNextPage.disabled = true;
-        
+
         const totalDataInfoPeng = document.getElementById('totalDataInfoPeng');
         if(totalDataInfoPeng) totalDataInfoPeng.innerText = `(0 data)`;
-        
+
         const btnFirstPagePeng = document.getElementById('btnFirstPagePeng');
         if(btnFirstPagePeng) btnFirstPagePeng.disabled = true;
         const btnLastPagePeng = document.getElementById('btnLastPagePeng');
         if(btnLastPagePeng) btnLastPagePeng.disabled = true;
-        
+
         return;
       }
 

@@ -809,6 +809,17 @@ function getDashboardData() {
   grandTotal.trenNilai = trenNilai;
   grandTotal.metrikJenis = metrikJenis;
 
+  // Cepat ambil jumlah PLT/PLH untuk info loading di frontend
+  let totalPltPlh = 0;
+  const sheetPltPlh = ss.getSheetByName('pegawai_plt_plh');
+  if (sheetPltPlh) {
+     const lastRow = sheetPltPlh.getLastRow();
+     if (lastRow > 1) {
+        totalPltPlh = lastRow - 1;
+     }
+  }
+  grandTotal.totalPltPlh = totalPltPlh;
+
   // Data pegawai (seluruh row) tidak ditarik di sini agar Dashboard muncul instan (Lazy Loading)
   // ===============================================
   // BACA WAKTU UPDATE (SEL A6) DARI MASING-MASING SHEET
@@ -1449,15 +1460,22 @@ function getPltPlhData() {
     const idxNip = header.indexOf('nip');
     const idxNama = header.indexOf('nama');
     
-    let idxJabatan = header.indexOf('skp_jabatan');
+    // Deteksi dinamis untuk nama kolom jabatan
+    let idxJabatan = header.indexOf('jabatan');
+    if (idxJabatan === -1) idxJabatan = header.indexOf('skp_jabatan');
+    if (idxJabatan === -1) idxJabatan = header.indexOf('jabatan_akhir');
+    if (idxJabatan === -1) idxJabatan = header.indexOf('nama_jabatan');
 
+    // Deteksi dinamis untuk unit kerja
     let idxUnitKerja = header.indexOf('unit_kerja');
     if (idxUnitKerja === -1) idxUnitKerja = header.indexOf('skp_unor');
     if (idxUnitKerja === -1) idxUnitKerja = header.indexOf('skp_unor_nama');
+    if (idxUnitKerja === -1) idxUnitKerja = header.indexOf('unor_nama');
 
     const idxOpd = header.indexOf('skp_unor_induk');
     const idxStatus = header.indexOf('skp_status');
     const idxAtasan = header.indexOf('nama_atasan');
+    let idxJenisPegawai = header.indexOf('jenis_pegawai');
 
     const daftarBulanStr = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
     const idxBulanArr = daftarBulanStr.map(b => header.indexOf(b));
@@ -1471,6 +1489,7 @@ function getPltPlhData() {
         unitKerja: idxUnitKerja !== -1 ? row[idxUnitKerja].toString().trim() : "",
         opd: idxOpd !== -1 ? row[idxOpd].toString().trim() : "",
         status: idxStatus !== -1 ? row[idxStatus].toString().trim() : "",
+        jenis_pegawai: idxJenisPegawai !== -1 && row[idxJenisPegawai] ? row[idxJenisPegawai].toString().trim() : "-",
         atasan: idxAtasan !== -1 ? row[idxAtasan].toString().trim() : "",
         bulanan: []
       };
