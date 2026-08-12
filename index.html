@@ -651,13 +651,13 @@
     }
 
     .btn-danger {
-      background-color: rgba(239, 68, 68, 0.1);
-      color: var(--danger);
-      border-color: rgba(239, 68, 68, 0.2);
+      background-color: var(--danger);
+      color: #ffffff;
+      border-color: var(--danger);
     }
 
     .btn-danger:hover:not(:disabled) {
-      background-color: rgba(239, 68, 68, 0.2);
+      filter: brightness(0.9);
     }
 
     .btn:disabled {
@@ -883,6 +883,10 @@
         <button id="navPengecualian" class="nav-item nav-btn" style="display: none;" onclick="switchTab('panelPengecualian', this); updateBreadcrumb('Data Pengecualian'); closeSidebarMobile();">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="18" y1="8" x2="23" y2="13"></line><line x1="23" y1="8" x2="18" y2="13"></line></svg>
           <span>Data Pengecualian</span>
+        </button>
+        <button id="navRekon" class="nav-item nav-btn" style="display: none;" onclick="switchTab('panelRekon', this); updateBreadcrumb('Sinkronisasi'); closeSidebarMobile();">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path><path d="M16 21v-5h5"></path></svg>
+          <span>Sinkronisasi</span>
         </button>
         <button id="navUpload" class="nav-item nav-btn" style="display: none;" onclick="switchTab('panelUpload', this); updateBreadcrumb('Upload Laporan'); closeSidebarMobile();">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
@@ -1359,10 +1363,6 @@
                   Daftar Pegawai Pengecualian
                 </h2>
                 <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                  <button id="btnSyncPengecualian" class="btn btn-secondary" disabled title="Jalankan Sinkronisasi Pengecualian">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                    Sync
-                  </button>
                   <button id="btnDownloadPdfPengecualian" class="btn btn-secondary" disabled title="Unduh PDF">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     PDF
@@ -1518,6 +1518,51 @@
               </div>
             </div>
           </div> <!-- End panelUpload -->
+
+          <!-- Panel Rekon -->
+          <div id="panelRekon" class="nav-panel">
+            <div class="card">
+              <h2 class="section-title">Sinkronisasi Data</h2>
+
+              <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+                <button id="btnSyncMaster" class="btn btn-primary" style="flex: 1; min-width: 200px; justify-content: center;" onclick="runSync('generateMasterPegawai', 'Ambil Data Pegawai')">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                  Ambil Data Pegawai
+                </button>
+                <button id="btnSyncPltPlh" class="btn btn-secondary" style="flex: 1; min-width: 200px; justify-content: center;" onclick="runSync('generateDataPltPlh', 'Ambil Data Pegawai PLT/PLH')">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                  Ambil Data PLT/PLH
+                </button>
+                <button id="btnSyncHapusPengecualian" class="btn btn-danger" style="flex: 1; min-width: 200px; justify-content: center;" onclick="runSync('hapusPengecualian', 'Hapus Pegawai Pengecualian')">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                  Hapus Pengecualian
+                </button>
+                <button id="btnSyncOPD" class="btn btn-secondary" style="flex: 1; min-width: 200px; justify-content: center;" onclick="runSync('generateLaporanOPDManual', 'Generate Laporan OPD')">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                  Laporan OPD
+                </button>
+              </div>
+
+              <h3 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Ambil Nilai Kinerja</h3>
+              
+              <!-- Grid Bulan (1 Baris) -->
+              <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+                <button class="btn btn-secondary" style="flex: 1; min-width: 60px; justify-content: center; padding: 0.5rem;" onclick="runSync('syncJan', 'Nilai Januari')">Jan</button>
+                <button class="btn btn-secondary" style="flex: 1; min-width: 60px; justify-content: center; padding: 0.5rem;" onclick="runSync('syncFeb', 'Nilai Februari')">Feb</button>
+                <button class="btn btn-secondary" style="flex: 1; min-width: 60px; justify-content: center; padding: 0.5rem;" onclick="runSync('syncMar', 'Nilai Maret')">Mar</button>
+                <button class="btn btn-secondary" style="flex: 1; min-width: 60px; justify-content: center; padding: 0.5rem;" onclick="runSync('syncApr', 'Nilai April')">Apr</button>
+                <button class="btn btn-secondary" style="flex: 1; min-width: 60px; justify-content: center; padding: 0.5rem;" onclick="runSync('syncMei', 'Nilai Mei')">Mei</button>
+                <button class="btn btn-secondary" style="flex: 1; min-width: 60px; justify-content: center; padding: 0.5rem;" onclick="runSync('syncJun', 'Nilai Juni')">Jun</button>
+                <button class="btn btn-secondary" style="flex: 1; min-width: 60px; justify-content: center; padding: 0.5rem;" onclick="runSync('syncJul', 'Nilai Juli')">Jul</button>
+                <button class="btn btn-secondary" style="flex: 1; min-width: 60px; justify-content: center; padding: 0.5rem;" onclick="runSync('syncAgu', 'Nilai Agustus')">Agu</button>
+                <button class="btn btn-secondary" style="flex: 1; min-width: 60px; justify-content: center; padding: 0.5rem;" onclick="runSync('syncSep', 'Nilai September')">Sep</button>
+                <button class="btn btn-secondary" style="flex: 1; min-width: 60px; justify-content: center; padding: 0.5rem;" onclick="runSync('syncOkt', 'Nilai Oktober')">Okt</button>
+                <button class="btn btn-secondary" style="flex: 1; min-width: 60px; justify-content: center; padding: 0.5rem;" onclick="runSync('syncNov', 'Nilai November')">Nov</button>
+                <button class="btn btn-secondary" style="flex: 1; min-width: 60px; justify-content: center; padding: 0.5rem;" onclick="runSync('syncDes', 'Nilai Desember')">Des</button>
+              </div>
+              <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="runSync('syncTahunan', 'Nilai Tahunan')">Tahunan</button>
+            </div>
+          </div> <!-- End panelRekon -->
 
         </div> <!-- End of dashboard-content -->
 
@@ -1691,6 +1736,42 @@
         _doSwitchTab(panelId, btnElement);
       }
 
+      function runSync(funcName, label) {
+        Swal.fire({
+          title: 'Konfirmasi Sinkronisasi',
+          text: `Anda yakin ingin menjalankan proses "${label}"? Proses ini mungkin memakan waktu beberapa saat.`,
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: 'Ya, Jalankan',
+          cancelButtonText: 'Batal'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              title: 'Sedang Memproses',
+              html: 'Memanggil backend untuk menyinkronkan data...',
+              allowOutsideClick: false,
+              didOpen: () => {
+                Swal.showLoading();
+              }
+            });
+
+            google.script.run
+              .withSuccessHandler((res) => {
+                if (res && res.status === 'error') {
+                  Swal.fire('Gagal', res.message, 'error');
+                } else {
+                  const msg = res && res.message ? res.message : `Proses ${label} selesai!`;
+                  Swal.fire('Sukses', msg, 'success');
+                }
+              })
+              .withFailureHandler((err) => {
+                Swal.fire('Error', `Gagal menjalankan ${label}: ` + err.message, 'error');
+              })
+              [funcName]();
+          }
+        });
+      }
+
       function promptLogin() {
         Swal.fire({
           title: '<span style="color: #1e293b; font-weight: 600;">Login Admin</span>',
@@ -1741,6 +1822,7 @@
         const btnPegawai = document.getElementById('navPegawai');
         const btnPltPlh = document.getElementById('navPltPlh');
         const btnPengecualian = document.getElementById('navPengecualian');
+        const btnRekon = document.getElementById('navRekon');
         const btnUpload = document.getElementById('navUpload');
         const btnLogin = document.getElementById('btnLogin');
         const btnLogout = document.getElementById('btnLogout');
@@ -1749,6 +1831,7 @@
           if (btnPegawai) btnPegawai.style.display = 'flex';
           if (btnPltPlh) btnPltPlh.style.display = 'flex';
           if (btnPengecualian) btnPengecualian.style.display = 'flex';
+          if (btnRekon) btnRekon.style.display = 'flex';
           if (btnUpload) btnUpload.style.display = 'flex';
           if (btnLogin) btnLogin.style.display = 'none';
           if (btnLogout) btnLogout.style.display = 'flex';
@@ -1756,6 +1839,7 @@
           if (btnPegawai) btnPegawai.style.display = 'none';
           if (btnPltPlh) btnPltPlh.style.display = 'none';
           if (btnPengecualian) btnPengecualian.style.display = 'none';
+          if (btnRekon) btnRekon.style.display = 'none';
           if (btnUpload) btnUpload.style.display = 'none';
           if (btnLogin) btnLogin.style.display = 'flex';
           if (btnLogout) btnLogout.style.display = 'none';
@@ -3253,7 +3337,6 @@
 
       const btns = [
         document.getElementById('btnAddPengecualian'),
-        document.getElementById('btnSyncPengecualian'),
         document.getElementById('btnDownloadPdfPengecualian')
       ];
 
@@ -3289,7 +3372,6 @@
 
       const btns = [
         document.getElementById('btnAddPengecualian'),
-        document.getElementById('btnSyncPengecualian'),
         document.getElementById('btnDownloadPdfPengecualian')
       ];
 
@@ -3392,7 +3474,6 @@
     // Modal Handlers
     const modalPengecualian = document.getElementById('pengecualianModal');
     const btnAddPengecualian = document.getElementById('btnAddPengecualian');
-    const btnSyncPengecualian = document.getElementById('btnSyncPengecualian');
     const btnBatalPengecualian = document.getElementById('btnBatalPengecualian');
     const btnSimpanPengecualian = document.getElementById('btnSimpanPengecualian');
 
@@ -3404,38 +3485,6 @@
     const pengOpd = document.getElementById('pengOpd');
     const pengKet = document.getElementById('pengKet');
     const pengError = document.getElementById('pengError');
-
-    if (btnSyncPengecualian) {
-      btnSyncPengecualian.addEventListener('click', () => {
-        const originalText = btnSyncPengecualian.innerText;
-        btnSyncPengecualian.innerText = 'Syncing...';
-        btnSyncPengecualian.disabled = true;
-        btnSyncPengecualian.style.opacity = '0.5';
-
-        google.script.run
-          .withSuccessHandler((res) => {
-            btnSyncPengecualian.innerText = originalText;
-            btnSyncPengecualian.disabled = false;
-            btnSyncPengecualian.style.opacity = '1';
-
-            if (res && res.status === 'error') {
-              Swal.fire('Gagal', res.message, 'error');
-            } else {
-              const msg = res && res.message ? res.message : 'Proses Sinkronisasi Pengecualian selesai!';
-              Swal.fire('Sukses', msg, 'success');
-              // Refresh tabel pengecualian setelah sync jika diperlukan, tapi ini mengubah sheet pegawai
-              // Bisa memanggil fungsi load (opsional) atau update rekap
-            }
-          })
-          .withFailureHandler((err) => {
-            btnSyncPengecualian.innerText = originalText;
-            btnSyncPengecualian.disabled = false;
-            btnSyncPengecualian.style.opacity = '1';
-            Swal.fire('Error', 'Gagal menjalankan proses Sync: ' + err.message, 'error');
-          })
-          .hapusPengecualian();
-      });
-    }
 
     const btnDownloadPdfPengecualian = document.getElementById('btnDownloadPdfPengecualian');
     if (btnDownloadPdfPengecualian) {

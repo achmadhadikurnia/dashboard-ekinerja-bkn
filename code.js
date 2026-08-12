@@ -1015,6 +1015,23 @@ function getPengecualianData() {
   return { status: 'success', data: result };
 }
 
+function _hapusDariSheetByNip(sheetName, nip) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(sheetName);
+  if (!sheet) return;
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return;
+  const headers = data[0].map(h => h.toString().toLowerCase().trim().replace(/\./g, ''));
+  const idxNip = headers.indexOf('nip');
+  if (idxNip === -1) return;
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][idxNip] && data[i][idxNip].toString().trim() === nip) {
+      sheet.deleteRow(i + 1);
+      break;
+    }
+  }
+}
+
 function savePengecualianData(payload) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName('Pengecualian');
@@ -1047,6 +1064,10 @@ function savePengecualianData(payload) {
     if (idxUnit !== -1) sheet.getRange(foundRow, idxUnit + 1).setValue(payload.unit_kerja);
     if (idxOpd !== -1) sheet.getRange(foundRow, idxOpd + 1).setValue(payload.opd);
     if (idxKet !== -1) sheet.getRange(foundRow, idxKet + 1).setValue(payload.keterangan);
+    
+    _hapusDariSheetByNip('pegawai', payload.nip);
+    _hapusDariSheetByNip('pltplh', payload.nip);
+    
     return { status: 'success', message: 'Data pengecualian berhasil diperbarui' };
   } else {
     // Insert new
@@ -1060,6 +1081,10 @@ function savePengecualianData(payload) {
     if (idxOpd !== -1) newRow[idxOpd] = payload.opd;
     if (idxKet !== -1) newRow[idxKet] = payload.keterangan;
     sheet.appendRow(newRow);
+    
+    _hapusDariSheetByNip('pegawai', payload.nip);
+    _hapusDariSheetByNip('pltplh', payload.nip);
+    
     return { status: 'success', message: 'Data pengecualian berhasil ditambahkan' };
   }
 }
