@@ -712,7 +712,23 @@
     .pagination-controls {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.25rem;
+    }
+
+    .pagination-controls .btn {
+      padding: 0.25rem 0.6rem;
+      min-width: 32px;
+    }
+
+    .pagination-controls .search-box {
+      padding: 0.2rem;
+      font-size: 0.85rem;
+      height: 28px;
+    }
+
+    .pagination-info {
+      font-size: 0.85rem;
+      margin: 0 0.25rem;
     }
 
     /* Modals */
@@ -1360,7 +1376,7 @@
 
               <div id="pengecualian-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; color: var(--text-secondary);">
                 <div class="spinner"></div>
-                <p style="font-weight: 500;">Sedang memuat data pengecualian...</p>
+                <p id="pengecualian-loading-text" style="font-weight: 500;">Sedang memuat data pengecualian...</p>
               </div>
 
               <div id="pengecualian-content" style="display: none;">
@@ -1837,6 +1853,135 @@
       return new Intl.NumberFormat('id-ID').format(num);
     };
 
+    class PaginationManager {
+      constructor(config) {
+        this.data = config.data || [];
+        this.itemsPerPageSelect = document.getElementById(config.elements.itemsPerPage);
+        this.btnFirst = document.getElementById(config.elements.btnFirst);
+        this.btnPrev = document.getElementById(config.elements.btnPrev);
+        this.btnNext = document.getElementById(config.elements.btnNext);
+        this.btnLast = document.getElementById(config.elements.btnLast);
+        this.inputPage = document.getElementById(config.elements.inputPage);
+        this.totalPagesInfo = document.getElementById(config.elements.totalPagesInfo);
+        this.totalDataInfo = document.getElementById(config.elements.totalDataInfo);
+        
+        this.onRender = config.onRender;
+        this.onEmpty = config.onEmpty;
+
+        this.currentPage = 1;
+        this.itemsPerPage = this.itemsPerPageSelect ? (parseInt(this.itemsPerPageSelect.value) || 10) : 10;
+        
+        this.initListeners();
+        this.render();
+      }
+
+      setData(newData) {
+        this.data = newData;
+        this.currentPage = 1;
+        if (this.inputPage) this.inputPage.value = 1;
+        this.render();
+      }
+
+      initListeners() {
+        if (this.itemsPerPageSelect) {
+          this.itemsPerPageSelect.addEventListener('change', (e) => {
+            this.itemsPerPage = parseInt(e.target.value);
+            this.currentPage = 1;
+            this.render();
+          });
+        }
+
+        if (this.btnPrev) {
+          this.btnPrev.addEventListener('click', () => {
+            if (this.currentPage > 1) {
+              this.currentPage--;
+              this.render();
+            }
+          });
+        }
+
+        if (this.btnNext) {
+          this.btnNext.addEventListener('click', () => {
+            const totalPages = Math.ceil(this.data.length / this.itemsPerPage) || 1;
+            if (this.currentPage < totalPages) {
+              this.currentPage++;
+              this.render();
+            }
+          });
+        }
+
+        if (this.btnFirst) {
+          this.btnFirst.addEventListener('click', () => {
+            if (this.currentPage > 1) {
+              this.currentPage = 1;
+              this.render();
+            }
+          });
+        }
+
+        if (this.btnLast) {
+          this.btnLast.addEventListener('click', () => {
+            const totalPages = Math.ceil(this.data.length / this.itemsPerPage) || 1;
+            if (this.currentPage < totalPages) {
+              this.currentPage = totalPages;
+              this.render();
+            }
+          });
+        }
+
+        if (this.inputPage) {
+          this.inputPage.addEventListener('change', (e) => {
+            const totalPages = Math.ceil(this.data.length / this.itemsPerPage) || 1;
+            let val = parseInt(e.target.value);
+            if (isNaN(val) || val < 1) val = 1;
+            if (val > totalPages) val = totalPages;
+            this.currentPage = val;
+            this.render();
+          });
+        }
+      }
+
+      render() {
+        const totalItems = this.data.length;
+        
+        if (totalItems === 0) {
+          if (this.totalPagesInfo) this.totalPagesInfo.innerText = '1';
+          if (this.btnFirst) this.btnFirst.disabled = true;
+          if (this.btnPrev) this.btnPrev.disabled = true;
+          if (this.btnNext) this.btnNext.disabled = true;
+          if (this.btnLast) this.btnLast.disabled = true;
+          if (this.totalDataInfo) this.totalDataInfo.innerText = '(0 data)';
+          
+          if (this.onEmpty) this.onEmpty();
+          return;
+        }
+
+        const totalPages = Math.ceil(totalItems / this.itemsPerPage) || 1;
+        if (this.currentPage > totalPages) this.currentPage = totalPages;
+        if (this.currentPage < 1) this.currentPage = 1;
+
+        const startIdx = (this.currentPage - 1) * this.itemsPerPage;
+        const endIdx = startIdx + this.itemsPerPage;
+        const pageData = this.data.slice(startIdx, endIdx);
+
+        if (this.inputPage) this.inputPage.value = this.currentPage;
+        if (this.totalPagesInfo) this.totalPagesInfo.innerText = totalPages;
+        
+        if (this.btnFirst) this.btnFirst.disabled = this.currentPage === 1;
+        if (this.btnPrev) this.btnPrev.disabled = this.currentPage === 1;
+        if (this.btnNext) this.btnNext.disabled = this.currentPage === totalPages;
+        if (this.btnLast) this.btnLast.disabled = this.currentPage === totalPages;
+
+        if (this.totalDataInfo) {
+          const actualEndIdx = Math.min(endIdx, totalItems);
+          this.totalDataInfo.innerText = `${startIdx + 1} - ${actualEndIdx} dari ${totalItems}`;
+        }
+
+        if (this.onRender) {
+          this.onRender(pageData, startIdx);
+        }
+      }
+    }
     // Fungsi utama dipanggil saat halaman dimuat
     document.addEventListener("DOMContentLoaded", () => {
       // Cek status login saat dimuat
@@ -1860,12 +2005,20 @@
       // Set teks loading dengan angka pasti
       const totalPegawai = data.grandTotal ? data.grandTotal.totalPegawai : 0;
       if (totalPegawai > 0) {
-        document.getElementById('pegawai-loading-text').innerText = `Sedang mengunduh ${formatNumber(totalPegawai)} rincian pegawai dari server...`;
+        const elPegawai = document.getElementById('pegawai-loading-text');
+        if (elPegawai) elPegawai.innerText = `Sedang mengunduh ${formatNumber(totalPegawai)} rincian pegawai dari server...`;
       }
 
       const totalPltPlh = data.grandTotal ? data.grandTotal.totalPltPlh : 0;
       if (totalPltPlh > 0) {
-        document.getElementById('pltPlh-loading-text').innerText = `Sedang mengunduh ${formatNumber(totalPltPlh)} rincian PLT/PLH dari server...`;
+        const elPlt = document.getElementById('pltPlh-loading-text');
+        if (elPlt) elPlt.innerText = `Sedang mengunduh ${formatNumber(totalPltPlh)} rincian PLT/PLH dari server...`;
+      }
+
+      const totalPengecualian = data.grandTotal ? data.grandTotal.totalPengecualian : 0;
+      if (totalPengecualian > 0) {
+        const elPeng = document.getElementById('pengecualian-loading-text');
+        if (elPeng) elPeng.innerText = `Sedang mengunduh ${formatNumber(totalPengecualian)} data pengecualian dari server...`;
       }
 
       // Panggil asinkron tabel pegawai
@@ -2311,29 +2464,20 @@
 
     let globalPegawaiData = [];
     let globalFilteredPegawaiData = [];
-    let currentPage = 1;
+    let pegawaiPagination = null;
 
     function renderPegawaiData(pegawaiDataArray) {
       document.getElementById('pegawai-loading').style.display = 'none';
       document.getElementById('pegawai-content').style.display = 'block';
 
       globalPegawaiData = pegawaiDataArray || [];
-      globalFilteredPegawaiData = [];
-      currentPage = 1;
+      globalFilteredPegawaiData = [...globalPegawaiData];
 
       // 4. Render Table Pegawai
-      const pegawaiTbody = document.querySelector('#pegawaiTable tbody');
       const searchInput = document.getElementById('searchPegawai');
       const filterBulan = document.getElementById('filterBulan');
       const filterStatus = document.getElementById('filterStatus');
       const filterPredikat = document.getElementById('filterPredikat');
-
-      const itemsPerPageSelect = document.getElementById('itemsPerPage');
-      const btnPrevPage = document.getElementById('btnPrevPage');
-      const btnNextPage = document.getElementById('btnNextPage');
-      const pageInfo = document.getElementById('pageInfo');
-
-      let itemsPerPage = parseInt(itemsPerPageSelect.value) || 10;
 
       const filterOpd = document.getElementById('filterOpd');
       const filterJenisPegawai = document.getElementById('filterJenisPegawai');
@@ -2438,89 +2582,71 @@
         }
 
         globalFilteredPegawaiData = displayData;
-        currentPage = 1;
-        document.getElementById('inputPage').value = 1;
-        renderPaginatedTable();
-      };
-
-      const renderPaginatedTable = () => {
-        const totalItems = globalFilteredPegawaiData.length;
-        const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
-
-        if (currentPage > totalPages) currentPage = totalPages;
-
-        const startIdx = (currentPage - 1) * itemsPerPage;
-        const endIdx = startIdx + itemsPerPage;
-        const pageData = globalFilteredPegawaiData.slice(startIdx, endIdx);
-
-        document.getElementById('inputPage').value = currentPage;
-        document.getElementById('totalPagesInfo').innerText = totalPages;
-        btnPrevPage.disabled = currentPage === 1;
-        btnNextPage.disabled = currentPage === totalPages;
-
-        const btnFirstPage = document.getElementById('btnFirstPage');
-        if (btnFirstPage) btnFirstPage.disabled = currentPage === 1;
-        const btnLastPage = document.getElementById('btnLastPage');
-        if (btnLastPage) btnLastPage.disabled = currentPage === totalPages;
-
-        const totalDataInfo = document.getElementById('totalDataInfo');
-        if (totalDataInfo) {
-          const actualEndIdx = Math.min(endIdx, totalItems);
-          if (totalItems > 0) {
-            totalDataInfo.innerText = `${startIdx + 1} - ${actualEndIdx} dari ${totalItems}`;
-          } else {
-            totalDataInfo.innerText = `(0 data)`;
-          }
-        }
-
-        let pHTML = '';
-        let pNo = startIdx + 1;
-
-        const activeBulan = document.getElementById('filterBulan').value;
-
-        pageData.forEach(p => {
-          let pBulan = '';
-          p.bulanan.forEach((val, idx) => {
-             let mClass = val ? 'val-green' : 'val-red';
-             let displayVal = val ? val.toString().trim() : '-';
-
-             if (displayVal !== '-') {
-               if (displayVal.length > 2) {
-                 const parts = displayVal.split(' ');
-                 if (parts.length > 1) {
-                   displayVal = parts.map(kata => kata[0].toUpperCase()).join('');
-                 } else {
-                   displayVal = displayVal.substring(0, 1).toUpperCase();
-                 }
-               } else {
-                 displayVal = displayVal.toUpperCase();
-               }
-             }
-
-             let hlClass = (activeBulan !== 'semua' && parseInt(activeBulan) === idx) ? ' highlight-col' : '';
-
-             pBulan += `<td class="${mClass}${hlClass}" title="${val}" style="cursor:help;">${displayVal}</td>`;
+        if (!pegawaiPagination) {
+          pegawaiPagination = new PaginationManager({
+            data: globalFilteredPegawaiData,
+            elements: {
+              itemsPerPage: 'itemsPerPage',
+              btnFirst: 'btnFirstPage',
+              btnPrev: 'btnPrevPage',
+              btnNext: 'btnNextPage',
+              btnLast: 'btnLastPage',
+              inputPage: 'inputPage',
+              totalPagesInfo: 'totalPagesInfo',
+              totalDataInfo: 'totalDataInfo'
+            },
+            onRender: (pageData, startIdx) => {
+              let pHTML = '';
+              let pNo = startIdx + 1;
+              const activeBulan = document.getElementById('filterBulan').value;
+      
+              pageData.forEach(p => {
+                let pBulan = '';
+                p.bulanan.forEach((val, idx) => {
+                   let mClass = val ? 'val-green' : 'val-red';
+                   let displayVal = val ? val.toString().trim() : '-';
+      
+                   if (displayVal !== '-') {
+                     if (displayVal.length > 2) {
+                       const parts = displayVal.split(' ');
+                       if (parts.length > 1) {
+                         displayVal = parts.map(kata => kata[0].toUpperCase()).join('');
+                       } else {
+                         displayVal = displayVal.substring(0, 1).toUpperCase();
+                       }
+                     } else {
+                       displayVal = displayVal.toUpperCase();
+                     }
+                   }
+      
+                   let hlClass = (activeBulan !== 'semua' && parseInt(activeBulan) === idx) ? ' highlight-col' : '';
+      
+                   pBulan += `<td class="${mClass}${hlClass}" title="${val}" style="cursor:help;">${displayVal}</td>`;
+                });
+      
+                pHTML += `
+                  <tr>
+                    <td>${pNo++}</td>
+                    <td style="white-space: nowrap; text-align: left; font-size: 0.75rem;">${p.nip}</td>
+                    <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 120px; font-size: 0.75rem;"><strong>${p.nama}</strong></td>
+                    <td style="white-space: nowrap; text-align: left; font-size: 0.75rem; text-transform: capitalize;">${p.jenis_pegawai ? p.jenis_pegawai.replace(/_/g, ' ') : '-'}</td>
+                    <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 140px; font-size: 0.75rem;">${p.jabatan}</td>
+                    <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 140px; font-size: 0.75rem;">${p.unit_kerja}</td>
+                    <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 150px; font-size: 0.7rem;">${p.opd}</td>
+                    ${pBulan}
+                  </tr>
+                `;
+              });
+      
+              document.querySelector('#pegawaiTable tbody').innerHTML = pHTML;
+            },
+            onEmpty: () => {
+              document.querySelector('#pegawaiTable tbody').innerHTML = `<tr><td colspan="20" class="val-muted" style="text-align:center; padding: 1rem;">Tidak ada data yang cocok dengan filter.</td></tr>`;
+            }
           });
-
-          pHTML += `
-            <tr>
-              <td>${pNo++}</td>
-              <td style="white-space: nowrap; text-align: left; font-size: 0.75rem;">${p.nip}</td>
-              <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 120px; font-size: 0.75rem;"><strong>${p.nama}</strong></td>
-              <td style="white-space: nowrap; text-align: left; font-size: 0.75rem; text-transform: capitalize;">${p.jenis_pegawai ? p.jenis_pegawai.replace(/_/g, ' ') : '-'}</td>
-              <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 140px; font-size: 0.75rem;">${p.jabatan}</td>
-              <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 140px; font-size: 0.75rem;">${p.unit_kerja}</td>
-              <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 150px; font-size: 0.7rem;">${p.opd}</td>
-              ${pBulan}
-            </tr>
-          `;
-        });
-
-        if (totalItems === 0) {
-           pHTML += `<tr><td colspan="20" class="val-muted" style="text-align:center; padding: 1rem;">Tidak ada data yang cocok dengan filter.</td></tr>`;
+        } else {
+          pegawaiPagination.setData(globalFilteredPegawaiData);
         }
-
-        document.querySelector('#pegawaiTable tbody').innerHTML = pHTML;
       };
 
       applyFilters();
@@ -2533,55 +2659,8 @@
       filterPredikat.addEventListener('change', applyFilters);
       filterSkpStatus.addEventListener('change', applyFilters);
 
-      itemsPerPageSelect.addEventListener('change', (e) => {
-        itemsPerPage = parseInt(e.target.value);
-        applyFilters();
-      });
 
-      document.getElementById('inputPage').addEventListener('change', (e) => {
-        let val = parseInt(e.target.value);
-        const totalPages = Math.ceil(globalFilteredPegawaiData.length / itemsPerPage) || 1;
-        if (isNaN(val) || val < 1) val = 1;
-        if (val > totalPages) val = totalPages;
-        currentPage = val;
-        renderPaginatedTable();
-      });
 
-      btnPrevPage.addEventListener('click', () => {
-        if (currentPage > 1) {
-          currentPage--;
-          renderPaginatedTable();
-        }
-      });
-
-      btnNextPage.addEventListener('click', () => {
-        const totalPages = Math.ceil(globalFilteredPegawaiData.length / itemsPerPage);
-        if (currentPage < totalPages) {
-          currentPage++;
-          renderPaginatedTable();
-        }
-      });
-
-      const btnFirstPage = document.getElementById('btnFirstPage');
-      if (btnFirstPage) {
-        btnFirstPage.addEventListener('click', () => {
-          if (currentPage > 1) {
-            currentPage = 1;
-            renderPaginatedTable();
-          }
-        });
-      }
-
-      const btnLastPage = document.getElementById('btnLastPage');
-      if (btnLastPage) {
-        btnLastPage.addEventListener('click', () => {
-          const totalPages = Math.ceil(globalFilteredPegawaiData.length / itemsPerPage);
-          if (currentPage < totalPages) {
-            currentPage = totalPages;
-            renderPaginatedTable();
-          }
-        });
-      }
 
       document.getElementById('btnDownloadPdf').addEventListener('click', () => {
         if (globalFilteredPegawaiData.length === 0) {
@@ -2784,37 +2863,22 @@
 
     let globalPltPlhData = [];
     let globalFilteredPltPlhData = [];
-    let currentPltPlhPage = 1;
+    let pltPlhPagination = null;
 
     function renderPltPlhData(pltPlhDataArray) {
       document.getElementById('pltPlh-loading').style.display = 'none';
       document.getElementById('pltPlh-content').style.display = 'block';
 
       globalPltPlhData = pltPlhDataArray || [];
-      globalFilteredPltPlhData = [];
-      currentPltPlhPage = 1;
+      globalFilteredPltPlhData = [...globalPltPlhData];
 
-      const tbody = document.querySelector('#pltPlhTable tbody');
       const searchInput = document.getElementById('searchPltPlh');
       const filterBulan = document.getElementById('filterPltPlhBulan');
       const filterStatus = document.getElementById('filterPltPlhStatus');
       const filterPredikat = document.getElementById('filterPltPlhPredikat');
       const filterOpd = document.getElementById('filterPltPlhOpd');
       const filterSkpStatus = document.getElementById('filterPltPlhSkpStatus');
-
-      const itemsPerPageSelect = document.getElementById('itemsPerPagePltPlh');
-      const btnPrevPage = document.getElementById('btnPrevPagePltPlh');
-      const btnNextPage = document.getElementById('btnNextPagePltPlh');
-      const btnFirstPage = document.getElementById('btnFirstPagePltPlh');
-      const btnLastPage = document.getElementById('btnLastPagePltPlh');
-      const pageInfo = document.getElementById('pageInfoPltPlh');
-      const inputPage = document.getElementById('inputPagePltPlh');
-      const totalPagesInfo = document.getElementById('totalPagesInfoPltPlh');
-      const totalDataInfo = document.getElementById('totalDataInfoPltPlh');
-
       const filterJenisPegawai = document.getElementById('filterPltPlhJenisPegawai');
-
-      let itemsPerPage = parseInt(itemsPerPageSelect.value) || 10;
 
       const opdSet = new Set();
       const skpStatusSet = new Set();
@@ -2918,86 +2982,71 @@
         }
 
         globalFilteredPltPlhData = displayData;
-        currentPltPlhPage = 1;
-        inputPage.value = 1;
-        renderTableChunk();
-      };
-
-      const renderTableChunk = () => {
-        const totalRows = globalFilteredPltPlhData.length;
-        const totalPages = Math.ceil(totalRows / itemsPerPage) || 1;
-
-        if (currentPltPlhPage < 1) currentPltPlhPage = 1;
-        if (currentPltPlhPage > totalPages) currentPltPlhPage = totalPages;
-
-        inputPage.value = currentPltPlhPage;
-        totalPagesInfo.innerText = totalPages;
-
-        btnFirstPage.disabled = currentPltPlhPage === 1;
-        btnPrevPage.disabled = currentPltPlhPage === 1;
-        btnNextPage.disabled = currentPltPlhPage === totalPages;
-        btnLastPage.disabled = currentPltPlhPage === totalPages;
-
-        const startIdx = (currentPltPlhPage - 1) * itemsPerPage;
-        const endIdx = startIdx + itemsPerPage;
-        const pageData = globalFilteredPltPlhData.slice(startIdx, endIdx);
-
-        if (totalDataInfo) {
-          const actualEndIdx = Math.min(endIdx, totalRows);
-          if (totalRows > 0) {
-            totalDataInfo.innerText = `${startIdx + 1} - ${actualEndIdx} dari ${totalRows}`;
-          } else {
-            totalDataInfo.innerText = `(0 data)`;
-          }
+        if (!pltPlhPagination) {
+          pltPlhPagination = new PaginationManager({
+            data: globalFilteredPltPlhData,
+            elements: {
+              itemsPerPage: 'itemsPerPagePltPlh',
+              btnFirst: 'btnFirstPagePltPlh',
+              btnPrev: 'btnPrevPagePltPlh',
+              btnNext: 'btnNextPagePltPlh',
+              btnLast: 'btnLastPagePltPlh',
+              inputPage: 'inputPagePltPlh',
+              totalPagesInfo: 'totalPagesInfoPltPlh',
+              totalDataInfo: 'totalDataInfoPltPlh'
+            },
+            onRender: (pageData, startIdx) => {
+              const tbody = document.querySelector('#pltPlhTable tbody');
+              tbody.innerHTML = '';
+              const bulanVal = document.getElementById('filterPltPlhBulan').value;
+      
+              pageData.forEach((p, index) => {
+                const actualIndex = startIdx + index + 1;
+                const tr = document.createElement('tr');
+      
+                let html = `
+                  <td class="text-center">${actualIndex}</td>
+                  <td style="white-space: nowrap; text-align: left; font-size: 0.75rem;">${p.nip}</td>
+                  <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 120px; font-size: 0.75rem;"><strong>${p.nama}</strong></td>
+                  <td style="white-space: nowrap; text-align: left; font-size: 0.75rem; text-transform: capitalize;">${p.jenis_pegawai ? p.jenis_pegawai.replace(/_/g, ' ') : '-'}</td>
+                  <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 140px; font-size: 0.75rem;">${p.jabatan}</td>
+                  <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 140px; font-size: 0.75rem;">${p.unitKerja}</td>
+                  <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 150px; font-size: 0.7rem;">${p.opd}</td>
+                `;
+      
+                for(let i=0; i<=12; i++) {
+                   let val = p.bulanan[i] || "";
+                   let mClass = val ? 'val-green' : 'val-red';
+                   let displayVal = val ? val.toString().trim() : '-';
+      
+                   if (displayVal !== '-') {
+                     if (displayVal.length > 2) {
+                       const parts = displayVal.split(' ');
+                       if (parts.length > 1) {
+                         displayVal = parts.map(kata => kata[0].toUpperCase()).join('');
+                       } else {
+                         displayVal = displayVal.substring(0, 1).toUpperCase();
+                       }
+                     } else {
+                       displayVal = displayVal.toUpperCase();
+                     }
+                   }
+      
+                   let hlClass = (bulanVal === i.toString()) ? ' highlight-col' : '';
+                   html += `<td class="${mClass}${hlClass}" title="${val}" style="cursor:help; text-align:center;">${displayVal}</td>`;
+                }
+      
+                tr.innerHTML = html;
+                tbody.appendChild(tr);
+              });
+            },
+            onEmpty: () => {
+              document.querySelector('#pltPlhTable tbody').innerHTML = `<tr><td colspan="20" class="val-muted" style="text-align:center; padding: 1rem;">Tidak ada data yang cocok dengan filter.</td></tr>`;
+            }
+          });
+        } else {
+          pltPlhPagination.setData(globalFilteredPltPlhData);
         }
-
-        tbody.innerHTML = '';
-        if(pageData.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="20" class="val-muted" style="text-align:center; padding: 1rem;">Tidak ada data yang cocok dengan filter.</td></tr>`;
-          return;
-        }
-
-        const bulanVal = filterBulan.value;
-
-        pageData.forEach((p, index) => {
-          const actualIndex = startIdx + index + 1;
-          const tr = document.createElement('tr');
-
-          let html = `
-            <td class="text-center">${actualIndex}</td>
-            <td style="white-space: nowrap; text-align: left; font-size: 0.75rem;">${p.nip}</td>
-            <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 120px; font-size: 0.75rem;"><strong>${p.nama}</strong></td>
-            <td style="white-space: nowrap; text-align: left; font-size: 0.75rem; text-transform: capitalize;">${p.jenis_pegawai ? p.jenis_pegawai.replace(/_/g, ' ') : '-'}</td>
-            <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 140px; font-size: 0.75rem;">${p.jabatan}</td>
-            <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 140px; font-size: 0.75rem;">${p.unitKerja}</td>
-            <td style="white-space: normal; text-align: left; min-width: 80px; max-width: 150px; font-size: 0.7rem;">${p.opd}</td>
-          `;
-
-          for(let i=0; i<=12; i++) {
-             let val = p.bulanan[i] || "";
-             let mClass = val ? 'val-green' : 'val-red';
-             let displayVal = val ? val.toString().trim() : '-';
-
-             if (displayVal !== '-') {
-               if (displayVal.length > 2) {
-                 const parts = displayVal.split(' ');
-                 if (parts.length > 1) {
-                   displayVal = parts.map(kata => kata[0].toUpperCase()).join('');
-                 } else {
-                   displayVal = displayVal.substring(0, 1).toUpperCase();
-                 }
-               } else {
-                 displayVal = displayVal.toUpperCase();
-               }
-             }
-
-             let hlClass = (bulanVal === i.toString()) ? ' highlight-col' : '';
-             html += `<td class="${mClass}${hlClass}" title="${val}" style="cursor:help; text-align:center;">${displayVal}</td>`;
-          }
-
-          tr.innerHTML = html;
-          tbody.appendChild(tr);
-        });
       };
 
       searchInput.addEventListener('input', applyFilters);
@@ -3007,35 +3056,6 @@
       filterStatus.addEventListener('change', applyFilters);
       filterPredikat.addEventListener('change', applyFilters);
       filterSkpStatus.addEventListener('change', applyFilters);
-
-      itemsPerPageSelect.addEventListener('change', (e) => {
-        itemsPerPage = parseInt(e.target.value);
-        currentPltPlhPage = 1;
-        renderTableChunk();
-      });
-
-      btnPrevPage.addEventListener('click', () => {
-        if(currentPltPlhPage > 1) { currentPltPlhPage--; renderTableChunk(); }
-      });
-      btnNextPage.addEventListener('click', () => {
-        const totalPages = Math.ceil(globalFilteredPltPlhData.length / itemsPerPage) || 1;
-        if(currentPltPlhPage < totalPages) { currentPltPlhPage++; renderTableChunk(); }
-      });
-      btnFirstPage.addEventListener('click', () => {
-        currentPltPlhPage = 1; renderTableChunk();
-      });
-      btnLastPage.addEventListener('click', () => {
-        currentPltPlhPage = Math.ceil(globalFilteredPltPlhData.length / itemsPerPage) || 1;
-        renderTableChunk();
-      });
-      inputPage.addEventListener('change', (e) => {
-        let val = parseInt(e.target.value);
-        const totalPages = Math.ceil(globalFilteredPltPlhData.length / itemsPerPage) || 1;
-        if (isNaN(val) || val < 1) val = 1;
-        if (val > totalPages) val = totalPages;
-        currentPltPlhPage = val;
-        renderTableChunk();
-      });
 
       // PDF Ekspor (mirip pegawai tapi datanya dari globalFilteredPltPlhData)
       document.getElementById('btnDownloadPdfPltPlh').addEventListener('click', function() {
@@ -3072,7 +3092,12 @@
 
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
-        const titleText = globalReportTitle + ' (PLT/PLH)';
+        let titleText = globalReportTitle;
+        if (titleText.toUpperCase().includes('SKP')) {
+            titleText = titleText.replace(/SKP/i, 'SKP PLT/PLH');
+        } else {
+            titleText += ' (SKP PLT/PLH)';
+        }
         const titleWidth = doc.getTextWidth(titleText);
         doc.text(titleText, (pageWidth - titleWidth) / 2, currentY);
         currentY += 15;
@@ -3245,8 +3270,8 @@
 
     let globalPengecualianData = [];
     let globalFilteredPengecualianData = [];
-    let currentPengPage = 1;
     let isPengecualianEventSetup = false;
+    let pengPagination = null;
 
     function loadPengecualianData() {
       document.getElementById('pengecualian-loading').style.display = 'flex';
@@ -3317,7 +3342,6 @@
       }
 
       globalFilteredPengecualianData = [...globalPengecualianData];
-      currentPengPage = 1;
 
       setupPengecualianEvents();
       applyPengFilters();
@@ -3335,78 +3359,49 @@
 
         return matchSearch && matchKet;
       });
-      currentPengPage = 1;
-      document.getElementById('inputPagePeng').value = 1;
-      renderPaginatedPengecualianTable();
-    }
 
-    function renderPaginatedPengecualianTable() {
-      const tbody = document.getElementById('pengecualianBody');
-      const itemsPerPageSelect = document.getElementById('itemsPerPagePeng');
-      const btnPrevPage = document.getElementById('btnPrevPagePeng');
-      const btnNextPage = document.getElementById('btnNextPagePeng');
-      let itemsPerPage = parseInt(itemsPerPageSelect.value) || 10;
-
-      const totalItems = globalFilteredPengecualianData.length;
-      if (totalItems === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Data tidak ditemukan</td></tr>';
-        document.getElementById('totalPagesInfoPeng').innerText = '1';
-        btnPrevPage.disabled = true;
-        btnNextPage.disabled = true;
-
-        const totalDataInfoPeng = document.getElementById('totalDataInfoPeng');
-        if(totalDataInfoPeng) totalDataInfoPeng.innerText = `(0 data)`;
-
-        const btnFirstPagePeng = document.getElementById('btnFirstPagePeng');
-        if(btnFirstPagePeng) btnFirstPagePeng.disabled = true;
-        const btnLastPagePeng = document.getElementById('btnLastPagePeng');
-        if(btnLastPagePeng) btnLastPagePeng.disabled = true;
-
-        return;
+      if (!pengPagination) {
+        pengPagination = new PaginationManager({
+          data: globalFilteredPengecualianData,
+          elements: {
+            itemsPerPage: 'itemsPerPagePeng',
+            btnFirst: 'btnFirstPagePeng',
+            btnPrev: 'btnPrevPagePeng',
+            btnNext: 'btnNextPagePeng',
+            btnLast: 'btnLastPagePeng',
+            inputPage: 'inputPagePeng',
+            totalPagesInfo: 'totalPagesInfoPeng',
+            totalDataInfo: 'totalDataInfoPeng'
+          },
+          onRender: (pageData, startIdx) => {
+            const tbody = document.getElementById('pengecualianBody');
+            let html = '';
+            let pNo = startIdx + 1;
+            pageData.forEach((item) => {
+              html += `
+                <tr>
+                  <td style="text-align: right;">${pNo++}</td>
+                  <td style="white-space: nowrap; text-align: left;">${item.nip}</td>
+                  <td><strong>${item.nama}</strong></td>
+                  <td>${item.jabatan}</td>
+                  <td>${item.unit_kerja}</td>
+                  <td>${item.opd}</td>
+                  <td><span style="background: #e2e8f0; color: #1e293b; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">${item.keterangan}</span></td>
+                  <td>
+                    <button onclick="hapusPengecualian('${item.nip}')" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Hapus</button>
+                  </td>
+                </tr>
+              `;
+            });
+            tbody.innerHTML = html;
+          },
+          onEmpty: () => {
+            document.getElementById('pengecualianBody').innerHTML = '<tr><td colspan="8" style="text-align:center;">Data tidak ditemukan</td></tr>';
+          }
+        });
+      } else {
+        pengPagination.setData(globalFilteredPengecualianData);
       }
-
-      const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
-      if (currentPengPage > totalPages) currentPengPage = totalPages;
-
-      const startIdx = (currentPengPage - 1) * itemsPerPage;
-      const endIdx = startIdx + itemsPerPage;
-      const pageData = globalFilteredPengecualianData.slice(startIdx, endIdx);
-
-      document.getElementById('inputPagePeng').value = currentPengPage;
-      document.getElementById('totalPagesInfoPeng').innerText = totalPages;
-      btnPrevPage.disabled = currentPengPage === 1;
-      btnNextPage.disabled = currentPengPage === totalPages;
-
-      const btnFirstPagePeng = document.getElementById('btnFirstPagePeng');
-      if (btnFirstPagePeng) btnFirstPagePeng.disabled = currentPengPage === 1;
-      const btnLastPagePeng = document.getElementById('btnLastPagePeng');
-      if (btnLastPagePeng) btnLastPagePeng.disabled = currentPengPage === totalPages;
-
-      const totalDataInfoPeng = document.getElementById('totalDataInfoPeng');
-      if (totalDataInfoPeng) {
-        const actualEndIdx = Math.min(endIdx, totalItems);
-        totalDataInfoPeng.innerText = `${startIdx + 1} - ${actualEndIdx} dari ${totalItems}`;
-      }
-
-      let html = '';
-      let pNo = startIdx + 1;
-      pageData.forEach((item) => {
-        html += `
-          <tr>
-            <td style="text-align: right;">${pNo++}</td>
-            <td style="white-space: nowrap; text-align: left;">${item.nip}</td>
-            <td><strong>${item.nama}</strong></td>
-            <td>${item.jabatan}</td>
-            <td>${item.unit_kerja}</td>
-            <td>${item.opd}</td>
-            <td><span style="background: #e2e8f0; color: #1e293b; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">${item.keterangan}</span></td>
-            <td>
-              <button onclick="hapusPengecualian('${item.nip}')" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Hapus</button>
-            </td>
-          </tr>
-        `;
-      });
-      tbody.innerHTML = html;
     }
 
     function setupPengecualianEvents() {
@@ -3415,62 +3410,9 @@
 
       const searchInput = document.getElementById('searchPengecualian');
       const selKet = document.getElementById('filterKeteranganPengecualian');
-      const itemsPerPageSelect = document.getElementById('itemsPerPagePeng');
-      const btnPrevPage = document.getElementById('btnPrevPagePeng');
-      const btnNextPage = document.getElementById('btnNextPagePeng');
-      const inputPage = document.getElementById('inputPagePeng');
 
       searchInput.addEventListener('input', applyPengFilters);
       if (selKet) selKet.addEventListener('change', applyPengFilters);
-      itemsPerPageSelect.addEventListener('change', () => {
-        currentPengPage = 1;
-        renderPaginatedPengecualianTable();
-      });
-
-      btnPrevPage.addEventListener('click', () => {
-        if (currentPengPage > 1) {
-          currentPengPage--;
-          renderPaginatedPengecualianTable();
-        }
-      });
-
-      btnNextPage.addEventListener('click', () => {
-        const totalPages = parseInt(document.getElementById('totalPagesInfoPeng').innerText);
-        if (currentPengPage < totalPages) {
-          currentPengPage++;
-          renderPaginatedPengecualianTable();
-        }
-      });
-
-      const btnFirstPage = document.getElementById('btnFirstPagePeng');
-      if (btnFirstPage) {
-        btnFirstPage.addEventListener('click', () => {
-          if (currentPengPage > 1) {
-            currentPengPage = 1;
-            renderPaginatedPengecualianTable();
-          }
-        });
-      }
-
-      const btnLastPage = document.getElementById('btnLastPagePeng');
-      if (btnLastPage) {
-        btnLastPage.addEventListener('click', () => {
-          const totalPages = parseInt(document.getElementById('totalPagesInfoPeng').innerText);
-          if (currentPengPage < totalPages) {
-            currentPengPage = totalPages;
-            renderPaginatedPengecualianTable();
-          }
-        });
-      }
-
-      inputPage.addEventListener('change', () => {
-        const totalPages = parseInt(document.getElementById('totalPagesInfoPeng').innerText);
-        let val = parseInt(inputPage.value);
-        if (isNaN(val) || val < 1) val = 1;
-        if (val > totalPages) val = totalPages;
-        currentPengPage = val;
-        renderPaginatedPengecualianTable();
-      });
     }
 
     // Modal Handlers

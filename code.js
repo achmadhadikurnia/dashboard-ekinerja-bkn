@@ -820,6 +820,17 @@ function getDashboardData() {
   }
   grandTotal.totalPltPlh = totalPltPlh;
 
+  // Cepat ambil jumlah Pengecualian untuk info loading di frontend
+  let totalPengecualian = 0;
+  const sheetPengecualian = ss.getSheetByName('Pengecualian');
+  if (sheetPengecualian) {
+     const lastRow = sheetPengecualian.getLastRow();
+     if (lastRow > 1) {
+        totalPengecualian = lastRow - 1;
+     }
+  }
+  grandTotal.totalPengecualian = totalPengecualian;
+
   // Data pegawai (seluruh row) tidak ditarik di sini agar Dashboard muncul instan (Lazy Loading)
   // ===============================================
   // BACA WAKTU UPDATE (SEL A6) DARI MASING-MASING SHEET
