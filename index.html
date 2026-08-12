@@ -2096,24 +2096,18 @@
 
       const data = response.data;
       renderDashboard(data);
-      // Set teks loading dengan angka pasti
-      const totalPegawai = data.grandTotal ? data.grandTotal.totalPegawai : 0;
-      if (totalPegawai > 0) {
-        const elPegawai = document.getElementById('pegawai-loading-text');
-        if (elPegawai) elPegawai.innerText = `Sedang mengunduh ${formatNumber(totalPegawai)} rincian pegawai dari server...`;
-      }
+      // Fungsi reusable untuk update teks loading
+      const updateLoadingText = (id, count, label) => {
+        if (count > 0) {
+          const el = document.getElementById(id);
+          if (el) el.innerText = `Sedang mengunduh ${formatNumber(count)} ${label} dari server...`;
+        }
+      };
 
-      const totalPltPlh = data.grandTotal ? data.grandTotal.totalPltPlh : 0;
-      if (totalPltPlh > 0) {
-        const elPlt = document.getElementById('pltPlh-loading-text');
-        if (elPlt) elPlt.innerText = `Sedang mengunduh ${formatNumber(totalPltPlh)} rincian PLT/PLH dari server...`;
-      }
-
-      const totalPengecualian = data.grandTotal ? data.grandTotal.totalPengecualian : 0;
-      if (totalPengecualian > 0) {
-        const elPeng = document.getElementById('pengecualian-loading-text');
-        if (elPeng) elPeng.innerText = `Sedang mengunduh ${formatNumber(totalPengecualian)} data pengecualian dari server...`;
-      }
+      const grandTotal = data.grandTotal || {};
+      updateLoadingText('pegawai-loading-text', grandTotal.totalPegawai, 'rincian pegawai');
+      updateLoadingText('pltPlh-loading-text', grandTotal.totalPltPlh, 'rincian PLT/PLH');
+      updateLoadingText('pengecualian-loading-text', grandTotal.totalPengecualian, 'data pengecualian');
 
       // Panggil asinkron tabel pegawai
       google.script.run
