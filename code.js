@@ -1253,7 +1253,8 @@ function processUploadSync(bulanId) {
   let msg = '';
   if (bulanId === 'skp') {
     generateMasterPegawai();
-    msg = 'Berhasil memperbarui Master Pegawai.';
+    generateDataPltPlh(); // otomatis tarik data PLT/PLH juga
+    msg = 'Berhasil memperbarui Master Pegawai dan data PLT/PLH.';
   } else {
     _updateNilaiBulan(bulanId);
     msg = 'Berhasil sinkronisasi nilai bulan ' + bulanId.toUpperCase() + '.';
