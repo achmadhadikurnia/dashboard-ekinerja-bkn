@@ -475,7 +475,8 @@ function _updateNilaiBulan(targetBulan) {
   }
 
   if (barisHeaderBulan === -1) {
-    _alert('Error: Kolom "id" atau "hasil_akhir" tidak ditemukan di 20 baris pertama sheet "' + targetBulan + '".');
+    const jenisLaporan = targetBulan === 'tahunan' ? 'penilaian kinerja tahunan' : 'penilaian kinerja bulan ' + targetBulan;
+    _alert('Format Error: Kolom "id" atau "hasil_akhir" tidak ditemukan pada sheet "' + targetBulan + '".\n\n💡 Info: Hal ini biasanya terjadi karena Anda belum melakukan upload data ' + jenisLaporan + ' untuk periode ini.');
     return;
   }
 
@@ -508,7 +509,7 @@ function _updateNilaiBulan(targetBulan) {
     let idxId = header.indexOf('id');
     if (idxId === -1) idxId = header.indexOf('nip');
     if (idxId === -1) idxId = header.indexOf('nip_baru');
-    
+
     const posisiKolomBulan = header.indexOf(targetBulan);
 
     if (idxId === -1) return { isUpdated: false, count: 0, err: `Kolom NIP/ID tidak ditemukan di sheet ${sheetName}` };
@@ -766,19 +767,19 @@ function getDashboardData() {
   const sheetPegawai = ss.getSheetByName('pegawai');
   let trenNilai = {};
   let metrikJenis = { pns: 0, pppk: 0, pppk_paruh_waktu: 0 };
-  
+
   if (sheetPegawai) {
     const rawPegawai = sheetPegawai.getDataRange().getDisplayValues();
-    
+
     if (rawPegawai.length > 1) {
       // Ambil total pegawai langsung dari total sebenarnya (tanpa filter OPD)
       grandTotal.totalPegawai = rawPegawai.length - 1;
-      
+
       const headerPegawai = rawPegawai[0].map(h => h.toString().toLowerCase().trim());
       const idxJenis = headerPegawai.indexOf('jenis_pegawai');
       const daftarBulanStr = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
       const idxBulanArr = daftarBulanStr.map(b => headerPegawai.indexOf(b));
-      
+
       for (let i = 1; i < rawPegawai.length; i++) {
         const row = rawPegawai[i];
 
@@ -795,7 +796,7 @@ function getDashboardData() {
             if (val !== "" && val !== "-") {
               // Title Case standardisation
               val = val.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
-              
+
               if (!trenNilai[val]) {
                 trenNilai[val] = [0,0,0,0,0,0,0,0,0,0,0,0,0];
               }
@@ -901,7 +902,7 @@ function getDashboardData() {
 function getPegawaiData() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheetPegawai = ss.getSheetByName('pegawai');
-  
+
   if (!sheetPegawai) {
     return { status: 'error', message: 'Sheet "pegawai" belum ada.' };
   }
@@ -913,7 +914,7 @@ function getPegawaiData() {
     const yearMatch = judulLaporan.match(/20\d{2}/);
     let tahunLaporan = new Date().getFullYear();
     if (yearMatch) tahunLaporan = parseInt(yearMatch[0]);
-    
+
     if (tahunLaporan > _getValidTahunLisensi()) {
       return { status: 'error', message: 'Masa lisensi berakhir.' };
     }
@@ -986,10 +987,10 @@ function getPengecualianData() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('Pengecualian');
   if (!sheet) return { status: 'error', message: 'Sheet Pengecualian tidak ditemukan' };
-  
+
   const data = sheet.getDataRange().getValues();
   if (data.length <= 1) return { status: 'success', data: [] };
-  
+
   const headers = data[0].map(h => h.toString().toLowerCase().trim().replace(/\./g, ''));
   const idxNip = headers.indexOf('nip');
   const idxNama = headers.indexOf('nama');
@@ -997,7 +998,7 @@ function getPengecualianData() {
   const idxUnit = headers.indexOf('unit kerja');
   const idxOpd = headers.indexOf('opd');
   const idxKet = headers.indexOf('keterangan');
-  
+
   const result = [];
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
@@ -1036,13 +1037,13 @@ function savePengecualianData(payload) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName('Pengecualian');
   if (!sheet) return { status: 'error', message: 'Sheet Pengecualian tidak ditemukan' };
-  
+
   const data = sheet.getDataRange().getValues();
   const headers = data.length > 0 ? data[0].map(h => h.toString().toLowerCase().trim().replace(/\./g, '')) : [];
-  
+
   const idxNip = headers.indexOf('nip');
   if(idxNip === -1) return { status: 'error', message: 'Kolom NIP tidak ditemukan di sheet Pengecualian' };
-  
+
   // Update if exists
   let foundRow = -1;
   for (let i = 1; i < data.length; i++) {
@@ -1051,23 +1052,23 @@ function savePengecualianData(payload) {
       break;
     }
   }
-  
+
   const idxNama = headers.indexOf('nama');
   const idxJab = headers.indexOf('jabatan');
   const idxUnit = headers.indexOf('unit kerja');
   const idxOpd = headers.indexOf('opd');
   const idxKet = headers.indexOf('keterangan');
-  
+
   if (foundRow !== -1) {
     if (idxNama !== -1) sheet.getRange(foundRow, idxNama + 1).setValue(payload.nama);
     if (idxJab !== -1) sheet.getRange(foundRow, idxJab + 1).setValue(payload.jabatan);
     if (idxUnit !== -1) sheet.getRange(foundRow, idxUnit + 1).setValue(payload.unit_kerja);
     if (idxOpd !== -1) sheet.getRange(foundRow, idxOpd + 1).setValue(payload.opd);
     if (idxKet !== -1) sheet.getRange(foundRow, idxKet + 1).setValue(payload.keterangan);
-    
+
     _hapusDariSheetByNip('pegawai', payload.nip);
     _hapusDariSheetByNip('pltplh', payload.nip);
-    
+
     return { status: 'success', message: 'Data pengecualian berhasil diperbarui' };
   } else {
     // Insert new
@@ -1081,10 +1082,10 @@ function savePengecualianData(payload) {
     if (idxOpd !== -1) newRow[idxOpd] = payload.opd;
     if (idxKet !== -1) newRow[idxKet] = payload.keterangan;
     sheet.appendRow(newRow);
-    
+
     _hapusDariSheetByNip('pegawai', payload.nip);
     _hapusDariSheetByNip('pltplh', payload.nip);
-    
+
     return { status: 'success', message: 'Data pengecualian berhasil ditambahkan' };
   }
 }
@@ -1094,13 +1095,13 @@ function deletePengecualianData(nip) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('Pengecualian');
   if (!sheet) return { status: 'error', message: 'Sheet Pengecualian tidak ditemukan' };
-  
+
   const data = sheet.getDataRange().getValues();
   if (data.length <= 1) return { status: 'error', message: 'Data kosong' };
-  
+
   const headers = data[0].map(h => h.toString().toLowerCase().trim().replace(/\./g, ''));
   const idxNip = headers.indexOf('nip');
-  
+
   let foundRow = -1;
   for (let i = 1; i < data.length; i++) {
     if (data[i][idxNip] && data[i][idxNip].toString().trim() === nip) {
@@ -1108,10 +1109,10 @@ function deletePengecualianData(nip) {
       break;
     }
   }
-  
+
   if (foundRow !== -1) {
     sheet.deleteRow(foundRow);
-    
+
     // Renumber No
     const idxNo = headers.indexOf('no');
     if (idxNo !== -1 && sheet.getLastRow() > 1) {
@@ -1120,7 +1121,7 @@ function deletePengecualianData(nip) {
       for(let i=1; i<=newNoRange.getNumRows(); i++) nos.push([i]);
       newNoRange.setValues(nos);
     }
-    
+
     return {
       status: 'success',
       message: 'Berhasil menghapus NIP ' + nip
@@ -1143,7 +1144,7 @@ function getPegawaiFromSkp(nip) {
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheetSkp = ss.getSheetByName('skp');
-  
+
   if (!sheetSkp) {
     return { status: 'error', message: 'Sheet "skp" tidak ditemukan.' };
   }
@@ -1191,10 +1192,10 @@ function getPegawaiFromSkp(nip) {
     const nipStr = row[idxNip] ? row[idxNip].toString().trim() : null;
 
     if (nipStr === nip.toString().trim()) {
-      const tglPeriodeAkhir = (idxPeriodeAkhir !== -1 && row[idxPeriodeAkhir]) 
-        ? new Date(row[idxPeriodeAkhir]).getTime() 
+      const tglPeriodeAkhir = (idxPeriodeAkhir !== -1 && row[idxPeriodeAkhir])
+        ? new Date(row[idxPeriodeAkhir]).getTime()
         : 0;
-      
+
       if (!bestRow || tglPeriodeAkhir > maxTime) {
         bestRow = row;
         maxTime = tglPeriodeAkhir;
@@ -1228,23 +1229,23 @@ function getPegawaiFromSkp(nip) {
 function uploadLaporanChunk(bulanId, chunkData, isFirstChunk) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName(bulanId);
-  
+
   if (!sheet) {
     sheet = ss.insertSheet(bulanId);
   }
-  
+
   if (isFirstChunk) {
     sheet.clear();
   }
-  
+
   if (chunkData && chunkData.length > 0) {
     const numRows = chunkData.length;
     const numCols = chunkData[0].length;
-    
+
     const startRow = isFirstChunk ? 1 : sheet.getLastRow() + 1;
     sheet.getRange(startRow, 1, numRows, numCols).setValues(chunkData);
   }
-  
+
   return true;
 }
 
@@ -1266,14 +1267,14 @@ function processUploadSync(bulanId) {
 function verifyLogin(username, password) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheetPengaturan = ss.getSheetByName('pengaturan');
-  
+
   if (!sheetPengaturan) {
     return { status: 'error', message: 'Sheet pengaturan tidak ditemukan!' };
   }
-  
+
   const expectedUser = sheetPengaturan.getRange('B2').getValue().toString().trim();
   const expectedPass = sheetPengaturan.getRange('B3').getValue().toString().trim();
-  
+
   if (username === expectedUser && password === expectedPass) {
     const token = Utilities.base64Encode(username + ':' + password);
     return { status: 'success', token: token };
@@ -1289,10 +1290,10 @@ function verifyLogin(username, password) {
 function resetDatabase() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheets = ss.getSheets();
-  
+
   sheets.forEach(sheet => {
     const sheetName = sheet.getName();
-    
+
     if (sheetName === 'pengaturan') {
       // Abaikan sheet pengaturan
       return;
@@ -1307,7 +1308,7 @@ function resetDatabase() {
       sheet.clearContents();
     }
   });
-  
+
   return { status: 'success', message: 'Seluruh database telah berhasil direset!' };
 }
 
@@ -1326,7 +1327,7 @@ function generateDataPltPlh() {
   };
 
   const sheetSkp = ss.getSheetByName('skp');
-  
+
   if (!sheetSkp) {
     _alert('Error: Pastikan sheet "skp" ada di file ini.');
     return;
@@ -1353,7 +1354,7 @@ function generateDataPltPlh() {
   const headerSkp = dataSkpRaw[barisHeaderSkp];
   const idxNip = headerSkp.indexOf('nip');
   const idxIsPlt = headerSkp.indexOf('is_plt_plh');
-  const idxPeriodeAkhir = headerSkp.indexOf('periode_akhir'); 
+  const idxPeriodeAkhir = headerSkp.indexOf('periode_akhir');
 
   if (idxNip === -1 || idxIsPlt === -1 || idxPeriodeAkhir === -1) {
     _alert('Error: Kolom "nip", "is_plt_plh", atau "periode_akhir" tidak ditemukan di baris header sheet "skp".');
@@ -1440,7 +1441,7 @@ function generateDataPltPlh() {
 
   const outputData = [];
   const headerOutput = [...headerSkp];
-  daftarBulan.forEach(b => headerOutput.push(b)); 
+  daftarBulan.forEach(b => headerOutput.push(b));
 
   outputData.push(headerOutput);
 
@@ -1473,7 +1474,7 @@ function generateDataPltPlh() {
 function getPltPlhData() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheetPltPlh = ss.getSheetByName('pegawai_plt_plh');
-  
+
   if (!sheetPltPlh) {
     return { status: 'error', message: 'Sheet "pegawai_plt_plh" belum ada. Silakan jalankan menu Ambil Data Pegawai PLT/PLH terlebih dahulu di Spreadsheet.' };
   }
@@ -1495,7 +1496,7 @@ function getPltPlhData() {
     const header = rawPltPlh[0].map(h => h.toString().toLowerCase().trim());
     const idxNip = header.indexOf('nip');
     const idxNama = header.indexOf('nama');
-    
+
     // Deteksi dinamis untuk nama kolom jabatan
     let idxJabatan = header.indexOf('jabatan');
     if (idxJabatan === -1) idxJabatan = header.indexOf('skp_jabatan');

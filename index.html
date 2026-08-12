@@ -1765,7 +1765,12 @@
                 }
               })
               .withFailureHandler((err) => {
-                Swal.fire('Error', `Gagal menjalankan ${label}: ` + err.message, 'error');
+                const cleanMsg = err.message ? err.message.replace(/^(Error:\s*)+/i, '').replace(/\n/g, '<br>') : err.message;
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Proses Gagal',
+                  html: `Gagal menjalankan <b>${label}</b>:<br><br>${cleanMsg}`
+                });
               })
               [funcName]();
           }
