@@ -1523,6 +1523,11 @@
           <div id="panelRekon" class="nav-panel">
             <div class="card">
               <h2 class="section-title">Sinkronisasi Data</h2>
+              
+              <div style="background-color: rgba(59, 130, 246, 0.1); color: var(--text-primary); border-left: 4px solid var(--primary); padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem; font-size: 0.95rem; line-height: 1.5;">
+                <strong>💡 Info:</strong> Saat Anda mengupload laporan, sistem akan <strong>memproses datanya secara otomatis</strong>. Gunakan fungsi sinkronisasi manual di halaman ini <u>hanya</u> jika Anda pernah melakukan pengeditan langsung di Spreadsheet yang menyebabkan database tidak sinkron. (Lama proses bergantung pada banyaknya data).
+              </div>
+
 
               <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
                 <button id="btnSyncMaster" class="btn btn-primary" style="flex: 1; min-width: 200px; justify-content: center;" onclick="runSync('generateMasterPegawai', 'Ambil Data Pegawai')">
