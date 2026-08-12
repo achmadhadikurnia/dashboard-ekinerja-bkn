@@ -2796,19 +2796,6 @@
             if (data.section === 'head' && data.column.index === 0) {
               data.cell.styles.halign = 'right';
             }
-            if (isBulanFiltered && data.column.index === 7) {
-              if (data.section === 'head') {
-                data.cell.styles.fillColor = [59, 130, 246]; // Blue-500
-              } else if (data.section === 'body') {
-                data.cell.styles.fillColor = [219, 234, 254]; // Blue-100
-              }
-            } else if (!isBulanFiltered && data.column.index === (selectedMonthIdx + 7)) {
-              if (data.section === 'head') {
-                data.cell.styles.fillColor = [59, 130, 246]; // Blue-500
-              } else if (data.section === 'body') {
-                data.cell.styles.fillColor = [219, 234, 254]; // Blue-100
-              }
-            }
           }
         });
 
@@ -3204,19 +3191,6 @@
           didParseCell: function(data) {
             if (data.section === 'head' && data.column.index === 0) {
               data.cell.styles.halign = 'right';
-            }
-            if (isBulanSelected && data.column.index === 7) {
-              if (data.section === 'head') {
-                data.cell.styles.fillColor = [59, 130, 246]; // Blue-500
-              } else if (data.section === 'body') {
-                data.cell.styles.fillColor = [219, 234, 254]; // Blue-100
-              }
-            } else if (!isBulanSelected && data.column.index === (selectedMonthIdx + 7)) {
-              if (data.section === 'head') {
-                data.cell.styles.fillColor = [59, 130, 246]; // Blue-500
-              } else if (data.section === 'body') {
-                data.cell.styles.fillColor = [219, 234, 254]; // Blue-100
-              }
             }
           }
         });
