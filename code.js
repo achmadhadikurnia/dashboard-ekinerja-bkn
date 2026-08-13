@@ -899,7 +899,7 @@ function getDashboardData() {
  * Fungsi khusus untuk menarik data Pegawai secara terpisah (Lazy Loading)
  * Dipanggil dari Frontend UI di latar belakang.
  */
-function getPegawaiData() {
+function getPegawaiData(startRow = 0, chunkSize = 0) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheetPegawai = ss.getSheetByName('pegawai');
 
@@ -920,38 +920,51 @@ function getPegawaiData() {
     }
   }
 
+  const lastRow = sheetPegawai.getLastRow();
+  const lastCol = sheetPegawai.getLastColumn();
+  if (lastRow <= 1 || lastCol < 1) {
+    return { status: 'success', data: [], total: 0 };
+  }
+
   let pegawaiData = [];
-  const rawPegawai = sheetPegawai.getDataRange().getDisplayValues();
-  if (rawPegawai.length > 1) {
-    const headerPegawai = rawPegawai[0];
-    const idxNip = headerPegawai.indexOf('nip');
-    const idxNama = headerPegawai.indexOf('nama');
+  const headerPegawai = sheetPegawai.getRange(1, 1, 1, lastCol).getDisplayValues()[0];
 
-    // Deteksi dinamis untuk nama kolom jabatan
-    let idxJabatan = headerPegawai.indexOf('skp_jabatan');
-    if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('jabatan');
-    if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('jabatan_akhir');
-    if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('nama_jabatan');
+  const idxNip = headerPegawai.indexOf('nip');
+  const idxNama = headerPegawai.indexOf('nama');
 
-    // Deteksi dinamis untuk unit kerja
-    let idxUnitKerja = headerPegawai.indexOf('unit_kerja');
-    if (idxUnitKerja === -1) idxUnitKerja = headerPegawai.indexOf('skp_unor');
-    if (idxUnitKerja === -1) idxUnitKerja = headerPegawai.indexOf('skp_unor_nama');
-    if (idxUnitKerja === -1) idxUnitKerja = headerPegawai.indexOf('unor_nama');
+  // Deteksi dinamis untuk nama kolom jabatan
+  let idxJabatan = headerPegawai.indexOf('skp_jabatan');
+  if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('jabatan');
+  if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('jabatan_akhir');
+  if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('nama_jabatan');
 
-    let idxOpd = headerPegawai.indexOf('skp_unor_induk');
-    let idxSkpStatus = headerPegawai.indexOf('skp_status');
-    let idxJenisPegawai = headerPegawai.indexOf('jenis_pegawai');
+  // Deteksi dinamis untuk unit kerja
+  let idxUnitKerja = headerPegawai.indexOf('unit_kerja');
+  if (idxUnitKerja === -1) idxUnitKerja = headerPegawai.indexOf('skp_unor');
+  if (idxUnitKerja === -1) idxUnitKerja = headerPegawai.indexOf('skp_unor_nama');
+  if (idxUnitKerja === -1) idxUnitKerja = headerPegawai.indexOf('unor_nama');
 
-    const daftarBulan = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
-    const idxBulanPegawai = {};
-    daftarBulan.forEach(b => {
-      idxBulanPegawai[b] = headerPegawai.indexOf(b);
-    });
+  let idxOpd = headerPegawai.indexOf('skp_unor_induk');
+  let idxSkpStatus = headerPegawai.indexOf('skp_status');
+  let idxJenisPegawai = headerPegawai.indexOf('jenis_pegawai');
+
+  const daftarBulan = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
+  const idxBulanPegawai = {};
+  daftarBulan.forEach(b => {
+    idxBulanPegawai[b] = headerPegawai.indexOf(b);
+  });
+
+  let fetchStart = 2 + startRow;
+  let fetchNum = chunkSize > 0 ? chunkSize : (lastRow - 1);
+  
+  if (fetchStart <= lastRow) {
+    if (fetchStart + fetchNum - 1 > lastRow) fetchNum = lastRow - fetchStart + 1;
+
+    const rawPegawaiData = sheetPegawai.getRange(fetchStart, 1, fetchNum, lastCol).getDisplayValues();
 
     if (idxNip !== -1 && idxNama !== -1) {
-      for (let i = 1; i < rawPegawai.length; i++) {
-        const pRow = rawPegawai[i];
+      for (let i = 0; i < rawPegawaiData.length; i++) {
+        const pRow = rawPegawaiData[i];
         const bData = [];
 
         daftarBulan.forEach(b => {
@@ -975,7 +988,8 @@ function getPegawaiData() {
 
   return {
     status: 'success',
-    data: pegawaiData
+    data: pegawaiData,
+    total: lastRow - 1
   };
 }
 
@@ -983,15 +997,16 @@ function getPegawaiData() {
 // PENGECUALIAN CRUD
 // ==========================================
 
-function getPengecualianData() {
+function getPengecualianData(startRow = 0, chunkSize = 0) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('Pengecualian');
   if (!sheet) return { status: 'error', message: 'Sheet Pengecualian tidak ditemukan' };
 
-  const data = sheet.getDataRange().getValues();
-  if (data.length <= 1) return { status: 'success', data: [] };
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  if (lastRow <= 1 || lastCol < 1) return { status: 'success', data: [], total: 0 };
 
-  const headers = data[0].map(h => h.toString().toLowerCase().trim().replace(/\./g, ''));
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => h.toString().toLowerCase().trim().replace(/\./g, ''));
   const idxNip = headers.indexOf('nip');
   const idxNama = headers.indexOf('nama');
   const idxJab = headers.indexOf('jabatan');
@@ -999,21 +1014,31 @@ function getPengecualianData() {
   const idxOpd = headers.indexOf('opd');
   const idxKet = headers.indexOf('keterangan');
 
+  let fetchStart = 2 + startRow;
+  let fetchNum = chunkSize > 0 ? chunkSize : (lastRow - 1);
+
   const result = [];
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-    if (idxNip !== -1 && row[idxNip]) {
-      result.push({
-        nip: row[idxNip].toString().trim(),
-        nama: idxNama !== -1 ? row[idxNama].toString().trim() : '',
-        jabatan: idxJab !== -1 ? row[idxJab].toString().trim() : '',
-        unit_kerja: idxUnit !== -1 ? row[idxUnit].toString().trim() : '',
-        opd: idxOpd !== -1 ? row[idxOpd].toString().trim() : '',
-        keterangan: idxKet !== -1 ? row[idxKet].toString().trim() : ''
-      });
+  if (fetchStart <= lastRow) {
+    if (fetchStart + fetchNum - 1 > lastRow) fetchNum = lastRow - fetchStart + 1;
+    
+    const data = sheet.getRange(fetchStart, 1, fetchNum, lastCol).getValues();
+
+    for (let i = 0; i < data.length; i++) {
+      const row = data[i];
+      if (idxNip !== -1 && row[idxNip]) {
+        result.push({
+          nip: row[idxNip].toString().trim(),
+          nama: idxNama !== -1 ? row[idxNama].toString().trim() : '',
+          jabatan: idxJab !== -1 ? row[idxJab].toString().trim() : '',
+          unit_kerja: idxUnit !== -1 ? row[idxUnit].toString().trim() : '',
+          opd: idxOpd !== -1 ? row[idxOpd].toString().trim() : '',
+          keterangan: idxKet !== -1 ? row[idxKet].toString().trim() : ''
+        });
+      }
     }
   }
-  return { status: 'success', data: result };
+
+  return { status: 'success', data: result, total: lastRow - 1 };
 }
 
 function _hapusDariSheetByNip(sheetName, nip) {
@@ -1472,7 +1497,7 @@ function generateDataPltPlh() {
   _alert('Sukses! Ditemukan ' + (outputData.length - 1) + ' pegawai berstatus PLT/PLH. Data dicetak ke sheet "pegawai_plt_plh".', true);
 }
 
-function getPltPlhData() {
+function getPltPlhData(startRow = 0, chunkSize = 0) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheetPltPlh = ss.getSheetByName('pegawai_plt_plh');
 
@@ -1491,34 +1516,46 @@ function getPltPlhData() {
     }
   }
 
+  const lastRow = sheetPltPlh.getLastRow();
+  const lastCol = sheetPltPlh.getLastColumn();
+  if (lastRow <= 1 || lastCol < 1) {
+    return { status: 'success', data: [], total: 0 };
+  }
+
   let pltPlhData = [];
-  const rawPltPlh = sheetPltPlh.getDataRange().getDisplayValues();
-  if (rawPltPlh.length > 1) {
-    const header = rawPltPlh[0].map(h => h.toString().toLowerCase().trim());
-    const idxNip = header.indexOf('nip');
-    const idxNama = header.indexOf('nama');
+  const header = sheetPltPlh.getRange(1, 1, 1, lastCol).getDisplayValues()[0].map(h => h.toString().toLowerCase().trim());
+  const idxNip = header.indexOf('nip');
+  const idxNama = header.indexOf('nama');
 
-    // Deteksi dinamis untuk nama kolom jabatan
-    let idxJabatan = header.indexOf('skp_jabatan');
-    if (idxJabatan === -1) idxJabatan = header.indexOf('jabatan');
-    if (idxJabatan === -1) idxJabatan = header.indexOf('jabatan_akhir');
-    if (idxJabatan === -1) idxJabatan = header.indexOf('nama_jabatan');
+  // Deteksi dinamis untuk nama kolom jabatan
+  let idxJabatan = header.indexOf('skp_jabatan');
+  if (idxJabatan === -1) idxJabatan = header.indexOf('jabatan');
+  if (idxJabatan === -1) idxJabatan = header.indexOf('jabatan_akhir');
+  if (idxJabatan === -1) idxJabatan = header.indexOf('nama_jabatan');
 
-    // Deteksi dinamis untuk unit kerja
-    let idxUnitKerja = header.indexOf('unit_kerja');
-    if (idxUnitKerja === -1) idxUnitKerja = header.indexOf('skp_unor');
-    if (idxUnitKerja === -1) idxUnitKerja = header.indexOf('skp_unor_nama');
-    if (idxUnitKerja === -1) idxUnitKerja = header.indexOf('unor_nama');
+  // Deteksi dinamis untuk unit kerja
+  let idxUnitKerja = header.indexOf('unit_kerja');
+  if (idxUnitKerja === -1) idxUnitKerja = header.indexOf('skp_unor');
+  if (idxUnitKerja === -1) idxUnitKerja = header.indexOf('skp_unor_nama');
+  if (idxUnitKerja === -1) idxUnitKerja = header.indexOf('unor_nama');
 
-    const idxOpd = header.indexOf('skp_unor_induk');
-    const idxStatus = header.indexOf('skp_status');
-    const idxAtasan = header.indexOf('nama_atasan');
-    let idxJenisPegawai = header.indexOf('jenis_pegawai');
+  const idxOpd = header.indexOf('skp_unor_induk');
+  const idxStatus = header.indexOf('skp_status');
+  const idxAtasan = header.indexOf('nama_atasan');
+  let idxJenisPegawai = header.indexOf('jenis_pegawai');
 
-    const daftarBulanStr = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
-    const idxBulanArr = daftarBulanStr.map(b => header.indexOf(b));
+  const daftarBulanStr = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
+  const idxBulanArr = daftarBulanStr.map(b => header.indexOf(b));
 
-    for (let i = 1; i < rawPltPlh.length; i++) {
+  let fetchStart = 2 + startRow;
+  let fetchNum = chunkSize > 0 ? chunkSize : (lastRow - 1);
+
+  if (fetchStart <= lastRow) {
+    if (fetchStart + fetchNum - 1 > lastRow) fetchNum = lastRow - fetchStart + 1;
+
+    const rawPltPlh = sheetPltPlh.getRange(fetchStart, 1, fetchNum, lastCol).getDisplayValues();
+
+    for (let i = 0; i < rawPltPlh.length; i++) {
       const row = rawPltPlh[i];
       let rowData = {
         nip: idxNip !== -1 ? row[idxNip].toString().trim() : "",
@@ -1544,5 +1581,5 @@ function getPltPlhData() {
     }
   }
 
-  return { status: 'success', data: pltPlhData };
+  return { status: 'success', data: pltPlhData, total: lastRow - 1 };
 }

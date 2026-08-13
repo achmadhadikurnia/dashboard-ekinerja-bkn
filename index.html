@@ -801,6 +801,24 @@
       margin-bottom: 1rem;
     }
 
+    .progress-container {
+      width: 100%;
+      max-width: 400px;
+      height: 8px;
+      background-color: var(--border);
+      border-radius: 4px;
+      margin-top: 1rem;
+      overflow: hidden;
+      display: none;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background-color: var(--accent);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
     /* Responsive */
     .footer-container {
       border-top: 1px solid var(--border);
@@ -969,8 +987,11 @@
       <div class="content-area">
 
         <div id="loading">
-          <div class="spinner"></div>
-          <p style="color: var(--text-secondary); font-weight: 500;">Mengambil data real-time...</p>
+          <div class="spinner" id="main-spinner"></div>
+          <p id="main-loading-text" style="color: var(--text-secondary); font-weight: 500;">Mengambil data real-time...</p>
+          <div class="progress-container" id="main-progress-container">
+            <div class="progress-bar" id="main-progress-bar"></div>
+          </div>
         </div>
 
         <div id="error-container" style="display: none;" class="card" style="border-color: var(--danger); text-align: center;">
@@ -1164,6 +1185,9 @@
               <div id="pegawai-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; color: var(--text-secondary);">
                 <div class="spinner"></div>
                 <p id="pegawai-loading-text" style="font-weight: 500;">Sedang memuat rincian pegawai dari server...</p>
+                <div class="progress-container" id="pegawai-progress-container">
+                  <div class="progress-bar" id="pegawai-progress-bar"></div>
+                </div>
               </div>
 
               <div id="pegawai-content" style="display: none;">
@@ -1305,6 +1329,9 @@
               <div id="pltPlh-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; color: var(--text-secondary);">
                 <div class="spinner"></div>
                 <p id="pltPlh-loading-text" style="font-weight: 500;">Sedang memuat rincian PLT/PLH dari server...</p>
+                <div class="progress-container" id="pltPlh-progress-container">
+                  <div class="progress-bar" id="pltPlh-progress-bar"></div>
+                </div>
               </div>
 
               <div id="pltPlh-content" style="display: none;">
@@ -1426,6 +1453,9 @@
               <div id="pengecualian-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; color: var(--text-secondary);">
                 <div class="spinner"></div>
                 <p id="pengecualian-loading-text" style="font-weight: 500;">Sedang memuat data pengecualian...</p>
+                <div class="progress-container" id="pengecualian-progress-container">
+                  <div class="progress-bar" id="pengecualian-progress-bar"></div>
+                </div>
               </div>
 
               <div id="pengecualian-content" style="display: none;">
@@ -2144,6 +2174,57 @@
         .getDashboardData();
     });
 
+    async function fetchChunkedData(scriptFunc, loadingId, progressContId, progressId, onSuccessHandler, onFailureHandler) {
+      let allData = [];
+      let startRow = 0;
+      const chunkSize = 1500;
+      let isDone = false;
+      
+      const pCont = document.getElementById(progressContId);
+      if(pCont) pCont.style.display = 'block';
+      
+      while (!isDone) {
+        try {
+          const response = await new Promise((resolve, reject) => {
+             google.script.run
+               .withSuccessHandler(resolve)
+               .withFailureHandler(reject)
+               [scriptFunc](startRow, chunkSize);
+          });
+          
+          if (response.status === 'error') {
+             document.getElementById(loadingId).innerHTML = '<p class="error-msg">' + response.message + '</p>';
+             return;
+          }
+          
+          const chunkData = response.data || [];
+          allData = allData.concat(chunkData);
+          
+          const total = response.total || 0;
+          
+          if (total > 0) {
+            let percent = Math.min(100, Math.round((allData.length / total) * 100));
+            const pBar = document.getElementById(progressId);
+            if(pBar) pBar.style.width = percent + '%';
+            
+            const pText = document.getElementById(loadingId + '-text');
+            if(pText) pText.innerText = `Memuat data: ${allData.length.toLocaleString('id-ID')} / ${total.toLocaleString('id-ID')} (${percent}%)`;
+          }
+          
+          if (chunkData.length < chunkSize) {
+            isDone = true;
+          } else {
+            startRow += chunkSize;
+          }
+        } catch (error) {
+           onFailureHandler(error);
+           isDone = true;
+        }
+      }
+      
+      onSuccessHandler({ status: 'success', data: allData });
+    }
+
     function onSuccess(response) {
       if(response.status === 'error') {
         showError(response.message);
@@ -2166,16 +2247,10 @@
       updateLoadingText('pengecualian-loading-text', grandTotal.totalPengecualian, 'data pengecualian');
 
       // Panggil asinkron tabel pegawai
-      google.script.run
-        .withSuccessHandler(onPegawaiSuccess)
-        .withFailureHandler(onFailure)
-        .getPegawaiData();
+      fetchChunkedData('getPegawaiData', 'pegawai-loading', 'pegawai-progress-container', 'pegawai-progress-bar', onPegawaiSuccess, onFailure);
 
       // Panggil asinkron tabel PLT/PLH
-      google.script.run
-        .withSuccessHandler(onPltPlhSuccess)
-        .withFailureHandler(onFailure)
-        .getPltPlhData();
+      fetchChunkedData('getPltPlhData', 'pltPlh-loading', 'pltPlh-progress-container', 'pltPlh-progress-bar', onPltPlhSuccess, onFailure);
     }
 
     function onPegawaiSuccess(response) {
@@ -3552,22 +3627,21 @@
         }
       });
 
-      google.script.run
-        .withSuccessHandler(onPengecualianSuccess)
-        .withFailureHandler((err) => {
-          document.getElementById('pengecualian-loading').style.display = 'none';
-          document.getElementById('pengecualian-content').style.display = 'block';
-          document.getElementById('pengecualianBody').innerHTML = '<tr><td colspan="8" style="text-align:center; color:#ef4444;">Gagal memuat data: ' + err.message + '</td></tr>';
+      const onFailurePengecualian = (err) => {
+        document.getElementById('pengecualian-loading').style.display = 'none';
+        document.getElementById('pengecualian-content').style.display = 'block';
+        document.getElementById('pengecualianBody').innerHTML = '<tr><td colspan="8" style="text-align:center; color:#ef4444;">Gagal memuat data: ' + err.message + '</td></tr>';
 
-          btns.forEach(btn => {
-            if (btn) {
-              btn.disabled = false;
-              btn.style.cursor = 'pointer';
-              btn.style.opacity = '1';
-            }
-          });
-        })
-        .getPengecualianData();
+        btns.forEach(btn => {
+          if (btn) {
+            btn.disabled = false;
+            btn.style.cursor = 'pointer';
+            btn.style.opacity = '1';
+          }
+        });
+      };
+
+      fetchChunkedData('getPengecualianData', 'pengecualian-loading', 'pengecualian-progress-container', 'pengecualian-progress-bar', onPengecualianSuccess, onFailurePengecualian);
     }
 
     function onPengecualianSuccess(response) {
