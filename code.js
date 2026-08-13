@@ -764,51 +764,22 @@ function getDashboardData() {
 
 
   // BACA DATA DINAMIS TREN NILAI DARI SHEET PEGAWAI
+  // (Dioptimasi: Kalkulasi trenNilai dipindahkan ke frontend agar loading dashboard instan)
   const sheetPegawai = ss.getSheetByName('pegawai');
   let trenNilai = {};
   let metrikJenis = { pns: 0, pppk: 0, pppk_paruh_waktu: 0 };
 
   if (sheetPegawai) {
-    const rawPegawai = sheetPegawai.getDataRange().getDisplayValues();
-
-    if (rawPegawai.length > 1) {
-      // Ambil total pegawai langsung dari total sebenarnya (tanpa filter OPD)
-      grandTotal.totalPegawai = rawPegawai.length - 1;
-
-      const headerPegawai = rawPegawai[0].map(h => h.toString().toLowerCase().trim());
-      const idxJenis = headerPegawai.indexOf('jenis_pegawai');
-      const daftarBulanStr = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
-      const idxBulanArr = daftarBulanStr.map(b => headerPegawai.indexOf(b));
-
-      for (let i = 1; i < rawPegawai.length; i++) {
-        const row = rawPegawai[i];
-
-        if (idxJenis !== -1 && row[idxJenis]) {
-          const jp = row[idxJenis].toString().trim().toLowerCase();
-          if (jp === 'pns') metrikJenis.pns++;
-          else if (jp === 'pppk') metrikJenis.pppk++;
-          else if (jp === 'pppk_paruh_waktu') metrikJenis.pppk_paruh_waktu++;
-        }
-
-        idxBulanArr.forEach((idxB, monthIndex) => {
-          if (idxB !== -1) {
-            let val = row[idxB] ? row[idxB].toString().trim() : "";
-            if (val !== "" && val !== "-") {
-              // Title Case standardisation
-              val = val.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
-
-              if (!trenNilai[val]) {
-                trenNilai[val] = [0,0,0,0,0,0,0,0,0,0,0,0,0];
-              }
-              trenNilai[val][monthIndex]++;
-            }
-          }
-        });
-      }
+    const lastRow = sheetPegawai.getLastRow();
+    if (lastRow > 1) {
+      grandTotal.totalPegawai = lastRow - 1;
+    } else {
+      grandTotal.totalPegawai = 0;
     }
   }
-  grandTotal.trenNilai = trenNilai;
-  grandTotal.metrikJenis = metrikJenis;
+
+  grandTotal.trenNilai = trenNilai; // Akan dikalkulasi di index.html
+  grandTotal.metrikJenis = metrikJenis; // Akan dikalkulasi di index.html
 
   // Cepat ambil jumlah PLT/PLH untuk info loading di frontend
   let totalPltPlh = 0;

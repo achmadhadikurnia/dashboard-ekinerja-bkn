@@ -780,6 +780,14 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    @keyframes pulse-text { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+    .loading-pulse {
+      animation: pulse-text 1.5s infinite;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
 
     /* Loading Screen */
     #loading {
@@ -1029,7 +1037,7 @@
                   </div>
                   <div class="card-info">
                     <div class="card-title">PNS</div>
-                    <div class="card-value val-blue" id="val-pns">0</div>
+                    <div class="card-value val-blue" id="val-pns"><span class="loading-pulse">Menghitung...</span></div>
                   </div>
                 </div>
               </div>
@@ -1041,7 +1049,7 @@
                   </div>
                   <div class="card-info">
                     <div class="card-title">PPPK</div>
-                    <div class="card-value val-blue" id="val-pppk">0</div>
+                    <div class="card-value val-blue" id="val-pppk"><span class="loading-pulse">Menghitung...</span></div>
                   </div>
                 </div>
               </div>
@@ -1053,7 +1061,7 @@
                   </div>
                   <div class="card-info">
                     <div class="card-title">PPPK Paruh Waktu</div>
-                    <div class="card-value val-blue" id="val-pppk-paruh-waktu">0</div>
+                    <div class="card-value val-blue" id="val-pppk-paruh-waktu"><span class="loading-pulse">Menghitung...</span></div>
                   </div>
                 </div>
               </div>
@@ -1596,7 +1604,7 @@
               <h2 class="section-title">Sinkronisasi Data</h2>
 
               <div style="background-color: rgba(59, 130, 246, 0.1); color: var(--text-primary); border-left: 4px solid var(--primary); padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem; font-size: 0.95rem; line-height: 1.5;">
-                <strong>💡 Info:</strong> Saat Anda mengupload laporan, sistem akan <strong>memproses datanya secara otomatis</strong>. Gunakan fungsi sinkronisasi manual di halaman ini <u>hanya</u> jika Anda pernah melakukan pengeditan langsung di Spreadsheet yang menyebabkan database tidak sinkron. (Lama proses bergantung pada banyaknya data).
+                <strong>Saat Anda mengupload laporan, sistem akan <strong>memproses datanya secara otomatis</strong>. Gunakan fungsi sinkronisasi manual di halaman ini <u>hanya</u> jika Anda pernah melakukan pengeditan langsung di Spreadsheet yang menyebabkan database tidak sinkron. (Lama proses bergantung pada banyaknya data).
               </div>
 
 
@@ -2179,10 +2187,10 @@
       let startRow = 0;
       const chunkSize = 1500;
       let isDone = false;
-      
+
       const pCont = document.getElementById(progressContId);
       if(pCont) pCont.style.display = 'block';
-      
+
       while (!isDone) {
         try {
           const response = await new Promise((resolve, reject) => {
@@ -2191,26 +2199,26 @@
                .withFailureHandler(reject)
                [scriptFunc](startRow, chunkSize);
           });
-          
+
           if (response.status === 'error') {
              document.getElementById(loadingId).innerHTML = '<p class="error-msg">' + response.message + '</p>';
              return;
           }
-          
+
           const chunkData = response.data || [];
           allData = allData.concat(chunkData);
-          
+
           const total = response.total || 0;
-          
+
           if (total > 0) {
             let percent = Math.min(100, Math.round((allData.length / total) * 100));
             const pBar = document.getElementById(progressId);
             if(pBar) pBar.style.width = percent + '%';
-            
+
             const pText = document.getElementById(loadingId + '-text');
             if(pText) pText.innerText = `Memuat data: ${allData.length.toLocaleString('id-ID')} / ${total.toLocaleString('id-ID')} (${percent}%)`;
           }
-          
+
           if (chunkData.length < chunkSize) {
             isDone = true;
           } else {
@@ -2221,7 +2229,7 @@
            isDone = true;
         }
       }
-      
+
       onSuccessHandler({ status: 'success', data: allData });
     }
 
@@ -2337,14 +2345,54 @@
       document.getElementById('val-tahunan-dinilai').innerText = formatNumber(tahunanDinilai);
       document.getElementById('val-persentase-tahunan').innerText = pctTahunan + "%";
 
-      if (gt.metrikJenis) {
-        document.getElementById('val-pns').innerText = formatNumber(gt.metrikJenis.pns);
-        document.getElementById('val-pppk').innerText = formatNumber(gt.metrikJenis.pppk);
-        document.getElementById('val-pppk-paruh-waktu').innerText = formatNumber(gt.metrikJenis.pppk_paruh_waktu);
+      // Metrik jenis tidak diupdate di sini, menunggu renderPegawaiData selesai.
+
+      // 2. Render Chart (Chart.js) dipindahkan ke fungsi terpisah agar bisa di-update
+      renderDashboardCharts(gt);
+
+      // ==========================================
+      // 3. Render Table OPD
+      // ==========================================
+      const currentRealYear = new Date().getFullYear();
+      let reportYear = currentRealYear;
+
+      // Ekstrak tahun dari judul laporan (jika ada, misal: "Tahun 2026")
+      const yearMatch = globalReportTitle.match(/20\d{2}/);
+      if (yearMatch) {
+        reportYear = parseInt(yearMatch[0]);
       }
 
-      // 2. Render Chart (Chart.js)
+      let targetHighlights = [];
+
+      if (currentRealYear > reportYear) {
+        // Jika sudah masuk tahun berikutnya, sorot HANYA kolom Tahunan
+        targetHighlights = [12];
+      } else {
+        const currentRealMonth = new Date().getMonth();
+        if (currentRealMonth === 11) { // Desember
+          targetHighlights = [10, 11, 12]; // Nov, Des, Tahunan
+        } else if (currentRealMonth > 0) {
+          targetHighlights = [currentRealMonth - 1]; // Dinilai bulan berikutnya
+        }
+      }
+
+      targetHighlights.forEach(idx => {
+        const opdTh = document.getElementById(`opd-th-${idx}`);
+        if (opdTh) opdTh.classList.add('highlight-col');
+      });
+
+      globalDashboardData = data;
+      globalTargetHighlights = targetHighlights;
+      buildOpdTableBody();
+    } // Akhir renderDashboard
+
+    let laporanChartInstance = null;
+    function renderDashboardCharts(gt) {
       const ctx = document.getElementById('laporanChart').getContext('2d');
+
+      if (laporanChartInstance) {
+        laporanChartInstance.destroy();
+      }
 
       // Gradient for bars
       const gradient = ctx.createLinearGradient(0, 0, 0, 400);
@@ -2353,7 +2401,7 @@
 
       let chartDatasets = [];
 
-      if (gt.trenNilai) {
+      if (gt.trenNilai && Object.keys(gt.trenNilai).length > 0) {
         const colorPalette = [
           '#10b981', // green
           '#3b82f6', // blue
@@ -2455,7 +2503,12 @@
           </div>
         `;
       } else {
-        document.getElementById('ringkasanPredikatContainer').innerHTML = '';
+        document.getElementById('ringkasanPredikatContainer').innerHTML = `
+          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; color: var(--text-secondary); background-color: var(--bg-secondary); border-radius: 12px; border: 1px dashed var(--border); margin-top: 1rem;">
+            <div class="spinner" style="width: 28px; height: 28px; border-width: 2.5px; border-top-color: var(--accent); margin-bottom: 0.75rem;"></div>
+            <p class="loading-pulse" style="margin: 0;">Sedang mengalkulasi tren nilai & rincian predikat...</p>
+          </div>
+        `;
       }
 
       chartDatasets.push({
@@ -2469,7 +2522,7 @@
         hoverBackgroundColor: 'rgba(96, 165, 250, 1)'
       });
 
-      new Chart(ctx, {
+      laporanChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'Tahunan'],
@@ -2507,40 +2560,7 @@
           }
         }
       });
-
-      // 3. Render Table OPD
-      const currentRealYear = new Date().getFullYear();
-      let reportYear = currentRealYear;
-
-      // Ekstrak tahun dari judul laporan (jika ada, misal: "Tahun 2026")
-      const yearMatch = globalReportTitle.match(/20\d{2}/);
-      if (yearMatch) {
-        reportYear = parseInt(yearMatch[0]);
-      }
-
-      let targetHighlights = [];
-
-      if (currentRealYear > reportYear) {
-        // Jika sudah masuk tahun berikutnya, sorot HANYA kolom Tahunan
-        targetHighlights = [12];
-      } else {
-        const currentRealMonth = new Date().getMonth();
-        if (currentRealMonth === 11) { // Desember
-          targetHighlights = [10, 11, 12]; // Nov, Des, Tahunan
-        } else if (currentRealMonth > 0) {
-          targetHighlights = [currentRealMonth - 1]; // Dinilai bulan berikutnya
-        }
-      }
-
-      targetHighlights.forEach(idx => {
-        const opdTh = document.getElementById(`opd-th-${idx}`);
-        if (opdTh) opdTh.classList.add('highlight-col');
-      });
-
-      globalDashboardData = data;
-      globalTargetHighlights = targetHighlights;
-      buildOpdTableBody();
-    } // Akhir renderDashboard
+    } // Akhir renderDashboardCharts
     let currentSortColOpd = '';
     let currentSortAscOpd = true;
 
@@ -2695,6 +2715,47 @@
 
       globalPegawaiData = pegawaiDataArray || [];
       globalFilteredPegawaiData = [...globalPegawaiData];
+
+      // KALKULASI TREN NILAI DAN METRIK JENIS SECARA FRONTEND (Asli dari getDashboardData)
+      let trenNilai = {};
+      let metrikJenis = { pns: 0, pppk: 0, pppk_paruh_waktu: 0 };
+
+      if (globalPegawaiData.length > 0) {
+          const daftarBulanStr = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
+
+          globalPegawaiData.forEach(p => {
+             // Metrik Jenis
+             if (p.jenis_pegawai) {
+               const jp = p.jenis_pegawai.toString().trim().toLowerCase();
+               if (jp === 'pns') metrikJenis.pns++;
+               else if (jp === 'pppk') metrikJenis.pppk++;
+               else if (jp === 'pppk_paruh_waktu') metrikJenis.pppk_paruh_waktu++;
+             }
+
+             // Tren Nilai
+             daftarBulanStr.forEach((bulan, monthIndex) => {
+                 let val = (p.bulanan && p.bulanan[monthIndex]) ? p.bulanan[monthIndex].toString().trim() : "";
+                 if (val !== "" && val !== "-") {
+                     val = val.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+                     if (!trenNilai[val]) trenNilai[val] = [0,0,0,0,0,0,0,0,0,0,0,0,0];
+                     trenNilai[val][monthIndex]++;
+                 }
+             });
+          });
+      }
+
+      if (globalDashboardData && globalDashboardData.grandTotal) {
+          globalDashboardData.grandTotal.trenNilai = trenNilai;
+          globalDashboardData.grandTotal.metrikJenis = metrikJenis;
+
+          // Update DOM Summary
+          document.getElementById('val-pns').innerText = formatNumber(metrikJenis.pns);
+          document.getElementById('val-pppk').innerText = formatNumber(metrikJenis.pppk);
+          document.getElementById('val-pppk-paruh-waktu').innerText = formatNumber(metrikJenis.pppk_paruh_waktu);
+
+          // Render Ulang Chart & Tabel Ringkasan
+          renderDashboardCharts(globalDashboardData.grandTotal);
+      }
 
       // 4. Render Table Pegawai
       const searchInput = document.getElementById('searchPegawai');
