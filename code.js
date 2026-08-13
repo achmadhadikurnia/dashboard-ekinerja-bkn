@@ -928,8 +928,8 @@ function getPegawaiData() {
     const idxNama = headerPegawai.indexOf('nama');
 
     // Deteksi dinamis untuk nama kolom jabatan
-    let idxJabatan = headerPegawai.indexOf('jabatan');
-    if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('skp_jabatan');
+    let idxJabatan = headerPegawai.indexOf('skp_jabatan');
+    if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('jabatan');
     if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('jabatan_akhir');
     if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('nama_jabatan');
 
@@ -1168,8 +1168,8 @@ function getPegawaiFromSkp(nip) {
   const idxNama = headerSkp.indexOf('nama');
   const idxPeriodeAkhir = headerSkp.indexOf('periode_akhir');
 
-  let idxJabatan = headerSkp.indexOf('jabatan');
-  if (idxJabatan === -1) idxJabatan = headerSkp.indexOf('skp_jabatan');
+  let idxJabatan = headerSkp.indexOf('skp_jabatan');
+  if (idxJabatan === -1) idxJabatan = headerSkp.indexOf('jabatan');
   if (idxJabatan === -1) idxJabatan = headerSkp.indexOf('jabatan_akhir');
   if (idxJabatan === -1) idxJabatan = headerSkp.indexOf('nama_jabatan');
 
@@ -1499,8 +1499,8 @@ function getPltPlhData() {
     const idxNama = header.indexOf('nama');
 
     // Deteksi dinamis untuk nama kolom jabatan
-    let idxJabatan = header.indexOf('jabatan');
-    if (idxJabatan === -1) idxJabatan = header.indexOf('skp_jabatan');
+    let idxJabatan = header.indexOf('skp_jabatan');
+    if (idxJabatan === -1) idxJabatan = header.indexOf('jabatan');
     if (idxJabatan === -1) idxJabatan = header.indexOf('jabatan_akhir');
     if (idxJabatan === -1) idxJabatan = header.indexOf('nama_jabatan');
 
