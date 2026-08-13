@@ -1537,10 +1537,10 @@
             <div class="card">
               <h2 class="section-title">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                Upload Laporan Penilaian Kinerja (BKN)
+                Upload Laporan Penyusunan / Penilaian Kinerja BKN
               </h2>
               <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem; line-height: 1.5;">
-                Pilih file laporan Excel (.xlsx, .xls) yang diunduh dari sistem BKN. Sistem akan otomatis mendeteksi Bulan/Tahun dari dalam file dan menyimpannya secara otomatis ke database bulanan/tahunan.
+                Pilih file laporan Excel (.xlsx) yang diunduh dari sistem BKN. Sistem akan otomatis mendeteksi Penyusunan / Penilaian Bulan/Tahun SKP dari dalam file dan menyimpannya secara otomatis ke database bulanan/tahunan.
               </p>
 
               <div id="uploadInputContainer" style="background-color: var(--bg-secondary); padding: 2.5rem 1.5rem; border-radius: 12px; border: 2px dashed var(--border); text-align: center; margin-bottom: 1.5rem; transition: border-color 0.2s;">
@@ -1655,10 +1655,21 @@
                 <p style="color: var(--text-secondary); margin-bottom: 1.25rem; font-size: 0.95rem;">
                   Fitur ini akan <strong>menghapus seluruh data pegawai, laporan bulanan, tahunan, dan pengecualian</strong> pada spreadsheet secara permanen.
                 </p>
-                <button class="btn btn-danger" onclick="promptReset()">
+                <button id="btnResetDatabase" class="btn btn-danger" onclick="promptReset()">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                   Reset Database
                 </button>
+
+                <div id="resetStatusContainer" style="display: none; background-color: var(--bg-secondary); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); margin-top: 1.5rem;">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; color: var(--text-primary);">
+                    <span id="resetMetaInfo" style="font-weight: 600;">Menghapus database...</span>
+                    <span id="resetPercentage" style="font-weight: 600; color: var(--danger);">0%</span>
+                  </div>
+                  <div style="width: 100%; background-color: var(--border); border-radius: 6px; overflow: hidden; height: 12px; margin-bottom: 0.75rem;">
+                    <div id="resetProgressBar" style="width: 0%; height: 100%; background-color: var(--danger); transition: width 0.3s ease;"></div>
+                  </div>
+                  <div id="resetDetails" style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 500;">Memulai penghapusan...</div>
+                </div>
               </div>
             </div>
           </div> <!-- End panelRekon -->
@@ -2004,31 +2015,77 @@
           cancelButtonText: 'Batal'
         }).then((result) => {
           if (result.isConfirmed) {
-            Swal.fire({
-              title: 'Sedang Mereset...',
-              text: 'Mohon tunggu sebentar, data sedang dihapus dari server.',
-              allowOutsideClick: false,
-              didOpen: () => {
-                Swal.showLoading();
-              }
-            });
+            // Animasi Loading via DOM (mirip proses upload)
+            document.getElementById('btnResetDatabase').style.display = 'none';
+            document.getElementById('resetStatusContainer').style.display = 'block';
+            document.getElementById('resetProgressBar').style.width = '0%';
+            document.getElementById('resetPercentage').innerText = '0%';
+            document.getElementById('resetDetails').innerText = 'Menghapus data di server...';
+            document.getElementById('resetProgressBar').style.backgroundColor = 'var(--danger)';
+            document.getElementById('resetPercentage').style.color = 'var(--danger)';
+
+            let progress = 0;
+            // Fake animation progress sampai max 90% selagi menunggu server
+            let fakeProgressInterval = setInterval(() => {
+                progress += Math.floor(Math.random() * 10) + 5;
+                if (progress > 90) progress = 90;
+                document.getElementById('resetPercentage').innerText = progress + '%';
+                document.getElementById('resetProgressBar').style.width = progress + '%';
+            }, 300);
 
             google.script.run
               .withSuccessHandler(function(response) {
+                clearInterval(fakeProgressInterval);
                 if (response.status === 'success') {
-                  Swal.fire({
-                    title: 'Berhasil!',
-                    text: response.message,
-                    icon: 'success'
-                  }).then(() => {
-                    fetchDashboardData(true);
-                  });
+                  document.getElementById('resetPercentage').innerText = '100%';
+                  document.getElementById('resetProgressBar').style.width = '100%';
+                  document.getElementById('resetProgressBar').style.backgroundColor = 'var(--success)';
+                  document.getElementById('resetPercentage').style.color = 'var(--success)';
+
+                  let countdown = 3;
+                  document.getElementById('resetDetails').innerText = `Berhasil dihapus! Memperbarui halaman dalam ${countdown} detik...`;
+
+                  // Hitung mundur 3 detik
+                  let countdownInterval = setInterval(() => {
+                      countdown--;
+                      if (countdown <= 0) {
+                          clearInterval(countdownInterval);
+                          document.getElementById('btnResetDatabase').style.display = 'inline-flex';
+                          document.getElementById('resetStatusContainer').style.display = 'none';
+
+                          // Pindah ke tab pertama (Dashboard)
+                          const btns = document.getElementsByClassName('nav-btn');
+                          if(btns.length > 0) switchTab('panelDashboard', btns[0]);
+
+                          // Tampilkan kembali layar loading
+                          document.getElementById('dashboard-content').style.display = 'none';
+                          const loadingEl = document.getElementById('loading');
+                          if(loadingEl) loadingEl.style.display = 'flex';
+
+                          const loadText = document.getElementById('loading-text');
+                          if(loadText) loadText.innerText = 'Memperbarui Dasbor...';
+
+                          // Ambil ulang data dasbor dan pegawai
+                          google.script.run
+                             .withSuccessHandler(onSuccess)
+                             .withFailureHandler(onFailure)
+                             .getDashboardData();
+                      } else {
+                          document.getElementById('resetDetails').innerText = `Berhasil dihapus! Memperbarui halaman dalam ${countdown} detik...`;
+                      }
+                  }, 1000);
+
                 } else {
                   Swal.fire('Gagal!', response.message || 'Terjadi kesalahan.', 'error');
+                  document.getElementById('btnResetDatabase').style.display = 'inline-flex';
+                  document.getElementById('resetStatusContainer').style.display = 'none';
                 }
               })
               .withFailureHandler(function(error) {
+                clearInterval(fakeProgressInterval);
                 Swal.fire('Error!', error.message, 'error');
+                document.getElementById('btnResetDatabase').style.display = 'inline-flex';
+                document.getElementById('resetStatusContainer').style.display = 'none';
               })
               .resetDatabase();
           }
