@@ -12,6 +12,7 @@
   <!-- jsPDF & AutoTable -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <!-- SheetJS -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- SweetAlert2 -->
@@ -1170,6 +1171,9 @@
                   <button id="btnDownloadPdf" class="btn btn-secondary" title="Download PDF">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                   </button>
+                  <button id="btnDownloadZipOpd" class="btn btn-secondary" title="Unduh ZIP per Kecamatan">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
+                  </button>
                 </div>
 
                 <div id="timestampInfo" style="display: none; align-items: center; gap: 0.5rem; background-color: rgba(59, 130, 246, 0.1); color: var(--accent); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.875rem; margin-bottom: 1.5rem; font-weight: 500;">
@@ -1504,7 +1508,7 @@
           <div id="panelRekon" class="nav-panel">
             <div class="card">
               <h2 class="section-title">Sinkronisasi Data</h2>
-              
+
               <div style="background-color: rgba(59, 130, 246, 0.1); color: var(--text-primary); border-left: 4px solid var(--primary); padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem; font-size: 0.95rem; line-height: 1.5;">
                 <strong>💡 Info:</strong> Saat Anda mengupload laporan, sistem akan <strong>memproses datanya secara otomatis</strong>. Gunakan fungsi sinkronisasi manual di halaman ini <u>hanya</u> jika Anda pernah melakukan pengeditan langsung di Spreadsheet yang menyebabkan database tidak sinkron. (Lama proses bergantung pada banyaknya data).
               </div>
@@ -1530,7 +1534,7 @@
               </div>
 
               <h3 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Ambil Nilai Kinerja</h3>
-              
+
               <!-- Grid Bulan (1 Baris) -->
               <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
                 <button class="btn btn-secondary" style="flex: 1; min-width: 60px; justify-content: center; padding: 0.5rem;" onclick="runSync('syncJan', 'Nilai Januari')">Jan</button>
@@ -1547,7 +1551,7 @@
                 <button class="btn btn-secondary" style="flex: 1; min-width: 60px; justify-content: center; padding: 0.5rem;" onclick="runSync('syncDes', 'Nilai Desember')">Des</button>
               </div>
               <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="runSync('syncTahunan', 'Nilai Tahunan')">Tahunan</button>
-              
+
               <!-- Reset Database Section -->
               <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border);">
                 <h3 style="color: var(--danger); margin-bottom: 0.5rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
@@ -2743,145 +2747,146 @@
       filterPredikat.addEventListener('change', applyFilters);
       filterSkpStatus.addEventListener('change', applyFilters);
 
+    function buildPegawaiPdf(dataToExport, activeOpdVal, activeBulanVal, activeStatusVal, textOpd, textBulan, textStatus) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('l', 'pt', 'a4');
 
+      const pageWidth = doc.internal.pageSize.getWidth();
+      let currentY = 30;
 
-
-      document.getElementById('btnDownloadPdf').addEventListener('click', () => {
-        if (globalFilteredPegawaiData.length === 0) {
-          Swal.fire('Info', 'Tidak ada data untuk diunduh.', 'info');
-          return;
-        }
-
-        const proceedDownload = () => {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('l', 'pt', 'a4');
-
-        const pageWidth = doc.internal.pageSize.getWidth();
-        let currentY = 30;
-
-        if (globalReportInstansi) {
-          doc.setFontSize(14);
-          doc.setFont('helvetica', 'bold');
-          const upperInstansi = globalReportInstansi.toUpperCase();
-          const instWidth = doc.getTextWidth(upperInstansi);
-          doc.text(upperInstansi, (pageWidth - instWidth) / 2, currentY);
-          currentY += 15;
-        }
-
-        doc.setFontSize(12);
+      if (globalReportInstansi) {
+        doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
-        const titleText = globalReportTitle;
-        const titleWidth = doc.getTextWidth(titleText);
-        doc.text(titleText, (pageWidth - titleWidth) / 2, currentY);
+        const upperInstansi = globalReportInstansi.toUpperCase();
+        const instWidth = doc.getTextWidth(upperInstansi);
+        doc.text(upperInstansi, (pageWidth - instWidth) / 2, currentY);
         currentY += 15;
+      }
 
-        doc.setFontSize(10);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      const titleText = globalReportTitle;
+      const titleWidth = doc.getTextWidth(titleText);
+      doc.text(titleText, (pageWidth - titleWidth) / 2, currentY);
+      currentY += 15;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+
+      const printCenter = (text) => {
+         const w = doc.getTextWidth(text);
+         doc.text(text, (pageWidth - w) / 2, currentY);
+         currentY += 14;
+      };
+
+      if (activeOpdVal !== 'semua') {
+         printCenter(textOpd);
+      }
+      if (activeStatusVal !== 'semua') {
+         printCenter('Status Penilaian: ' + textStatus);
+      }
+      if (activeBulanVal !== 'semua') {
+         let txtBulan = 'Periode Bulan ' + textBulan;
+         const idxBulan = parseInt(activeBulanVal);
+         if (globalTimestamps[idxBulan]) {
+           let tstamp = globalTimestamps[idxBulan].trim();
+           txtBulan += ' (' + tstamp + ')';
+         }
+         printCenter(txtBulan);
+      }
+
+      let tableStartY = currentY + 10;
+      doc.setFont('helvetica', 'normal');
+
+      let headers = [['No', 'NIP', 'Nama', 'Jenis Pegawai', 'Jabatan', 'Unit Kerja', 'OPD', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'THN']];
+      const isBulanFiltered = activeBulanVal !== 'semua';
+      const selectedMonthIdx = isBulanFiltered ? parseInt(activeBulanVal) : -1;
+
+      if (isBulanFiltered) {
+          const newHeaders = ['No', 'NIP', 'Nama', 'Jenis Pegawai', 'Jabatan', 'Unit Kerja', 'OPD', headers[0][selectedMonthIdx + 7]];
+          headers = [newHeaders];
+      }
+
+      const body = dataToExport.map((p, index) => {
+         const getDisplay = (val) => {
+           if(!val) return '-';
+           let s = val.toString().trim();
+           if (s.length > 2) {
+             const parts = s.split(' ');
+             if (parts.length > 1) return parts.map(kata => kata[0].toUpperCase()).join('');
+             return s.substring(0, 1).toUpperCase();
+           }
+           return s.toUpperCase();
+         };
+
+         const jpDisplay = p.jenis_pegawai ? p.jenis_pegawai.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : '-';
+         const fullRow = [
+           index + 1,
+           p.nip,
+           p.nama,
+           jpDisplay,
+           p.jabatan,
+           p.unit_kerja,
+           p.opd,
+           ...p.bulanan.map(getDisplay)
+         ];
+
+         if (isBulanFiltered) {
+           return [fullRow[0], fullRow[1], fullRow[2], fullRow[3], fullRow[4], fullRow[5], fullRow[6], fullRow[selectedMonthIdx + 7]];
+         }
+         return fullRow;
+      });
+
+      let colStyles = {
+        0: { cellWidth: 'auto', halign: 'right' },
+        1: { cellWidth: 'auto', halign: 'left' }
+      };
+
+      if (isBulanFiltered) {
+        colStyles[7] = { cellWidth: 50, halign: 'center' };
+      } else {
+        for (let i = 7; i <= 18; i++) { colStyles[i] = { cellWidth: 20, halign: 'center' }; }
+        colStyles[19] = { cellWidth: 35, halign: 'center' };
+      }
+
+      doc.autoTable({
+        head: headers,
+        body: body,
+        startY: tableStartY,
+        styles: { fontSize: 7, cellPadding: 2, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1 },
+        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], lineColor: [0, 0, 0], lineWidth: 0.1 },
+        columnStyles: colStyles,
+        margin: { top: 30, right: 30, bottom: 20, left: 30 },
+        tableWidth: 'auto',
+        didParseCell: function(data) {
+          if (data.section === 'head' && data.column.index === 0) {
+            data.cell.styles.halign = 'right';
+          }
+        }
+      });
+
+      return doc;
+    }
+
+    document.getElementById('btnDownloadPdf').addEventListener('click', () => {
+      if (globalFilteredPegawaiData.length === 0) {
+        Swal.fire('Info', 'Tidak ada data untuk diunduh.', 'info');
+        return;
+      }
+
+      const proceedDownload = () => {
         const selOpd = document.getElementById('filterOpd');
-        const textOpd = selOpd.options[selOpd.selectedIndex].text;
         const selBulan = document.getElementById('filterBulan');
-        const textBulan = selBulan.options[selBulan.selectedIndex].text;
         const selStatus = document.getElementById('filterStatus');
+
+        const activeOpdVal = selOpd.value;
+        const activeBulanVal = selBulan.value;
+        const activeStatusVal = selStatus.value;
+        const textOpd = selOpd.options[selOpd.selectedIndex].text;
+        const textBulan = selBulan.options[selBulan.selectedIndex].text;
         const textStatus = selStatus.options[selStatus.selectedIndex].text;
 
-        const activeBulanVal = document.getElementById('filterBulan').value;
-        const activeOpdVal = selOpd.value;
-        const activeStatusVal = selStatus.value;
-
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-
-        const printCenter = (text) => {
-           const w = doc.getTextWidth(text);
-           doc.text(text, (pageWidth - w) / 2, currentY);
-           currentY += 14;
-        };
-
-        if (activeOpdVal !== 'semua') {
-           printCenter(textOpd);
-        }
-        if (activeStatusVal !== 'semua') {
-           printCenter('Status Penilaian: ' + textStatus);
-        }
-        if (activeBulanVal !== 'semua') {
-           let txtBulan = 'Periode Bulan ' + textBulan;
-           const idxBulan = parseInt(activeBulanVal);
-           if (globalTimestamps[idxBulan]) {
-             let tstamp = globalTimestamps[idxBulan].trim();
-             txtBulan += ' (' + tstamp + ')';
-           }
-           printCenter(txtBulan);
-        }
-
-        let tableStartY = currentY + 10;
-        doc.setFont('helvetica', 'normal');
-
-        let headers = [['No', 'NIP', 'Nama', 'Jenis Pegawai', 'Jabatan', 'Unit Kerja', 'OPD', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', 'THN']];
-        const isBulanFiltered = activeBulanVal !== 'semua';
-        const selectedMonthIdx = isBulanFiltered ? parseInt(activeBulanVal) : -1;
-
-        if (isBulanFiltered) {
-            const newHeaders = ['No', 'NIP', 'Nama', 'Jenis Pegawai', 'Jabatan', 'Unit Kerja', 'OPD', headers[0][selectedMonthIdx + 7]];
-            headers = [newHeaders];
-        }
-
-        const body = globalFilteredPegawaiData.map((p, index) => {
-           const getDisplay = (val) => {
-             if(!val) return '-';
-             let s = val.toString().trim();
-             if (s.length > 2) {
-               const parts = s.split(' ');
-               if (parts.length > 1) return parts.map(kata => kata[0].toUpperCase()).join('');
-               return s.substring(0, 1).toUpperCase();
-             }
-             return s.toUpperCase();
-           };
-
-           const jpDisplay = p.jenis_pegawai ? p.jenis_pegawai.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : '-';
-           const fullRow = [
-             index + 1,
-             p.nip,
-             p.nama,
-             jpDisplay,
-             p.jabatan,
-             p.unit_kerja,
-             p.opd,
-             ...p.bulanan.map(getDisplay)
-           ];
-
-           if (isBulanFiltered) {
-             return [fullRow[0], fullRow[1], fullRow[2], fullRow[3], fullRow[4], fullRow[5], fullRow[6], fullRow[selectedMonthIdx + 7]];
-           }
-           return fullRow;
-        });
-
-        let colStyles = {
-          0: { cellWidth: 'auto', halign: 'right' },
-          1: { cellWidth: 'auto', halign: 'left' }
-        };
-
-        if (isBulanFiltered) {
-          colStyles[7] = { cellWidth: 50, halign: 'center' };
-        } else {
-          for (let i = 7; i <= 18; i++) { colStyles[i] = { cellWidth: 20, halign: 'center' }; }
-          colStyles[19] = { cellWidth: 35, halign: 'center' };
-        }
-
-        doc.autoTable({
-          head: headers,
-          body: body,
-          startY: tableStartY,
-          styles: { fontSize: 7, cellPadding: 2, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1 },
-          headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], lineColor: [0, 0, 0], lineWidth: 0.1 },
-          columnStyles: colStyles,
-          margin: { top: 30, right: 30, bottom: 20, left: 30 },
-          tableWidth: 'auto',
-          didParseCell: function(data) {
-            // Rata kanan untuk header kolom No. (index 0)
-            if (data.section === 'head' && data.column.index === 0) {
-              data.cell.styles.halign = 'right';
-            }
-          }
-        });
+        const doc = buildPegawaiPdf(globalFilteredPegawaiData, activeOpdVal, activeBulanVal, activeStatusVal, textOpd, textBulan, textStatus);
 
         // Bentuk Nama File Dinamis
         let strBulan = "semua_bulan";
@@ -2891,40 +2896,179 @@
         }
 
         let strStatus = "semua_status";
-        const valStatus = document.getElementById('filterStatus').value;
-        if (valStatus === 'sudah') strStatus = "1";
-        else if (valStatus === 'belum') strStatus = "0";
+        if (activeStatusVal === 'sudah') strStatus = "1";
+        else if (activeStatusVal === 'belum') strStatus = "0";
 
         let strOpd = "semua_opd";
-        const valOpd = document.getElementById('filterOpd').value;
-        if (valOpd !== 'semua') {
-          strOpd = valOpd.replace(/[^a-zA-Z0-9]+/g, '_').toLowerCase();
+        if (activeOpdVal !== 'semua') {
+          strOpd = activeOpdVal.replace(/[^a-zA-Z0-9]+/g, '_').toLowerCase();
         }
 
         const fileName = `kinerja_${strBulan}_${strStatus}_${strOpd}.pdf`;
         doc.save(fileName);
-        };
+      };
 
-        if (globalFilteredPegawaiData.length > 1000) {
-          Swal.fire({
-            title: 'Terlalu Banyak Data',
-            text: `Terdapat ${formatNumber(globalFilteredPegawaiData.length)} baris data. Proses pembuatan PDF untuk lebih dari 1.000 baris dapat membuat browser lambat (macet sementara). Tetap lanjutkan?`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Ya, Lanjutkan',
-            cancelButtonText: 'Batal'
-          }).then((result) => {
-            if (result.isConfirmed) {
-              proceedDownload();
+      if (globalFilteredPegawaiData.length > 1000) {
+        Swal.fire({
+          title: 'Terlalu Banyak Data',
+          text: `Terdapat ${formatNumber(globalFilteredPegawaiData.length)} baris data. Proses pembuatan PDF untuk lebih dari 1.000 baris dapat membuat browser lambat (macet sementara). Tetap lanjutkan?`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: 'Ya, Lanjutkan',
+          cancelButtonText: 'Batal'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            proceedDownload();
+          }
+        });
+      } else {
+        proceedDownload();
+      }
+    });
+
+    const btnDownloadZipOpd = document.getElementById('btnDownloadZipOpd');
+    if (btnDownloadZipOpd) {
+      btnDownloadZipOpd.addEventListener('click', async () => {
+        if (globalPegawaiData.length === 0) {
+          Swal.fire('Info', 'Tidak ada data pegawai.', 'info');
+          return;
+        }
+        if(typeof window.JSZip === 'undefined') {
+          Swal.fire('Error', 'Library JSZip belum termuat. Silakan muat ulang halaman.', 'error');
+          return;
+        }
+
+        const selBulan = document.getElementById('filterBulan');
+        const selStatus = document.getElementById('filterStatus');
+        const selJenisPegawai = document.getElementById('filterJenisPegawai');
+        const selPredikat = document.getElementById('filterPredikat');
+        const selSkpStatus = document.getElementById('filterSkpStatus');
+
+        const activeBulanVal = selBulan.value;
+        const activeStatusVal = selStatus.value;
+        const activeJenisPegawaiVal = selJenisPegawai.value;
+        const activePredikatVal = selPredikat.value;
+        const activeSkpStatusVal = selSkpStatus.value;
+
+        const textBulan = selBulan.options[selBulan.selectedIndex].text;
+        const textStatus = selStatus.options[selStatus.selectedIndex].text;
+
+        let baseData = globalPegawaiData;
+
+        if (activeStatusVal !== 'semua') {
+          const wantSudah = activeStatusVal === 'sudah';
+          baseData = baseData.filter(p => {
+            if (activeBulanVal !== 'semua') {
+              const bIdx = parseInt(activeBulanVal);
+              const hasVal = (p.bulanan[bIdx] && p.bulanan[bIdx].toString().trim() !== "");
+              return wantSudah ? hasVal : !hasVal;
+            } else {
+              let hasAny = p.bulanan.some(v => v && v.toString().trim() !== "");
+              return wantSudah ? hasAny : !hasAny;
             }
           });
-        } else {
-          proceedDownload();
+        }
+
+        if (activeJenisPegawaiVal !== 'semua') {
+          baseData = baseData.filter(p => {
+            if (activeJenisPegawaiVal === 'asn') return p.jenis_pegawai === 'pns' || p.jenis_pegawai === 'pppk';
+            if (activeJenisPegawaiVal === 'non_asn') return p.jenis_pegawai !== 'pns' && p.jenis_pegawai !== 'pppk';
+            return p.jenis_pegawai === activeJenisPegawaiVal;
+          });
+        }
+
+        if (activePredikatVal !== 'semua') {
+          const lowerSearch = activePredikatVal.toLowerCase();
+          baseData = baseData.filter(p => {
+            if (activeBulanVal !== 'semua') {
+               const bIdx = parseInt(activeBulanVal);
+               const val = p.bulanan[bIdx] ? p.bulanan[bIdx].toString().toLowerCase() : "";
+               return val.includes(lowerSearch);
+            } else {
+               return p.bulanan.some(v => v && v.toString().toLowerCase().includes(lowerSearch));
+            }
+          });
+        }
+
+        if (activeSkpStatusVal !== 'semua') {
+          const lowerSearch = activeSkpStatusVal.toLowerCase();
+          baseData = baseData.filter(p => p.status && p.status.toLowerCase().includes(lowerSearch));
+        }
+
+        const uniqueOpds = [...new Set(baseData.map(p => p.opd))]
+          .filter(Boolean)
+          .filter(opd => opd.toLowerCase().trim().startsWith('kecamatan'));
+        if (uniqueOpds.length === 0) {
+          Swal.fire('Info', 'Tidak ada data untuk kombinasi filter tersebut.', 'info');
+          return;
+        }
+
+        Swal.fire({
+          title: 'Membuat File ZIP...',
+          html: 'Mohon tunggu, memproses <b>' + uniqueOpds.length + '</b> instansi/kecamatan.',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
+
+        await new Promise(r => setTimeout(r, 100));
+
+        try {
+          const zip = new JSZip();
+          for (let opd of uniqueOpds) {
+            const dataOpd = baseData.filter(p => p.opd === opd);
+            if (dataOpd.length > 0) {
+              const doc = buildPegawaiPdf(dataOpd, opd, activeBulanVal, activeStatusVal, opd, textBulan, textStatus);
+              const pdfArrayBuffer = doc.output('arraybuffer');
+
+              let safeOpdName = opd.replace(/[^a-zA-Z0-9]+/g, '_').toLowerCase();
+              let strBulan = "semua_bulan";
+              if (activeBulanVal !== 'semua') {
+                if (activeBulanVal === '12') strBulan = "tahunan";
+                else strBulan = (parseInt(activeBulanVal) + 1).toString().padStart(2, '0');
+              }
+              let strStatus = "semua_status";
+              if (activeStatusVal === 'sudah') strStatus = "1";
+              else if (activeStatusVal === 'belum') strStatus = "0";
+
+              const fileName = `kinerja_${strBulan}_${strStatus}_${safeOpdName}.pdf`;
+              zip.file(fileName, pdfArrayBuffer);
+            }
+          }
+
+          const content = await zip.generateAsync({type:"blob"});
+
+          let strBulanZip = "semua_bulan";
+          if (activeBulanVal !== 'semua') {
+            if (activeBulanVal === '12') strBulanZip = "tahunan";
+            else strBulanZip = (parseInt(activeBulanVal) + 1).toString().padStart(2, '0');
+          }
+          let strStatusZip = "semua_status";
+          if (activeStatusVal === 'sudah') strStatusZip = "1";
+          else if (activeStatusVal === 'belum') strStatusZip = "0";
+
+          const zipName = `kinerja_${strBulanZip}_${strStatusZip}_batch_kecamatan.zip`;
+
+          const a = document.createElement("a");
+          const url = URL.createObjectURL(content);
+          a.href = url;
+          a.download = zipName;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          }, 0);
+
+          Swal.fire('Berhasil', 'File ZIP berhasil dibuat dan diunduh.', 'success');
+        } catch (error) {
+          console.error(error);
+          Swal.fire('Error', 'Terjadi kesalahan saat membuat file ZIP.', 'error');
         }
       });
     }
+  }
 
     // ==========================================
     // LOGIKA PENGECUALIAN
