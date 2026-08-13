@@ -2197,7 +2197,11 @@
     }
 
     function onFailure(error) {
-      showError("Terjadi kesalahan jaringan atau server: " + error.message);
+      let msg = "Terjadi kesalahan yang tidak diketahui.";
+      if (error) {
+        msg = error.message || error.toString();
+      }
+      showError("Terjadi kesalahan jaringan atau server: " + msg);
     }
 
     function showError(msg) {
