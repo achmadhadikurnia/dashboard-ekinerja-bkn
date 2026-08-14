@@ -3121,7 +3121,10 @@
       return doc;
     }
 
-    document.getElementById('btnDownloadPdf').addEventListener('click', () => {
+    const btnPdfOrigin = document.getElementById('btnDownloadPdf');
+    const btnPdfClone = btnPdfOrigin.cloneNode(true);
+    btnPdfOrigin.parentNode.replaceChild(btnPdfClone, btnPdfOrigin);
+    btnPdfClone.addEventListener('click', () => {
       if (globalFilteredPegawaiData.length === 0) {
         Swal.fire('Info', 'Tidak ada data untuk diunduh.', 'info');
         return;
@@ -3181,9 +3184,11 @@
       }
     });
 
-    const btnDownloadZipOpd = document.getElementById('btnDownloadZipOpd');
-    if (btnDownloadZipOpd) {
-      btnDownloadZipOpd.addEventListener('click', async () => {
+    const btnDownloadZipOpdOrigin = document.getElementById('btnDownloadZipOpd');
+    if (btnDownloadZipOpdOrigin) {
+      const btnDownloadZipOpdClone = btnDownloadZipOpdOrigin.cloneNode(true);
+      btnDownloadZipOpdOrigin.parentNode.replaceChild(btnDownloadZipOpdClone, btnDownloadZipOpdOrigin);
+      btnDownloadZipOpdClone.addEventListener('click', async () => {
         if (globalPegawaiData.length === 0) {
           Swal.fire('Info', 'Tidak ada data pegawai.', 'info');
           return;
@@ -3526,7 +3531,10 @@
       filterSkpStatus.addEventListener('change', applyFilters);
 
       // PDF Ekspor (mirip pegawai tapi datanya dari globalFilteredPltPlhData)
-      document.getElementById('btnDownloadPdfPltPlh').addEventListener('click', function() {
+      const btnPltPlhOrigin = document.getElementById('btnDownloadPdfPltPlh');
+      const btnPltPlhClone = btnPltPlhOrigin.cloneNode(true);
+      btnPltPlhOrigin.parentNode.replaceChild(btnPltPlhClone, btnPltPlhOrigin);
+      btnPltPlhClone.addEventListener('click', function() {
         if(typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
           showError("Library jsPDF belum termuat. Silakan muat ulang halaman.");
           return;
@@ -3882,9 +3890,11 @@
     const pengKet = document.getElementById('pengKet');
     const pengError = document.getElementById('pengError');
 
-    const btnDownloadPdfPengecualian = document.getElementById('btnDownloadPdfPengecualian');
-    if (btnDownloadPdfPengecualian) {
-      btnDownloadPdfPengecualian.addEventListener('click', () => {
+    const btnPengOrigin = document.getElementById('btnDownloadPdfPengecualian');
+    if (btnPengOrigin) {
+      const btnPengClone = btnPengOrigin.cloneNode(true);
+      btnPengOrigin.parentNode.replaceChild(btnPengClone, btnPengOrigin);
+      btnPengClone.addEventListener('click', () => {
         if (globalFilteredPengecualianData.length === 0) {
           Swal.fire('Info', 'Tidak ada data pengecualian untuk diunduh.', 'info');
           return;
@@ -3950,9 +3960,11 @@
       });
     }
 
-    const btnDownloadPdfOpd = document.getElementById('btnDownloadPdfOpd');
-    if (btnDownloadPdfOpd) {
-      btnDownloadPdfOpd.addEventListener('click', () => {
+    const btnOpdOrigin = document.getElementById('btnDownloadPdfOpd');
+    if (btnOpdOrigin) {
+      const btnOpdClone = btnOpdOrigin.cloneNode(true);
+      btnOpdOrigin.parentNode.replaceChild(btnOpdClone, btnOpdOrigin);
+      btnOpdClone.addEventListener('click', () => {
         if (!globalDashboardData || !globalDashboardData.opdData || globalDashboardData.opdData.length === 0) {
           Swal.fire('Info', 'Tidak ada data OPD untuk diunduh.', 'info');
           return;
