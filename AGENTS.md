@@ -7,7 +7,7 @@ Harap baca aturan ini dengan saksama **sebelum menulis atau memodifikasi kode ap
 ---
 
 ## 🏗️ 1. Arsitektur & Tech Stack
-- **Backend (Server)**: `code.js` (Google Apps Script). Berisi logika manipulasi Spreadsheet dan API Endpoint (menggunakan `google.script.run`).
+- **Backend (Server)**: `code.gs` (Google Apps Script). Berisi logika manipulasi Spreadsheet dan API Endpoint (menggunakan `google.script.run`).
 - **Frontend (Client)**: `index.html`. Berisi UI (HTML/CSS/JS), logika pembacaan Excel (*Client-Side Parsing*), rendering tabel, dan cetak PDF.
 - **Library Eksternal (CDN)**:
   - `SheetJS (XLSX)`: Untuk membaca dan mem-parsing file `.xlsx` secara lokal di browser.
@@ -25,7 +25,7 @@ Google Apps Script Web App berjalan di dalam `<iframe>` (sandbox) yang sangat ke
 
 ### ❌ B. Dilarang Memanggil `ui.alert()` Sembarangan di Backend
 Fungsi yang dieksekusi dari Web App berjalan secara *headless*. Memanggil `SpreadsheetApp.getUi().alert()` akan memicu error `TypeError: Cannot read properties of null (reading 'alert')`.
-- **Solusi**: Gunakan *wrapper* `_alert(msg, isSuccess)` yang sudah disediakan di `code.js`. Wrapper ini otomatis akan mengabaikan pemanggilan UI jika dijalankan dari Web App, dan akan melempar pesan *error* murni yang bisa ditangkap oleh `withFailureHandler` di frontend.
+- **Solusi**: Gunakan *wrapper* `_alert(msg, isSuccess)` yang sudah disediakan di `code.gs`. Wrapper ini otomatis akan mengabaikan pemanggilan UI jika dijalankan dari Web App, dan akan melempar pesan *error* murni yang bisa ditangkap oleh `withFailureHandler` di frontend.
 
 ### ✅ C. Wajib Menggunakan "Chunking" untuk Upload Data
 Membaca file Excel yang berisi ribuan baris langsung di backend akan terkena limitasi batas waktu (*Timeout 6 menit*) GAS.

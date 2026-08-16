@@ -20,13 +20,13 @@ Sesuai instruksi mutlak pengguna, jangan buat folder dengan nama versi, melainka
 - `README.md`
 - `INSTALASI.txt`
 - `CARA_PENGGUNAAN.txt`
-- `code.js`
+- `code.gs`
 - `dashboard.xlsx`
 - `index.html`
 
 Gunakan perintah PowerShell `Compress-Archive` untuk menyeleksi file dan menjadikannya zip. Contoh perintah:
-`Compress-Archive -Path "README.md", "INSTALASI.txt", "CARA_PENGGUNAAN.txt", "code.js", "dashboard.xlsx", "index.html" -DestinationPath "releases/dashboard-ekinerja-bkn-<versi>.zip" -Force`
+`Compress-Archive -Path "README.md", "INSTALASI.txt", "CARA_PENGGUNAAN.txt", "code.gs", "dashboard.xlsx", "index.html" -DestinationPath "releases/dashboard-ekinerja-bkn-<versi>.zip" -Force`
 
 ### 5. Laporkan Hasil
-Laporkan kepada pengguna bahwa proses *release* dan *versioning* telah selesai. Beritahukan lokasi persis folder rilis dan file `.zip`-nya. 
+Laporkan kepada pengguna bahwa proses *release* dan *versioning* telah selesai. Beritahukan lokasi persis folder rilis dan file `.zip`-nya.
 **(Opsional):** Tawarkan pengguna apakah mereka juga ingin membuat *git tag* (contoh: `git tag v1.0.0`) untuk versi ini agar riwayat *versioning* di repositori Git tetap sinkron.

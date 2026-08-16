@@ -17,12 +17,12 @@ Sesuai instruksi mutlak pengguna, **HANYA** salin (*copy*) file-file berikut ini
 - `README.md`
 - `INSTALASI.txt`
 - `CARA_PENGGUNAAN.txt`
-- `code.js`
+- `code.gs`
 - `dashboard.xlsx`
 - `index.html`
 
 Pastikan menimpa (*overwrite*) file lama jika sudah ada (gunakan parameter `-Force`). Anda bisa menggunakan perintah PowerShell seperti:
-`Copy-Item -Path "README.md", "INSTALASI.txt", "CARA_PENGGUNAAN.txt", "code.js", "dashboard.xlsx", "index.html" -Destination "build\" -Force`
+`Copy-Item -Path "README.md", "INSTALASI.txt", "CARA_PENGGUNAAN.txt", "code.gs", "dashboard.xlsx", "index.html" -Destination "build\" -Force`
 
 ### 3. Laporkan Hasil
 Laporkan kepada pengguna bahwa proses *build* telah selesai. Beritahukan bahwa seluruh file yang dibutuhkan untuk tahap pengujian sudah terkumpul dengan rapi di dalam folder `build/`.

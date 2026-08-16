@@ -24,7 +24,7 @@ Aplikasi ini menggunakan pola **Frontend-Backend (Client-Server)** di dalam ekos
    - Menangani unggahan dan pembacaan file Excel.
    - Menyajikan data ke dalam bentuk tabel *dashboard* dan menangani interaksi pengguna.
    - Mengelola ekspor data ke PDF.
-2. **`code.js` (Backend / Server Script)**:
+2. **`code.gs` (Backend / Server Script)**:
    - *Entry point* untuk Web App (`doGet`).
    - Menerima potongan data (chunks) dari *frontend* dan menyimpannya ke Google Sheets (`uploadLaporanChunk`).
    - Memproses rekapitulasi data secara otomatis (`processUploadSync`, `generateMasterPegawai`, `_updateNilaiBulan`).
@@ -37,7 +37,7 @@ Aplikasi ini menggunakan pola **Frontend-Backend (Client-Server)** di dalam ekos
 1. **Siapkan Template**: Upload file template `dashboard.xlsx` ke Google Drive Anda.
 2. **Konversi ke Spreadsheet**: Buka file tersebut di Google Drive web, lalu klik menu **File > Save as Google Sheets**.
 3. **Buka Editor Script**: Dari file Google Sheets yang baru saja dibuat, klik menu **Extensions > Apps Script**.
-4. **Pasang Kode Backend**: Salin (*copy*) seluruh isi file `code.js` dan tempelkan (*paste*) ke dalam file `Code.gs` (timpa kode bawaannya).
+4. **Pasang Kode Backend**: Salin (*copy*) seluruh isi file `code.gs` dan tempelkan (*paste*) ke dalam file `Code.gs` (timpa kode bawaannya).
 5. **Pasang Kode Frontend**: Klik logo tambah `(+) > HTML`, beri nama persis `index` (huruf kecil). Hapus kode bawaannya, lalu salin seluruh isi file `index.html` ke dalamnya.
 6. **Simpan**: Klik ikon disket untuk menyimpan proyek (Save).
 7. **Proses Deploy**:
