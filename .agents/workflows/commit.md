@@ -9,19 +9,15 @@ Dokumen ini mendefinisikan standar operasional (SOP) **MUTLAK** bagi Agen AI ket
 
 ## Langkah-langkah (SOP)
 
-### 1. Periksa Status Repositori & LAPORKAN
+### 1. Periksa Status & Lakukan Staging
 Selalu mulai dengan memeriksa status file yang berubah menggunakan perintah:
 `git status`
-*Tujuan: Memastikan file mana saja yang telah dimodifikasi, ditambah, atau dihapus.*
-**ATURAN MUTLAK:** Setelah menjalankan `git status`, Anda **DIWAJIBKAN** untuk berhenti dan melaporkan status tersebut kepada pengguna. Tanyakan kepada pengguna file mana saja yang ingin mereka masukkan (*stage*) ke dalam commit ini.
+Setelah itu, Anda diizinkan untuk langsung melakukan *staging* pada semua file yang berubah menggunakan:
+`git add .`
 
-### 2. Seleksi File yang Akan Di-commit (Staging)
-Hanya tambahkan file (`git add`) yang **spesifik diizinkan oleh pengguna** atau yang benar-benar Anda kerjakan. 
-- Gunakan spesifik file: `git add path/to/file1 path/to/file2`
-- **ATURAN MUTLAK:** Anda **HARAM / DILARANG KERAS** menggunakan `git add .`, `git add -A`, atau `git commit -a` dalam kondisi apa pun. Tidak ada pengecualian. Menambahkan file secara masal sering kali memasukkan file yang tidak relevan.
-- **Peringatan Ekstra:** Abaikan file apa pun yang berada di luar direktori proyek (contoh: folder `Downloads`, `Documents`, dll.) yang mungkin tidak sengaja diedit oleh pengguna.
+*(Pengecualian: Jika ada peringatan perubahan pada file konfigurasi sistem di luar proyek, tanyakan dulu pada pengguna).*
 
-### 3. Susun Pesan Commit (Conventional Commits) & MINTA PERSETUJUAN
+### 2. Susun Pesan Commit (Conventional Commits) & MINTA PERSETUJUAN
 Gunakan standar **Conventional Commits** untuk menulis pesan commit. Strukturnya:
 `<tipe>(<scope/modul>): <deskripsi singkat>`
 
@@ -39,9 +35,9 @@ Gunakan standar **Conventional Commits** untuk menulis pesan commit. Strukturnya
 
 **ATURAN MUTLAK:** Sebelum menjalankan perintah `git commit`, Anda **HARUS** menampilkan rancangan pesan commit tersebut kepada pengguna dan **MEMINTA PERSETUJUAN EKSPLISIT** ("Apakah Anda setuju dengan pesan commit ini?").
 
-### 4. Eksekusi Commit
-Setelah pengguna menyetujui pesan commit dan file yang akan di-stage, barulah Anda boleh menjalankan perintah commit:
+### 3. Eksekusi Commit
+Setelah pengguna mereview dan menyetujui pesan commit, barulah Anda boleh menjalankan perintah commit:
 `git commit -m "tipe(scope): deskripsi singkat"`
 
-### 5. Laporkan Hasilnya
+### 4. Laporkan Hasilnya
 Informasikan kepada pengguna bahwa proses *commit* telah berhasil.
