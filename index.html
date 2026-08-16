@@ -296,8 +296,8 @@
       flex: 1;
       padding: 2rem 2rem 1rem 2rem;
       overflow-y: auto;
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-rows: 1fr auto;
     }
 
     .content-container {
@@ -993,8 +993,8 @@
 
       <!-- Content Area -->
       <div class="content-area">
-
-        <div id="loading">
+        <div class="content-wrapper">
+          <div id="loading">
           <div class="spinner" id="main-spinner"></div>
           <p id="main-loading-text" style="color: var(--text-secondary); font-weight: 500;">Mengambil data real-time...</p>
           <div class="progress-container" id="main-progress-container">
@@ -1675,9 +1675,10 @@
           </div> <!-- End panelRekon -->
 
         </div> <!-- End of dashboard-content -->
+        </div> <!-- End of content-wrapper -->
 
         <!-- Footer / Copyright -->
-        <div style="margin-top: auto; padding-top: 2rem; color: var(--text-secondary); font-size: 0.875rem;">
+        <div style="padding-top: 0.5rem; color: var(--text-secondary); font-size: 0.875rem;">
           <div class="footer-container">
             <p class="footer-left">
               &copy; <span id="currentYear">2026</span> Dashboard E-Kinerja BKN. All rights reserved.<br>
