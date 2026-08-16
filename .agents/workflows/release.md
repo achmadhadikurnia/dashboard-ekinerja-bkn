@@ -27,6 +27,9 @@ Sesuai instruksi mutlak pengguna, jangan buat folder dengan nama versi, melainka
 Gunakan perintah PowerShell `Compress-Archive` untuk menyeleksi file dan menjadikannya zip. Contoh perintah:
 `Compress-Archive -Path "README.md", "INSTALASI.txt", "CARA_PENGGUNAAN.txt", "code.gs", "dashboard.xlsx", "index.html" -DestinationPath "releases/dashboard-ekinerja-bkn-<versi>.zip" -Force`
 
+### 4. Buat Git Tag dan Push (Otomatis Trigger GitHub Actions)
+Setelah ZIP lokal berhasil dibuat, secara otomatis buat *git tag* untuk versi tersebut dan dorong (*push*) tag-nya ke repositori remote agar proses rilis di GitHub (GitHub Actions) dapat berjalan:
+`git tag <versi>; git push --tags`
+
 ### 5. Laporkan Hasil
-Laporkan kepada pengguna bahwa proses *release* dan *versioning* telah selesai. Beritahukan lokasi persis folder rilis dan file `.zip`-nya.
-**(Opsional):** Tawarkan pengguna apakah mereka juga ingin membuat *git tag* (contoh: `git tag v1.0.0`) untuk versi ini agar riwayat *versioning* di repositori Git tetap sinkron.
+Laporkan kepada pengguna bahwa proses *release* lokal dan *push tag* ke Git telah selesai. Beritahukan juga bahwa saat ini GitHub Actions sedang memproses perilisan resminya secara otomatis di server.
