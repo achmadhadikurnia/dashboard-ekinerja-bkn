@@ -1,0 +1,39 @@
+name: Release Automatis
+
+on:
+  push:
+    tags:
+      - 'v*' # Akan berjalan otomatis setiap kali Anda melakukan 'git push --tags' dengan format awalan v
+
+permissions:
+  contents: write # Izin untuk membuat rilis di GitHub
+
+jobs:
+  release:
+    name: Build & Publish Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Buat bundle ZIP
+        run: |
+          # Tentukan nama zip berdasarkan nama tag (misal: v1.0.1)
+          ZIP_NAME="dashboard-ekinerja-bkn-${{ github.ref_name }}.zip"
+          
+          # Daftar file yang ingin dimasukkan ke dalam zip
+          FILES="README.md INSTALASI.txt CARA_PENGGUNAAN.txt code.js dashboard.xlsx index.html"
+          
+          # Looping untuk memfilter hanya file yang benar-benar ada
+          for file in $FILES; do
+            if [ -f "$file" ]; then
+              zip -ur "$ZIP_NAME" "$file"
+            fi
+          done
+
+      - name: 🚀 Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dashboard-ekinerja-bkn-${{ github.ref_name }}.zip
+          generate_release_notes: true # GitHub akan otomatis merangkum commit menjadi catatan rilis
