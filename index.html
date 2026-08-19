@@ -2776,7 +2776,11 @@
 
       // KALKULASI TREN NILAI DAN METRIK JENIS SECARA FRONTEND (Asli dari getDashboardData)
       let trenNilai = {};
-      let metrikJenis = { pns: 0, pppk: 0, pppk_paruh_waktu: 0 };
+      let metrikJenis = { 
+        pns: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0 }, 
+        pppk: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0 }, 
+        pppk_paruh_waktu: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0 } 
+      };
 
       if (globalPegawaiData.length > 0) {
           const daftarBulanStr = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
@@ -2785,9 +2789,19 @@
              // Metrik Jenis
              if (p.jenis_pegawai) {
                const jp = p.jenis_pegawai.toString().trim().toLowerCase();
-               if (jp === 'pns') metrikJenis.pns++;
-               else if (jp === 'pppk') metrikJenis.pppk++;
-               else if (jp === 'pppk_paruh_waktu') metrikJenis.pppk_paruh_waktu++;
+               const status = p.skp_status ? p.skp_status.toString().trim().toLowerCase() : '';
+               let target = null;
+               
+               if (jp === 'pns') target = metrikJenis.pns;
+               else if (jp === 'pppk') target = metrikJenis.pppk;
+               else if (jp === 'pppk_paruh_waktu') target = metrikJenis.pppk_paruh_waktu;
+
+               if (target) {
+                 target.total++;
+                 if (status === 'draft') target.draft++;
+                 else if (status === 'pengajuan') target.pengajuan++;
+                 else if (status === 'persetujuan') target.persetujuan++;
+               }
              }
 
              // Tren Nilai
@@ -2807,9 +2821,17 @@
           globalDashboardData.grandTotal.metrikJenis = metrikJenis;
 
           // Update DOM Summary
-          document.getElementById('val-pns').innerText = formatNumber(metrikJenis.pns);
-          document.getElementById('val-pppk').innerText = formatNumber(metrikJenis.pppk);
-          document.getElementById('val-pppk-paruh-waktu').innerText = formatNumber(metrikJenis.pppk_paruh_waktu);
+          const getSubtitleHtml = (metrik) => {
+            return `<div style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; margin-top: 0.25rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <span><span class="val-muted">Draft:</span> <span style="color: var(--text-primary);">${formatNumber(metrik.draft)}</span></span>
+              <span><span style="color: var(--warning);">Pengajuan:</span> <span style="color: var(--text-primary);">${formatNumber(metrik.pengajuan)}</span></span>
+              <span><span class="val-green">Persetujuan:</span> <span style="color: var(--text-primary);">${formatNumber(metrik.persetujuan)}</span></span>
+            </div>`;
+          };
+
+          document.getElementById('val-pns').innerHTML = formatNumber(metrikJenis.pns.total) + getSubtitleHtml(metrikJenis.pns);
+          document.getElementById('val-pppk').innerHTML = formatNumber(metrikJenis.pppk.total) + getSubtitleHtml(metrikJenis.pppk);
+          document.getElementById('val-pppk-paruh-waktu').innerHTML = formatNumber(metrikJenis.pppk_paruh_waktu.total) + getSubtitleHtml(metrikJenis.pppk_paruh_waktu);
 
           // Render Ulang Chart & Tabel Ringkasan
           renderDashboardCharts(globalDashboardData.grandTotal);

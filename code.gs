@@ -767,7 +767,11 @@ function getDashboardData() {
   // (Dioptimasi: Kalkulasi trenNilai dipindahkan ke frontend agar loading dashboard instan)
   const sheetPegawai = ss.getSheetByName('pegawai');
   let trenNilai = {};
-  let metrikJenis = { pns: 0, pppk: 0, pppk_paruh_waktu: 0 };
+  let metrikJenis = { 
+    pns: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0 }, 
+    pppk: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0 }, 
+    pppk_paruh_waktu: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0 } 
+  };
 
   if (sheetPegawai) {
     const lastRow = sheetPegawai.getLastRow();
