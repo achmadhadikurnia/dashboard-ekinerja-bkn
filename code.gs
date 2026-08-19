@@ -768,9 +768,9 @@ function getDashboardData() {
   const sheetPegawai = ss.getSheetByName('pegawai');
   let trenNilai = {};
   let metrikJenis = { 
-    pns: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0 }, 
-    pppk: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0 }, 
-    pppk_paruh_waktu: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0 } 
+    pns: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 }, 
+    pppk: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 }, 
+    pppk_paruh_waktu: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 } 
   };
 
   if (sheetPegawai) {

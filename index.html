@@ -225,6 +225,34 @@
       margin: 0;
     }
 
+    /* Custom Bar Tooltip */
+    .bar-tooltip-container {
+      position: relative;
+    }
+    .bar-tooltip-container .bar-tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-8px);
+      background-color: var(--surface);
+      color: var(--text-primary);
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      box-shadow: var(--shadow);
+      white-space: nowrap;
+      z-index: 100;
+      border: 1px solid var(--border);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+      font-size: 0.85rem;
+      pointer-events: none;
+    }
+    .bar-tooltip-container:hover .bar-tooltip {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(-4px);
+    }
 
     /* Main Content */
     .main-content {
@@ -2777,9 +2805,9 @@
       // KALKULASI TREN NILAI DAN METRIK JENIS SECARA FRONTEND (Asli dari getDashboardData)
       let trenNilai = {};
       let metrikJenis = { 
-        pns: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0 }, 
-        pppk: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0 }, 
-        pppk_paruh_waktu: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0 } 
+        pns: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 }, 
+        pppk: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 }, 
+        pppk_paruh_waktu: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 } 
       };
 
       if (globalPegawaiData.length > 0) {
@@ -2801,6 +2829,7 @@
                  if (status === 'draft') target.draft++;
                  else if (status === 'pengajuan') target.pengajuan++;
                  else if (status === 'persetujuan') target.persetujuan++;
+                 else if (status === '' || status === '-') target.belum++;
                }
              }
 
@@ -2822,13 +2851,41 @@
 
           // Update DOM Summary
           const getSubtitleHtml = (metrik) => {
-            return `<div style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; margin-top: 0.25rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-              <span><span class="val-muted">Draft:</span> <span style="color: var(--text-primary);">${formatNumber(metrik.draft)}</span></span>
-              <span><span style="color: var(--warning);">Pengajuan:</span> <span style="color: var(--text-primary);">${formatNumber(metrik.pengajuan)}</span></span>
-              <span><span class="val-green">Persetujuan:</span> <span style="color: var(--text-primary);">${formatNumber(metrik.persetujuan)}</span></span>
+            const total = metrik.total || 1; // Cegah division by zero
+            const belumPct = (metrik.belum / total) * 100;
+            const draftPct = (metrik.draft / total) * 100;
+            const pengajuanPct = (metrik.pengajuan / total) * 100;
+            const setujuPct = (metrik.persetujuan / total) * 100;
+
+            return `
+            <div class="bar-tooltip-container" style="margin-top: 1rem; width: 100%; cursor: pointer;">
+              <div style="height: 6px; width: 100%; display: flex; border-radius: 3px; overflow: hidden; background-color: var(--bg-secondary);">
+                <div style="width: ${belumPct}%; background-color: var(--danger);"></div>
+                <div style="width: ${draftPct}%; background-color: var(--text-secondary);"></div>
+                <div style="width: ${pengajuanPct}%; background-color: var(--warning);"></div>
+                <div style="width: ${setujuPct}%; background-color: var(--success);"></div>
+              </div>
+              
+              <div class="bar-tooltip" style="text-align: left; line-height: 1.5; font-weight: 500;">
+                <div><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background-color:var(--danger); margin-right:6px;"></span>Belum: ${formatNumber(metrik.belum)}</div>
+                <div><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background-color:var(--text-secondary); margin-right:6px;"></span>Draft: ${formatNumber(metrik.draft)}</div>
+                <div><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background-color:var(--warning); margin-right:6px;"></span>Pengajuan: ${formatNumber(metrik.pengajuan)}</div>
+                <div><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background-color:var(--success); margin-right:6px;"></span>Persetujuan: ${formatNumber(metrik.persetujuan)}</div>
+              </div>
             </div>`;
           };
 
+          const totalMetrik = { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 };
+          globalPegawaiData.forEach(p => {
+             totalMetrik.total++;
+             const status = p.skp_status ? p.skp_status.toString().trim().toLowerCase() : '';
+             if (status === 'draft') totalMetrik.draft++;
+             else if (status === 'pengajuan') totalMetrik.pengajuan++;
+             else if (status === 'persetujuan') totalMetrik.persetujuan++;
+             else if (status === '' || status === '-') totalMetrik.belum++;
+          });
+
+          document.getElementById('val-total-pegawai').innerHTML = formatNumber(totalMetrik.total) + getSubtitleHtml(totalMetrik);
           document.getElementById('val-pns').innerHTML = formatNumber(metrikJenis.pns.total) + getSubtitleHtml(metrikJenis.pns);
           document.getElementById('val-pppk').innerHTML = formatNumber(metrikJenis.pppk.total) + getSubtitleHtml(metrikJenis.pppk);
           document.getElementById('val-pppk-paruh-waktu').innerHTML = formatNumber(metrikJenis.pppk_paruh_waktu.total) + getSubtitleHtml(metrikJenis.pppk_paruh_waktu);
