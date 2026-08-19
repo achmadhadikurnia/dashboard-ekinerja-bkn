@@ -705,65 +705,15 @@ function doGet(e) {
  */
 function getDashboardData() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheetOpd = ss.getSheetByName('opd');
-
-  const rows = [];
-  let grandTotalRow = null;
-
-  if (sheetOpd) {
-    const data = sheetOpd.getDataRange().getDisplayValues();
-    if (data.length > 1) {
-      // Baca semua baris kecuali header
-      for (let i = 1; i < data.length; i++) {
-        const row = data[i];
-        if (row[1] === "JUMLAH TOTAL") {
-          grandTotalRow = row;
-          continue;
-        }
-
-        // Parse angka agar jadi Number bukan String
-        rows.push({
-          opd: row[1],
-          totalPegawai: parseInt(row[2].toString().replace(/\D/g, '')) || 0,
-          skpDisetujui: parseInt(row[3].toString().replace(/\D/g, '')) || 0,
-          bulanan: [
-            parseInt(row[4]?.toString().replace(/\D/g, '')) || 0, // Jan
-            parseInt(row[5]?.toString().replace(/\D/g, '')) || 0, // Feb
-            parseInt(row[6]?.toString().replace(/\D/g, '')) || 0, // Mar
-            parseInt(row[7]?.toString().replace(/\D/g, '')) || 0, // Apr
-            parseInt(row[8]?.toString().replace(/\D/g, '')) || 0, // Mei
-            parseInt(row[9]?.toString().replace(/\D/g, '')) || 0, // Jun
-            parseInt(row[10]?.toString().replace(/\D/g, '')) || 0, // Jul
-            parseInt(row[11]?.toString().replace(/\D/g, '')) || 0, // Agu
-            parseInt(row[12]?.toString().replace(/\D/g, '')) || 0, // Sep
-            parseInt(row[13]?.toString().replace(/\D/g, '')) || 0, // Okt
-            parseInt(row[14]?.toString().replace(/\D/g, '')) || 0, // Nov
-            parseInt(row[15]?.toString().replace(/\D/g, '')) || 0, // Des
-            parseInt(row[16]?.toString().replace(/\D/g, '')) || 0  // Tahunan
-          ]
-        });
-      }
-    }
-  }
-
-  // Siapkan data Grand Total
+  
   const grandTotal = {
-    totalPegawai: grandTotalRow ? parseInt(grandTotalRow[2].toString().replace(/\D/g, '')) || 0 : 0,
-    skpDisetujui: grandTotalRow ? parseInt(grandTotalRow[3].toString().replace(/\D/g, '')) || 0 : 0,
-    bulanan: []
+    totalPegawai: 0,
+    skpDisetujui: 0,
+    bulanan: [0,0,0,0,0,0,0,0,0,0,0,0,0]
   };
 
-  if (grandTotalRow) {
-    for (let m = 4; m <= 16; m++) {
-      grandTotal.bulanan.push(parseInt(grandTotalRow[m]?.toString().replace(/\D/g, '')) || 0);
-    }
-  } else {
-    grandTotal.bulanan = [0,0,0,0,0,0,0,0,0,0,0,0,0];
-  }
-
-
-
-  // BACA DATA DINAMIS TREN NILAI DAN METRIK SECARA ON-THE-FLY
+  let rows = [];
+  let opdMap = {};
   let trenNilai = {};
   let metrikJenis = { 
     pns: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 }, 
@@ -780,6 +730,7 @@ function getDashboardData() {
       const headerPegawai = dataPegawai[0];
       const idxJenis = headerPegawai.indexOf('jenis_pegawai');
       const idxStatus = headerPegawai.indexOf('skp_status');
+      const idxOpd = headerPegawai.indexOf('skp_unor_induk');
       const daftarBulan = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
       const idxBulan = {};
       daftarBulan.forEach(b => idxBulan[b] = headerPegawai.indexOf(b));
@@ -809,12 +760,31 @@ function getDashboardData() {
           }
         }
 
-        // -- Kalkulasi Tren Nilai --
+        if (statusSkp === 'persetujuan') {
+          grandTotal.skpDisetujui++;
+        }
+
+        // -- Kalkulasi OPD --
+        const namaOpd = (idxOpd !== -1 && row[idxOpd]) ? row[idxOpd].toString().trim() : "-";
+        if (!opdMap[namaOpd]) {
+          opdMap[namaOpd] = { total: 0, skpDisetujui: 0, bulanan: [0,0,0,0,0,0,0,0,0,0,0,0,0] };
+        }
+        opdMap[namaOpd].total++;
+        if (statusSkp === 'persetujuan') {
+          opdMap[namaOpd].skpDisetujui++;
+        }
+
+        // -- Kalkulasi Tren Nilai & Bulanan OPD --
         daftarBulan.forEach((b, monthIndex) => {
           const pos = idxBulan[b];
           if (pos !== -1) {
             let val = row[pos] ? row[pos].toString().trim() : "";
             if (val !== "" && val !== "-") {
+              // Tambah ke grandTotal bulanan & opd bulanan
+              grandTotal.bulanan[monthIndex]++;
+              opdMap[namaOpd].bulanan[monthIndex]++;
+
+              // Validasi Tren Nilai
               val = val.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
               let upperVal = val.toUpperCase();
               if (upperVal === 'SANGAT BAIK' || upperVal === 'BAIK' || upperVal === 'CUKUP' || upperVal === 'KURANG' || upperVal === 'SANGAT KURANG') {
@@ -825,8 +795,18 @@ function getDashboardData() {
           }
         });
       }
-    } else {
-      grandTotal.totalPegawai = 0;
+
+      // Convert opdMap ke rows array
+      const sortedOpds = Object.keys(opdMap).sort();
+      sortedOpds.forEach(opd => {
+        rows.push({
+          opd: opd,
+          totalPegawai: opdMap[opd].total,
+          skpDisetujui: opdMap[opd].skpDisetujui,
+          bulanan: opdMap[opd].bulanan
+        });
+      });
+
     }
   }
 
