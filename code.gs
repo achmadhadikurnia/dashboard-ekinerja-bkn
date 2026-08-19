@@ -609,6 +609,7 @@ function _generateLaporanOPD(showUi = true) {
   for (let i = 1; i < dataPegawai.length; i++) {
     const row = dataPegawai[i];
     const namaOpd = row[idxOpd] ? row[idxOpd].toString().trim() : null;
+    const statusSkp = row[idxStatus] ? row[idxStatus].toString().trim().toLowerCase() : "";
 
     if (namaOpd) {
       if (!mapOpd[namaOpd]) {
@@ -618,7 +619,6 @@ function _generateLaporanOPD(showUi = true) {
 
       mapOpd[namaOpd].total++;
 
-      const statusSkp = row[idxStatus] ? row[idxStatus].toString().trim().toLowerCase() : "";
       if (statusSkp === "persetujuan") {
         mapOpd[namaOpd].skpDisetujui++;
       }
@@ -763,9 +763,7 @@ function getDashboardData() {
 
 
 
-  // BACA DATA DINAMIS TREN NILAI DARI SHEET PEGAWAI
-  // (Dioptimasi: Kalkulasi trenNilai dipindahkan ke frontend agar loading dashboard instan)
-  const sheetPegawai = ss.getSheetByName('pegawai');
+  // BACA DATA DINAMIS TREN NILAI DAN METRIK SECARA ON-THE-FLY
   let trenNilai = {};
   let metrikJenis = { 
     pns: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 }, 
@@ -773,17 +771,63 @@ function getDashboardData() {
     pppk_paruh_waktu: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 } 
   };
 
+  const sheetPegawai = ss.getSheetByName('pegawai');
   if (sheetPegawai) {
-    const lastRow = sheetPegawai.getLastRow();
-    if (lastRow > 1) {
-      grandTotal.totalPegawai = lastRow - 1;
+    const dataPegawai = sheetPegawai.getDataRange().getDisplayValues();
+    if (dataPegawai.length > 1) {
+      grandTotal.totalPegawai = dataPegawai.length - 1;
+      
+      const headerPegawai = dataPegawai[0];
+      const idxJenis = headerPegawai.indexOf('jenis_pegawai');
+      const idxStatus = headerPegawai.indexOf('skp_status');
+      const daftarBulan = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
+      const idxBulan = {};
+      daftarBulan.forEach(b => idxBulan[b] = headerPegawai.indexOf(b));
+
+      for (let i = 1; i < dataPegawai.length; i++) {
+        const row = dataPegawai[i];
+        const statusSkp = (idxStatus !== -1 && row[idxStatus]) ? row[idxStatus].toString().trim().toLowerCase() : "";
+
+        // -- Kalkulasi Metrik Jenis --
+        if (idxJenis !== -1) {
+          const jp = row[idxJenis] ? row[idxJenis].toString().trim().toLowerCase() : '';
+          let target = null;
+          if (jp === 'pns') target = metrikJenis.pns;
+          else if (jp === 'pppk') target = metrikJenis.pppk;
+          else if (jp === 'pppk paruh waktu' || jp === 'pppk_paruh_waktu') target = metrikJenis.pppk_paruh_waktu;
+
+          if (target) {
+            target.total++;
+            if (statusSkp === 'draft') target.draft++;
+            else if (statusSkp === 'pengajuan') target.pengajuan++;
+            else if (statusSkp === 'persetujuan') target.persetujuan++;
+            else if (statusSkp === '' || statusSkp === '-') target.belum++;
+          }
+        }
+
+        // -- Kalkulasi Tren Nilai --
+        daftarBulan.forEach((b, monthIndex) => {
+          const pos = idxBulan[b];
+          if (pos !== -1) {
+            let val = row[pos] ? row[pos].toString().trim() : "";
+            if (val !== "" && val !== "-") {
+              val = val.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+              let upperVal = val.toUpperCase();
+              if (upperVal === 'SANGAT BAIK' || upperVal === 'BAIK' || upperVal === 'CUKUP' || upperVal === 'KURANG' || upperVal === 'SANGAT KURANG') {
+                if (!trenNilai[val]) trenNilai[val] = [0,0,0,0,0,0,0,0,0,0,0,0,0];
+                trenNilai[val][monthIndex]++;
+              }
+            }
+          }
+        });
+      }
     } else {
       grandTotal.totalPegawai = 0;
     }
   }
 
-  grandTotal.trenNilai = trenNilai; // Akan dikalkulasi di index.html
-  grandTotal.metrikJenis = metrikJenis; // Akan dikalkulasi di index.html
+  grandTotal.trenNilai = trenNilai;
+  grandTotal.metrikJenis = metrikJenis;
 
   // Cepat ambil jumlah PLT/PLH untuk info loading di frontend
   let totalPltPlh = 0;
