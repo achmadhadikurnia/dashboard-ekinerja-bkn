@@ -29,7 +29,7 @@ Gunakan perintah PowerShell `Compress-Archive` untuk menyeleksi file dan menjadi
 
 ### 4. Buat Git Tag dan Push (Otomatis Trigger GitHub Actions)
 Setelah ZIP lokal berhasil dibuat, secara otomatis buat *git tag* untuk versi tersebut dan dorong (*push*) tag-nya ke repositori remote agar proses rilis di GitHub (GitHub Actions) dapat berjalan:
-`git tag <versi>; git push --tags`
+`git push origin main; git tag <versi>; git push origin <versi>`
 
 ### 5. Laporkan Hasil
 Laporkan kepada pengguna bahwa proses *release* lokal dan *push tag* ke Git telah selesai. Beritahukan juga bahwa saat ini GitHub Actions sedang memproses perilisan resminya secara otomatis di server.
