@@ -948,6 +948,17 @@
     .dropdown-content.show {
       display: block;
     }
+    .switch { position: relative; display: inline-block; width: 34px; height: 20px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switch .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border); transition: .3s; }
+    .switch .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .3s; }
+    .switch input:checked + .slider { background-color: var(--accent); }
+    .switch input:focus + .slider { box-shadow: 0 0 1px var(--accent); }
+    .switch input:checked + .slider:before { transform: translateX(14px); }
+    .switch .slider.round { border-radius: 20px; }
+    .switch .slider.round:before { border-radius: 50%; }
+    .switch input:disabled + .slider { background-color: var(--border-light); cursor: not-allowed; opacity: 0.5; }
+    .switch input:disabled ~ .slider-label { color: var(--text-muted); }
   </style>
 </head>
 <body>
@@ -1011,7 +1022,18 @@
           </button>
           <div class="breadcrumb" id="breadcrumb">Dashboard</div>
         </div>
-        <div class="header-right">
+        <div class="header-right" style="display: flex; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-right: 1.25rem;" title="Filter berdasarkan jabatan Guru">
+            <div id="filterGuruLoading" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-muted); font-weight: 500;">
+              <div class="spinner" style="width: 14px; height: 14px; border-width: 2px; margin: 0;"></div>
+              <span>Memuat...</span>
+            </div>
+            <select id="filterGuruUtama" onchange="applyGuruFilter()" style="display: none; padding: 0.35rem 0.5rem; font-size: 0.875rem; font-weight: 500; border-radius: 6px; border: 1px solid var(--border); background-color: var(--surface); color: var(--text-primary); cursor: pointer; outline: none; min-width: 140px;">
+              <option value="semua">Semua Pegawai</option>
+              <option value="tanpa_guru">Tanpa Guru</option>
+              <option value="hanya_guru">Hanya Guru</option>
+            </select>
+          </div>
           <button class="theme-toggle" onclick="toggleTheme()" id="themeToggleBtn" title="Toggle Dark/Light Mode">
             <svg id="themeIconLight" style="display: none;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
             <svg id="themeIconDark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
@@ -2366,6 +2388,14 @@
         document.getElementById('pegawai-loading').innerHTML = '<p class="error-msg">' + response.message + '</p>';
         return;
       }
+      // Enable filter guru setelah data selesai dimuat
+      const filterGuruLoading = document.getElementById('filterGuruLoading');
+      const filterGuruUtama = document.getElementById('filterGuruUtama');
+      if (filterGuruLoading && filterGuruUtama) {
+          filterGuruLoading.style.display = 'none';
+          filterGuruUtama.style.display = 'block';
+      }
+
       renderPegawaiData(response.data);
       // Load Pengecualian setelah data pegawai selesai dimuat (untuk keperluan pencarian NIP)
       loadPengecualianData();
@@ -2401,8 +2431,116 @@
     let globalDashboardData = null;
     let globalTargetHighlights = [];
     let opdFormat = 'persen'; // Default
+    
+    window.guruFilterMode = 'semua';
+
+    function applyGuruFilter() {
+      const selectEl = document.getElementById('filterGuruUtama');
+      if (selectEl) {
+          window.guruFilterMode = selectEl.value;
+      }
+      
+      // Jika data allPegawaiData belum ada, fungsi ini tidak akan berjalan (dicegah dari UI disabled)
+      if (!globalPegawaiData || globalPegawaiData.length === 0) return;
+      
+      // 1. Rekalkulasi Grand Total untuk Dashboard
+      recalculateDashboardGT();
+      
+      // 2. Terapkan filter ke tabel Pegawai (memaksa filter ulang)
+      const searchInput = document.getElementById('searchPegawai');
+      if (searchInput) searchInput.dispatchEvent(new Event('input'));
+    }
+
+    function recalculateDashboardGT() {
+       let newGt = {
+           totalPegawai: 0,
+           skpDisetujui: 0,
+           bulanan: [0,0,0,0,0,0,0,0,0,0,0,0,0],
+           trenNilai: {},
+           totalPltPlh: globalDashboardData ? globalDashboardData.grandTotal.totalPltPlh : 0,
+           totalPengecualian: globalDashboardData ? globalDashboardData.grandTotal.totalPengecualian : 0,
+           metrikJenis: {
+               pns: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 },
+               pppk: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 },
+               pppk_paruh_waktu: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 }
+           }
+       };
+
+       let opdMap = {};
+       const daftarBulan = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
+
+       globalPegawaiData.forEach(p => {
+           const isGuru = p.jabatan && p.jabatan.toLowerCase().includes('guru');
+           if (window.guruFilterMode === 'tanpa_guru' && isGuru) return;
+           if (window.guruFilterMode === 'hanya_guru' && !isGuru) return;
+
+           let opd = p.opd || '-';
+           if (!opdMap[opd]) opdMap[opd] = { opd: opd, totalPegawai: 0, skpDisetujui: 0, bulanan: [0,0,0,0,0,0,0,0,0,0,0,0,0] };
+           let opdRow = opdMap[opd];
+
+           newGt.totalPegawai++;
+           opdRow.totalPegawai++;
+
+           let statusSkp = p.skp_status ? p.skp_status.toLowerCase() : '';
+
+           if (statusSkp === 'persetujuan') {
+               newGt.skpDisetujui++;
+               opdRow.skpDisetujui++;
+           }
+
+           daftarBulan.forEach((b, idx) => {
+               let val = p.bulanan && p.bulanan[idx] ? p.bulanan[idx].toString().trim() : '';
+               if (val !== '' && val !== '-') {
+                   newGt.bulanan[idx]++;
+                   opdRow.bulanan[idx]++;
+
+                   let upperVal = val.toUpperCase();
+                   if (['SANGAT BAIK', 'BAIK', 'CUKUP', 'KURANG', 'SANGAT KURANG'].includes(upperVal)) {
+                       let valCapitalized = val.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+                       if (!newGt.trenNilai[valCapitalized]) newGt.trenNilai[valCapitalized] = [0,0,0,0,0,0,0,0,0,0,0,0,0];
+                       newGt.trenNilai[valCapitalized][idx]++;
+                   }
+               }
+           });
+
+           let jenis = p.jenis_pegawai ? p.jenis_pegawai.toString().toLowerCase() : '';
+           let target = null;
+           
+           if (jenis === 'pppk_paruh_waktu') {
+               target = newGt.metrikJenis.pppk_paruh_waktu;
+           } else if (jenis === 'pppk') {
+               target = newGt.metrikJenis.pppk;
+           } else if (jenis === 'pns') {
+               target = newGt.metrikJenis.pns;
+           }
+
+           if (target) {
+               target.total++;
+               if (statusSkp === 'draft') target.draft++;
+               else if (statusSkp === 'pengajuan') target.pengajuan++;
+               else if (statusSkp === 'persetujuan') target.persetujuan++;
+               else if (statusSkp === '' || statusSkp === '-') target.belum++;
+           }
+       });
+
+       let rowsArr = Object.values(opdMap).sort((a,b) => b.totalPegawai - a.totalPegawai);
+
+       let newData = {
+           grandTotal: newGt,
+           rows: rowsArr,
+           timestamps: globalTimestamps,
+           metadata: globalDashboardData ? globalDashboardData.metadata : null
+       };
+
+       renderDashboard(newData);
+    }
 
     function renderDashboard(data) {
+      // Simpan backup data dashboard
+      if (globalDashboardData === null || globalDashboardData !== data) {
+         globalDashboardData = data;
+      }
+
       // Hide Loading, Show Dashboard
       document.getElementById('loading').style.display = 'none';
       document.getElementById('dashboard-content').style.display = 'block';
@@ -3014,6 +3152,10 @@
         }
 
         let displayData = globalPegawaiData.filter(p => {
+          const isGuru = p.jabatan && p.jabatan.toLowerCase().includes('guru');
+          if (window.guruFilterMode === 'tanpa_guru' && isGuru) return false;
+          if (window.guruFilterMode === 'hanya_guru' && !isGuru) return false;
+          
           const mNama = p.nama.toLowerCase().includes(searchVal);
           const mNip = p.nip.toLowerCase().includes(searchVal);
           const mOpd = opdVal === 'semua' || p.opd === opdVal;

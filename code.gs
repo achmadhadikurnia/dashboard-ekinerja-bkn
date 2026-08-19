@@ -792,9 +792,13 @@ function getDashboardData() {
         if (idxJenis !== -1) {
           const jp = row[idxJenis] ? row[idxJenis].toString().trim().toLowerCase() : '';
           let target = null;
-          if (jp === 'pns') target = metrikJenis.pns;
-          else if (jp === 'pppk') target = metrikJenis.pppk;
-          else if (jp === 'pppk paruh waktu' || jp === 'pppk_paruh_waktu') target = metrikJenis.pppk_paruh_waktu;
+          if (jp === 'pns') {
+            target = metrikJenis.pns;
+          } else if (jp === 'pppk_paruh_waktu') {
+            target = metrikJenis.pppk_paruh_waktu;
+          } else if (jp === 'pppk') {
+            target = metrikJenis.pppk;
+          }
 
           if (target) {
             target.total++;
@@ -951,9 +955,8 @@ function getPegawaiData(startRow = 0, chunkSize = 0) {
   const idxNip = headerPegawai.indexOf('nip');
   const idxNama = headerPegawai.indexOf('nama');
 
-  // Deteksi dinamis untuk nama kolom jabatan
-  let idxJabatan = headerPegawai.indexOf('skp_jabatan');
-  if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('jabatan');
+  let idxJabatan = headerPegawai.indexOf('jabatan');
+  if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('skp_jabatan');
   if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('jabatan_akhir');
   if (idxJabatan === -1) idxJabatan = headerPegawai.indexOf('nama_jabatan');
 
