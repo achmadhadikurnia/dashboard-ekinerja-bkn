@@ -1204,6 +1204,13 @@
                   Rekap Penilaian Per OPD
                 </h2>
                 <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                  <div id="filterOpdJenisLoading" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-muted); font-weight: 500;">
+                    <div class="spinner" style="width: 14px; height: 14px; border-width: 2px; margin: 0;"></div>
+                    <span>Memuat...</span>
+                  </div>
+                  <select id="filterOpdJenisPegawai" class="search-box select-box" style="margin-bottom: 0; width: auto; display: none;" onchange="window.opdJenisFilterMode = this.value; recalculateDashboardGT();">
+                    <option value="semua">Semua Jenis Pegawai</option>
+                  </select>
                   <select id="opdFormatToggle" class="search-box select-box" style="margin-bottom: 0; width: auto;" onchange="opdFormat = this.value; buildOpdTableBody();">
                     <option value="persen">Tampilkan: Persentase (%)</option>
                     <option value="angka">Tampilkan: Angka Mutlak</option>
@@ -2437,6 +2444,7 @@
     let opdFormat = 'persen'; // Default
 
     window.guruFilterMode = 'semua';
+    window.opdJenisFilterMode = 'semua';
 
     function applyGuruFilter() {
       const selectEl = document.getElementById('filterGuruUtama');
@@ -2482,21 +2490,24 @@
            if (!opdMap[opd]) opdMap[opd] = { opd: opd, totalPegawai: 0, skpDisetujui: 0, bulanan: [0,0,0,0,0,0,0,0,0,0,0,0,0] };
            let opdRow = opdMap[opd];
 
+           let jenisForFilter = p.jenis_pegawai ? p.jenis_pegawai.toString().toLowerCase() : '';
+           let matchOpdJenis = (window.opdJenisFilterMode === 'semua' || window.opdJenisFilterMode.toLowerCase() === jenisForFilter);
+
            newGt.totalPegawai++;
-           opdRow.totalPegawai++;
+           if (matchOpdJenis) opdRow.totalPegawai++;
 
            let statusSkp = p.skp_status ? p.skp_status.toLowerCase() : '';
 
            if (statusSkp === 'persetujuan') {
                newGt.skpDisetujui++;
-               opdRow.skpDisetujui++;
+               if (matchOpdJenis) opdRow.skpDisetujui++;
            }
 
            daftarBulan.forEach((b, idx) => {
                let val = p.bulanan && p.bulanan[idx] ? p.bulanan[idx].toString().trim() : '';
                if (val !== '' && val !== '-') {
                    newGt.bulanan[idx]++;
-                   opdRow.bulanan[idx]++;
+                   if (matchOpdJenis) opdRow.bulanan[idx]++;
 
                    let upperVal = val.toUpperCase();
                    if (['SANGAT BAIK', 'BAIK', 'CUKUP', 'KURANG', 'SANGAT KURANG'].includes(upperVal)) {
@@ -2994,7 +3005,19 @@
       if (!globalDashboardData) return;
 
       const data = globalDashboardData;
-      const gt = data.grandTotal;
+
+      // Hitung ulang gt khusus untuk tabel OPD agar total row sinkron dengan filter
+      const gt = {
+        totalPegawai: 0,
+        skpDisetujui: 0,
+        bulanan: [0,0,0,0,0,0,0,0,0,0,0,0,0]
+      };
+      data.opdData.forEach(row => {
+        gt.totalPegawai += row.totalPegawai;
+        gt.skpDisetujui += row.skpDisetujui;
+        row.bulanan.forEach((val, i) => gt.bulanan[i] += val);
+      });
+
       const targetHighlights = globalTargetHighlights;
       const tbody = document.querySelector('#opdTable tbody');
 
@@ -3105,6 +3128,7 @@
 
       const filterOpd = document.getElementById('filterOpd');
       const filterJenisPegawai = document.getElementById('filterJenisPegawai');
+      const filterOpdJenisPegawai = document.getElementById('filterOpdJenisPegawai');
       // Populate dropdown OPD & SKP Status
       const opdSet = new Set();
       const skpStatusSet = new Set();
@@ -3134,7 +3158,20 @@
          opt.value = jp;
          opt.innerText = jp;
          filterJenisPegawai.appendChild(opt);
+
+         if (filterOpdJenisPegawai) {
+             const optOpd = document.createElement('option');
+             optOpd.value = jp;
+             optOpd.innerText = jp;
+             filterOpdJenisPegawai.appendChild(optOpd);
+         }
       });
+
+      const filterOpdJenisLoading = document.getElementById('filterOpdJenisLoading');
+      if (filterOpdJenisLoading && filterOpdJenisPegawai) {
+          filterOpdJenisLoading.style.display = 'none';
+          filterOpdJenisPegawai.style.display = 'inline-block';
+      }
 
       const applyFilters = () => {
         const searchVal = document.getElementById('searchPegawai').value.toLowerCase();
