@@ -189,10 +189,7 @@ function generateMasterPegawai() {
     // ATURAN 1: Pastikan NIP ada dan BUKAN PLT/PLH (is_plt_plh harus 0)
     if (nipStr && (isPlt === 0 || isPlt === '0')) {
 
-      // ATURAN 1b: Pastikan NIP tidak ada di daftar pengecualian (pensiun/mutasi)
-      if (blacklistNip.has(nipStr)) {
-        continue;
-      }
+      // ATURAN 1b: Penandaan NIP yang ada di daftar pengecualian dilakukan di bagian output
 
       const tglPeriodeAkhirBaru = row[idxPeriodeAkhir] ? new Date(row[idxPeriodeAkhir]).getTime() : 0;
 
@@ -248,6 +245,7 @@ function generateMasterPegawai() {
   // 1. Buat Header (Copy dari header SKP, ditambah kolom Jan-Des supaya rapi)
   const headerOutput = [...headerSkp];
   daftarBulan.forEach(b => headerOutput.push(b)); // Tambahkan nama bulan di ujung kanan
+  headerOutput.push('is_pengecualian'); // Tambahkan flag pengecualian
 
   outputData.push(headerOutput);
 
@@ -264,6 +262,9 @@ function generateMasterPegawai() {
       }
       barisPegawai.push(val);
     });
+    
+    // Tambahkan flag is_pengecualian
+    barisPegawai.push(blacklistNip.has(nip) ? 1 : 0);
 
     outputData.push(barisPegawai);
   });
@@ -343,24 +344,33 @@ function hapusPengecualian() {
     if (idx === -1) idx = header.indexOf('id');
     if (idx === -1) return 0;
 
-    const output = [dataTarget[0]];
-    let deletedCount = 0;
+    let idxPengecualian = header.indexOf('is_pengecualian');
+    if (idxPengecualian === -1) {
+      idxPengecualian = header.length;
+    }
+
+    const targetCols = Math.max(dataTarget[0].length, idxPengecualian + 1);
+    dataTarget.forEach(row => {
+      while(row.length < targetCols) row.push("");
+    });
+    dataTarget[0][idxPengecualian] = 'is_pengecualian';
+
+    let updatedCount = 0;
 
     for (let i = 1; i < dataTarget.length; i++) {
       const nip = dataTarget[i][idx];
       const nipStr = nip ? nip.toString().trim() : "";
-      if (blacklistNip.has(nipStr)) {
-        deletedCount++;
-      } else {
-        output.push(dataTarget[i]);
+      const isBlacklisted = blacklistNip.has(nipStr) ? 1 : 0;
+      
+      dataTarget[i][idxPengecualian] = isBlacklisted;
+      
+      if (isBlacklisted === 1) {
+        updatedCount++;
       }
     }
 
-    if (deletedCount > 0) {
-      sheetTarget.clearContents();
-      sheetTarget.getRange(1, 1, output.length, output[0].length).setValues(output);
-    }
-    return deletedCount;
+    sheetTarget.getRange(1, 1, dataTarget.length, targetCols).setValues(dataTarget);
+    return updatedCount;
   };
 
   const hapusPegawai = hapusPengecualianDariSheet('pegawai');
@@ -597,6 +607,8 @@ function _generateLaporanOPD(showUi = true) {
     return;
   }
 
+  const idxPengecualian = headerPegawai.indexOf('is_pengecualian');
+
   const daftarBulan = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
   const idxBulan = {};
   daftarBulan.forEach(b => {
@@ -608,6 +620,12 @@ function _generateLaporanOPD(showUi = true) {
 
   for (let i = 1; i < dataPegawai.length; i++) {
     const row = dataPegawai[i];
+    
+    // Skip data pengecualian
+    if (idxPengecualian !== -1 && (row[idxPengecualian] == 1 || row[idxPengecualian] == '1')) {
+      continue;
+    }
+    
     const namaOpd = row[idxOpd] ? row[idxOpd].toString().trim() : null;
     const statusSkp = row[idxStatus] ? row[idxStatus].toString().trim().toLowerCase() : "";
 
@@ -949,6 +967,7 @@ function getPegawaiData(startRow = 0, chunkSize = 0) {
   let idxOpd = headerPegawai.indexOf('skp_unor_induk');
   let idxSkpStatus = headerPegawai.indexOf('skp_status');
   let idxJenisPegawai = headerPegawai.indexOf('jenis_pegawai');
+  let idxPengecualian = headerPegawai.indexOf('is_pengecualian');
 
   const daftarBulan = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
   const idxBulanPegawai = {};
@@ -982,6 +1001,7 @@ function getPegawaiData(startRow = 0, chunkSize = 0) {
           opd: idxOpd !== -1 && pRow[idxOpd] ? pRow[idxOpd].toString().trim() : "-",
           skp_status: idxSkpStatus !== -1 && pRow[idxSkpStatus] ? pRow[idxSkpStatus].toString().trim() : "-",
           jenis_pegawai: idxJenisPegawai !== -1 && pRow[idxJenisPegawai] ? pRow[idxJenisPegawai].toString().trim() : "-",
+          is_pengecualian: idxPengecualian !== -1 ? pRow[idxPengecualian] : 0,
           bulanan: bData
         });
       }
@@ -1043,7 +1063,7 @@ function getPengecualianData(startRow = 0, chunkSize = 0) {
   return { status: 'success', data: result, total: lastRow - 1 };
 }
 
-function _hapusDariSheetByNip(sheetName, nip) {
+function _updatePengecualianFlagInSheet(sheetName, nip, flagValue) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(sheetName);
   if (!sheet) return;
@@ -1051,10 +1071,21 @@ function _hapusDariSheetByNip(sheetName, nip) {
   if (data.length <= 1) return;
   const headers = data[0].map(h => h.toString().toLowerCase().trim().replace(/\./g, ''));
   const idxNip = headers.indexOf('nip');
+  let idxPengecualian = headers.indexOf('is_pengecualian');
+  
   if (idxNip === -1) return;
+
+  // Jika kolom is_pengecualian belum ada, kita bisa asumsikan akan ditambahkan oleh generateMasterPegawai,
+  // Tapi untuk amannya jika dipanggil saat kolom belum ada, kita tidak melakukan apa-apa.
+  if (idxPengecualian === -1) {
+    // Tambahkan header is_pengecualian jika belum ada
+    sheet.getRange(1, headers.length + 1).setValue('is_pengecualian');
+    idxPengecualian = headers.length;
+  }
+
   for (let i = 1; i < data.length; i++) {
     if (data[i][idxNip] && data[i][idxNip].toString().trim() === nip) {
-      sheet.deleteRow(i + 1);
+      sheet.getRange(i + 1, idxPengecualian + 1).setValue(flagValue);
       break;
     }
   }
@@ -1093,8 +1124,8 @@ function savePengecualianData(payload) {
     if (idxOpd !== -1) sheet.getRange(foundRow, idxOpd + 1).setValue(payload.opd);
     if (idxKet !== -1) sheet.getRange(foundRow, idxKet + 1).setValue(payload.keterangan);
 
-    _hapusDariSheetByNip('pegawai', payload.nip);
-    _hapusDariSheetByNip('pltplh', payload.nip);
+    _updatePengecualianFlagInSheet('pegawai', payload.nip, 1);
+    _updatePengecualianFlagInSheet('pegawai_plt_plh', payload.nip, 1);
 
     return { status: 'success', message: 'Data pengecualian berhasil diperbarui' };
   } else {
@@ -1110,8 +1141,8 @@ function savePengecualianData(payload) {
     if (idxKet !== -1) newRow[idxKet] = payload.keterangan;
     sheet.appendRow(newRow);
 
-    _hapusDariSheetByNip('pegawai', payload.nip);
-    _hapusDariSheetByNip('pltplh', payload.nip);
+    _updatePengecualianFlagInSheet('pegawai', payload.nip, 1);
+    _updatePengecualianFlagInSheet('pegawai_plt_plh', payload.nip, 1);
 
     return { status: 'success', message: 'Data pengecualian berhasil ditambahkan' };
   }
@@ -1139,6 +1170,9 @@ function deletePengecualianData(nip) {
 
   if (foundRow !== -1) {
     sheet.deleteRow(foundRow);
+
+    _updatePengecualianFlagInSheet('pegawai', nip, 0);
+    _updatePengecualianFlagInSheet('pegawai_plt_plh', nip, 0);
 
     // Renumber No
     const idxNo = headers.indexOf('no');
@@ -1415,10 +1449,7 @@ function generateDataPltPlh() {
     const isPlt = row[idxIsPlt];
 
     if (nipStr && isPlt !== 0 && isPlt !== '0' && isPlt !== '') {
-      // Pastikan NIP tidak ada di daftar pengecualian (pensiun/mutasi)
-      if (blacklistNip.has(nipStr)) {
-        continue;
-      }
+      // NIP yang ada di daftar pengecualian ditandai di bagian output
 
       const tglPeriodeAkhirBaru = row[idxPeriodeAkhir] ? new Date(row[idxPeriodeAkhir]).getTime() : 0;
 
@@ -1470,6 +1501,7 @@ function generateDataPltPlh() {
   const outputData = [];
   const headerOutput = [...headerSkp];
   daftarBulan.forEach(b => headerOutput.push(b));
+  headerOutput.push('is_pengecualian');
 
   outputData.push(headerOutput);
 
@@ -1484,6 +1516,8 @@ function generateDataPltPlh() {
       }
       barisPegawai.push(val);
     });
+    
+    barisPegawai.push(blacklistNip.has(nip) ? 1 : 0);
 
     outputData.push(barisPegawai);
   });
@@ -1545,6 +1579,7 @@ function getPltPlhData(startRow = 0, chunkSize = 0) {
   const idxStatus = header.indexOf('skp_status');
   const idxAtasan = header.indexOf('nama_atasan');
   let idxJenisPegawai = header.indexOf('jenis_pegawai');
+  let idxPengecualian = header.indexOf('is_pengecualian');
 
   const daftarBulanStr = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
   const idxBulanArr = daftarBulanStr.map(b => header.indexOf(b));
@@ -1568,6 +1603,7 @@ function getPltPlhData(startRow = 0, chunkSize = 0) {
         status: idxStatus !== -1 ? row[idxStatus].toString().trim() : "",
         jenis_pegawai: idxJenisPegawai !== -1 && row[idxJenisPegawai] ? row[idxJenisPegawai].toString().trim() : "-",
         atasan: idxAtasan !== -1 ? row[idxAtasan].toString().trim() : "",
+        is_pengecualian: idxPengecualian !== -1 ? row[idxPengecualian] : 0,
         bulanan: []
       };
 

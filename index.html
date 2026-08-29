@@ -2327,8 +2327,11 @@
              return;
           }
 
-          const chunkData = response.data || [];
-          allData = allData.concat(chunkData);
+          const fetchedData = response.data || [];
+          const fetchedCount = fetchedData.length;
+          
+          const validData = fetchedData.filter(d => d.is_pengecualian != 1 && d.is_pengecualian !== '1');
+          allData = allData.concat(validData);
 
           const total = response.total || 0;
 
@@ -2341,7 +2344,7 @@
             if(pText) pText.innerText = `Memuat data: ${allData.length.toLocaleString('id-ID')} / ${total.toLocaleString('id-ID')} (${percent}%)`;
           }
 
-          if (chunkData.length < chunkSize) {
+          if (fetchedCount < chunkSize) {
             isDone = true;
           } else {
             startRow += chunkSize;
