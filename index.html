@@ -2384,6 +2384,9 @@
 
       // Panggil asinkron tabel PLT/PLH
       fetchChunkedData('getPltPlhData', 'pltPlh-loading', 'pltPlh-progress-container', 'pltPlh-progress-bar', onPltPlhSuccess, onFailure);
+
+      // Panggil asinkron tabel Pengecualian
+      loadPengecualianData();
     }
 
     function onPegawaiSuccess(response) {
@@ -2400,8 +2403,6 @@
       }
 
       renderPegawaiData(response.data);
-      // Load Pengecualian setelah data pegawai selesai dimuat (untuk keperluan pencarian NIP)
-      loadPengecualianData();
     }
 
     function onPltPlhSuccess(response) {
