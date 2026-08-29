@@ -2284,7 +2284,7 @@
 
         if (this.totalDataInfo) {
           const actualEndIdx = Math.min(endIdx, totalItems);
-          this.totalDataInfo.innerText = `${startIdx + 1} - ${actualEndIdx} dari ${totalItems}`;
+          this.totalDataInfo.innerText = `${formatNumber(startIdx + 1)} - ${formatNumber(actualEndIdx)} dari ${formatNumber(totalItems)}`;
         }
 
         if (this.onRender) {
@@ -4521,6 +4521,7 @@
     // ==========================================
     let currentUploadData = [];
     let currentUploadBulan = '';
+    let currentUploadHeaderIdx = -1;
 
     function handleFileSelect(event) {
       const file = event.target.files[0];
@@ -4623,6 +4624,7 @@
 
           currentUploadData = jsonData;
           currentUploadBulan = targetBulan;
+          currentUploadHeaderIdx = headerRowIdx;
 
           if(currentUploadData.length <= 1) {
              document.getElementById('uploadParsingLoading').style.display = 'none';
@@ -4638,7 +4640,8 @@
           // Tampilkan konfirmasi
           document.getElementById('confTargetSheet').innerText = targetBulan.toUpperCase();
           document.getElementById('confTahun').innerText = tahunLaporan;
-          document.getElementById('confDataCount').innerText = (currentUploadData.length - 1) + ' Baris';
+          const realCount = currentUploadData.length - (currentUploadHeaderIdx + 1);
+          document.getElementById('confDataCount').innerText = realCount.toLocaleString('id-ID') + ' Baris';
           document.getElementById('uploadConfirmationContainer').style.display = 'block';
           document.getElementById('uploadStatusContainer').style.display = 'none';
 
@@ -4662,12 +4665,14 @@
       document.getElementById('fileUploadInput').parentElement.style.display = 'block';
       currentUploadData = [];
       currentUploadBulan = '';
+      currentUploadHeaderIdx = -1;
     }
 
     function startUploadProcess() {
       document.getElementById('uploadConfirmationContainer').style.display = 'none';
       document.getElementById('uploadStatusContainer').style.display = 'block';
-      document.getElementById('uploadMetaInfo').innerText = `Mengirim ke sheet '${currentUploadBulan}' (${currentUploadData.length - 1} data)`;
+      const realCount = currentUploadData.length - (currentUploadHeaderIdx + 1);
+      document.getElementById('uploadMetaInfo').innerText = `Mengirim ke sheet '${currentUploadBulan}' (${realCount.toLocaleString('id-ID')} data)`;
       document.getElementById('uploadProgressBar').style.width = '0%';
       document.getElementById('uploadPercentage').innerText = '0%';
       document.getElementById('uploadDetails').innerText = 'Memulai pengiriman...';
