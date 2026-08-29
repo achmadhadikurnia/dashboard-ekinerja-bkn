@@ -749,12 +749,21 @@ function getDashboardData() {
       const idxJenis = headerPegawai.indexOf('jenis_pegawai');
       const idxStatus = headerPegawai.indexOf('skp_status');
       const idxOpd = headerPegawai.indexOf('skp_unor_induk');
+      const idxPengecualian = headerPegawai.indexOf('is_pengecualian');
       const daftarBulan = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
       const idxBulan = {};
       daftarBulan.forEach(b => idxBulan[b] = headerPegawai.indexOf(b));
 
       for (let i = 1; i < dataPegawai.length; i++) {
         const row = dataPegawai[i];
+        
+        // Lewati jika pegawai ini dikecualikan
+        const isPengecualian = (idxPengecualian !== -1 && row[idxPengecualian]) ? row[idxPengecualian].toString().trim() : "0";
+        if (isPengecualian === "1" || isPengecualian === 1) {
+          grandTotal.totalPegawai--;
+          continue;
+        }
+
         const statusSkp = (idxStatus !== -1 && row[idxStatus]) ? row[idxStatus].toString().trim().toLowerCase() : "";
 
         // -- Kalkulasi Metrik Jenis --
