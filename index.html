@@ -2329,7 +2329,7 @@
 
           const fetchedData = response.data || [];
           const fetchedCount = fetchedData.length;
-          
+
           const validData = fetchedData.filter(d => d.is_pengecualian != 1 && d.is_pengecualian !== '1');
           allData = allData.concat(validData);
 
@@ -2435,7 +2435,7 @@
     let globalDashboardData = null;
     let globalTargetHighlights = [];
     let opdFormat = 'persen'; // Default
-    
+
     window.guruFilterMode = 'semua';
 
     function applyGuruFilter() {
@@ -2443,13 +2443,13 @@
       if (selectEl) {
           window.guruFilterMode = selectEl.value;
       }
-      
+
       // Jika data allPegawaiData belum ada, fungsi ini tidak akan berjalan (dicegah dari UI disabled)
       if (!globalPegawaiData || globalPegawaiData.length === 0) return;
-      
+
       // 1. Rekalkulasi Grand Total untuk Dashboard
       recalculateDashboardGT();
-      
+
       // 2. Terapkan filter ke tabel Pegawai (memaksa filter ulang)
       const searchInput = document.getElementById('searchPegawai');
       if (searchInput) searchInput.dispatchEvent(new Event('input'));
@@ -2509,7 +2509,7 @@
 
            let jenis = p.jenis_pegawai ? p.jenis_pegawai.toString().toLowerCase() : '';
            let target = null;
-           
+
            if (jenis === 'pppk_paruh_waktu') {
                target = newGt.metrikJenis.pppk_paruh_waktu;
            } else if (jenis === 'pppk') {
@@ -2885,9 +2885,9 @@
         `;
       } else {
         document.getElementById('ringkasanPredikatContainer').innerHTML = `
-          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; color: var(--text-secondary); background-color: var(--bg-secondary); border-radius: 12px; border: 1px dashed var(--border); margin-top: 1rem;">
-            <div class="spinner" style="width: 28px; height: 28px; border-width: 2.5px; border-top-color: var(--accent); margin-bottom: 0.75rem;"></div>
-            <p class="loading-pulse" style="margin: 0;">Memuat data rincian...</p>
+          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 2rem; color: var(--text-secondary); background-color: var(--bg-secondary); border-radius: 12px; border: 1px dashed var(--border); margin-top: 1rem;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 1rem; opacity: 0.5;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <p style="margin: 0; font-weight: 500; font-size: 1.1rem;">Belum ada data penilaian kinerja</p>
           </div>
         `;
       }
@@ -3159,7 +3159,7 @@
           const isGuru = p.jabatan && p.jabatan.toLowerCase().includes('guru');
           if (window.guruFilterMode === 'tanpa_guru' && isGuru) return false;
           if (window.guruFilterMode === 'hanya_guru' && !isGuru) return false;
-          
+
           const mNama = p.nama.toLowerCase().includes(searchVal);
           const mNip = p.nip.toLowerCase().includes(searchVal);
           const mOpd = opdVal === 'semua' || p.opd === opdVal;
