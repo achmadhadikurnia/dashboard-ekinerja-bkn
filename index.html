@@ -1066,9 +1066,16 @@
 
           <!-- Panel Dashboard -->
           <div id="panelDashboard" class="nav-panel active">
-            <!-- Demografi Pegawai -->
-            <div class="summary-grid">
-              <div class="summary-card border-blue">
+            <!-- Loading Indicator Khusus Dashboard Saat Sync -->
+            <div id="dashboard-sync-loading" style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; color: var(--text-secondary);">
+              <div class="spinner"></div>
+              <p style="font-weight: 500;">Sedang menghitung ulang metrik dashboard...</p>
+            </div>
+            
+            <div id="dashboard-sync-content">
+              <!-- Demografi Pegawai -->
+              <div class="summary-grid">
+                <div class="summary-card border-blue">
                 <div class="card-content-wrapper">
                   <div class="card-icon-wrapper bg-blue-light">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -1251,6 +1258,7 @@
                 </table>
               </div>
             </div>
+            </div> <!-- End dashboard-sync-content -->
           </div> <!-- End panelDashboard -->
 
           <!-- Panel Pegawai -->
@@ -2469,8 +2477,8 @@
            skpDisetujui: 0,
            bulanan: [0,0,0,0,0,0,0,0,0,0,0,0,0],
            trenNilai: {},
-           totalPltPlh: globalDashboardData ? globalDashboardData.grandTotal.totalPltPlh : 0,
-           totalPengecualian: globalDashboardData ? globalDashboardData.grandTotal.totalPengecualian : 0,
+           totalPltPlh: (typeof globalPltPlhData !== 'undefined' && globalPltPlhData.length > 0) ? globalPltPlhData.length : (globalDashboardData ? globalDashboardData.grandTotal.totalPltPlh : 0),
+           totalPengecualian: (typeof globalPengecualianData !== 'undefined' && globalPengecualianData.length > 0) ? globalPengecualianData.length : (globalDashboardData ? globalDashboardData.grandTotal.totalPengecualian : 0),
            metrikJenis: {
                pns: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 },
                pppk: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 },
@@ -2559,6 +2567,12 @@
       // Hide Loading, Show Dashboard
       document.getElementById('loading').style.display = 'none';
       document.getElementById('dashboard-content').style.display = 'block';
+
+      // Reset loading sinkronisasi dashboard jika ada
+      const dSyncContent = document.getElementById('dashboard-sync-content');
+      if (dSyncContent) dSyncContent.style.display = 'block';
+      const dSyncLoading = document.getElementById('dashboard-sync-loading');
+      if (dSyncLoading) dSyncLoading.style.display = 'none';
 
       globalTimestamps = data.timestamps || [];
 
@@ -4499,6 +4513,62 @@
       }
     });
 
+    function syncAfterPengecualian(successMessage) {
+      // 1. Tampilkan notifikasi sukses langsung tanpa memblokir proses background
+      Swal.fire('Sukses!', successMessage, 'success');
+
+      // 2. Set UI loading state untuk Dashboard (hanya panel dashboardnya)
+      const dContent = document.getElementById('dashboard-sync-content');
+      if (dContent) dContent.style.display = 'none';
+      const dLoading = document.getElementById('dashboard-sync-loading');
+      if (dLoading) dLoading.style.display = 'flex';
+
+      // 3. Set UI loading state untuk Tabel Pegawai
+      const pContent = document.getElementById('pegawai-content');
+      if(pContent) pContent.style.display = 'none';
+      const pLoading = document.getElementById('pegawai-loading');
+      if(pLoading) {
+        pLoading.style.display = 'flex';
+        const pText = document.getElementById('pegawai-loading-text');
+        const pCount = (typeof globalPegawaiData !== 'undefined') ? formatNumber(globalPegawaiData.length) : '';
+        if(pText) pText.innerText = `Sedang mengunduh ${pCount} rincian pegawai dari server...`;
+        const pBar = document.getElementById('pegawai-progress-bar');
+        if(pBar) pBar.style.width = '0%';
+      }
+
+      // 4. Set UI loading state untuk Tabel PLT/PLH
+      const pltContent = document.getElementById('pltPlh-content');
+      if(pltContent) pltContent.style.display = 'none';
+      const pltLoading = document.getElementById('pltPlh-loading');
+      if(pltLoading) {
+        pltLoading.style.display = 'flex';
+        const pltText = document.getElementById('pltPlh-loading-text');
+        const pltCount = (typeof globalPltPlhData !== 'undefined') ? formatNumber(globalPltPlhData.length) : '';
+        if(pltText) pltText.innerText = `Sedang mengunduh ${pltCount} rincian PLT/PLH dari server...`;
+        const pltBar = document.getElementById('pltPlh-progress-bar');
+        if(pltBar) pltBar.style.width = '0%';
+      }
+
+      let pegawaiDone = false;
+      let pltPlhDone = false;
+
+      const checkAllDone = () => {
+        if (pegawaiDone && pltPlhDone) {
+          recalculateDashboardGT();
+        }
+      };
+
+      fetchChunkedData('getPegawaiData', 'pegawai-loading', 'pegawai-progress-container', 'pegawai-progress-bar', 
+        (res) => { onPegawaiSuccess(res); pegawaiDone = true; checkAllDone(); }, 
+        (err) => { onFailure(err); pegawaiDone = true; checkAllDone(); }
+      );
+
+      fetchChunkedData('getPltPlhData', 'pltPlh-loading', 'pltPlh-progress-container', 'pltPlh-progress-bar', 
+        (res) => { onPltPlhSuccess(res); pltPlhDone = true; checkAllDone(); }, 
+        (err) => { onFailure(err); pltPlhDone = true; checkAllDone(); }
+      );
+    }
+
     btnSimpanPengecualian.addEventListener('click', () => {
       const payload = {
         nip: pengNip.value.trim(),
@@ -4518,6 +4588,8 @@
           if (res.status === 'success') {
             modalPengecualian.style.display = 'none';
             loadPengecualianData();
+            // Sinkronkan data utama dengan loading indicator
+            syncAfterPengecualian('Data pengecualian berhasil disimpan.');
           } else {
             Swal.fire('Gagal', res.message, 'error');
             btnSimpanPengecualian.disabled = false;
@@ -4554,8 +4626,9 @@
           google.script.run
             .withSuccessHandler((res) => {
               if (res.status === 'success') {
-                Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
                 loadPengecualianData();
+                // Sinkronkan data utama dengan loading indicator
+                syncAfterPengecualian('Data berhasil dihapus.');
               } else {
                 Swal.fire('Gagal', 'Gagal menghapus: ' + res.message, 'error');
               }
