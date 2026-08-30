@@ -3327,6 +3327,7 @@
           pegawaiPagination.setData(globalFilteredPegawaiData);
         }
       };
+      window.applyPegawaiFilters = applyFilters;
 
       applyFilters();
 
@@ -3859,6 +3860,7 @@
           pltPlhPagination.setData(globalFilteredPltPlhData);
         }
       };
+      window.applyPltPlhFilters = applyFilters;
 
       searchInput.addEventListener('input', applyFilters);
       filterOpd.addEventListener('change', applyFilters);
@@ -4513,60 +4515,120 @@
       }
     });
 
-    function syncAfterPengecualian(successMessage) {
-      // 1. Tampilkan notifikasi sukses langsung tanpa memblokir proses background
-      Swal.fire('Sukses!', successMessage, 'success');
+    function syncAfterPengecualian(successMessage, isAdding = true, nipToProcess = '') {
+      const safeNipStr = (val) => (val === null || val === undefined) ? '' : val.toString().trim();
 
-      // 2. Set UI loading state untuk Dashboard (hanya panel dashboardnya)
-      const dContent = document.getElementById('dashboard-sync-content');
-      if (dContent) dContent.style.display = 'none';
-      const dLoading = document.getElementById('dashboard-sync-loading');
-      if (dLoading) dLoading.style.display = 'flex';
-
-      // 3. Set UI loading state untuk Tabel Pegawai
-      const pContent = document.getElementById('pegawai-content');
-      if(pContent) pContent.style.display = 'none';
-      const pLoading = document.getElementById('pegawai-loading');
-      if(pLoading) {
-        pLoading.style.display = 'flex';
-        const pText = document.getElementById('pegawai-loading-text');
-        const pCount = (typeof globalPegawaiData !== 'undefined') ? formatNumber(globalPegawaiData.length) : '';
-        if(pText) pText.innerText = `Sedang mengunduh ${pCount} rincian pegawai dari server...`;
-        const pBar = document.getElementById('pegawai-progress-bar');
-        if(pBar) pBar.style.width = '0%';
-      }
-
-      // 4. Set UI loading state untuk Tabel PLT/PLH
-      const pltContent = document.getElementById('pltPlh-content');
-      if(pltContent) pltContent.style.display = 'none';
-      const pltLoading = document.getElementById('pltPlh-loading');
-      if(pltLoading) {
-        pltLoading.style.display = 'flex';
-        const pltText = document.getElementById('pltPlh-loading-text');
-        const pltCount = (typeof globalPltPlhData !== 'undefined') ? formatNumber(globalPltPlhData.length) : '';
-        if(pltText) pltText.innerText = `Sedang mengunduh ${pltCount} rincian PLT/PLH dari server...`;
-        const pltBar = document.getElementById('pltPlh-progress-bar');
-        if(pltBar) pltBar.style.width = '0%';
-      }
-
-      let pegawaiDone = false;
-      let pltPlhDone = false;
-
-      const checkAllDone = () => {
-        if (pegawaiDone && pltPlhDone) {
-          recalculateDashboardGT();
+      if (isAdding) {
+        // Optimasi: Filter secara lokal (instan) tanpa perlu request ke server
+        Swal.fire('Sukses!', successMessage, 'success');
+        
+        if (typeof globalPegawaiData !== 'undefined') {
+          globalPegawaiData = globalPegawaiData.filter(p => safeNipStr(p.nip) !== safeNipStr(nipToProcess));
+          if (typeof window.applyPegawaiFilters === 'function') {
+             window.applyPegawaiFilters();
+          } else {
+             globalFilteredPegawaiData = [...globalPegawaiData];
+             if (typeof pegawaiPagination !== 'undefined' && pegawaiPagination !== null) {
+                pegawaiPagination.setData(globalFilteredPegawaiData);
+             }
+          }
         }
-      };
+        
+        if (typeof globalPltPlhData !== 'undefined') {
+          globalPltPlhData = globalPltPlhData.filter(p => safeNipStr(p.nip) !== safeNipStr(nipToProcess));
+          if (typeof window.applyPltPlhFilters === 'function') {
+             window.applyPltPlhFilters();
+          } else {
+             globalFilteredPltPlhData = [...globalPltPlhData];
+             if (typeof pltPlhPagination !== 'undefined' && pltPlhPagination !== null) {
+                pltPlhPagination.setData(globalFilteredPltPlhData);
+             }
+          }
+        }
+        
+        recalculateDashboardGT();
+      } else {
+        // Jika menghapus dari pengecualian (Restore), fetch hanya 1 baris pegawai tersebut
+        Swal.fire('Sukses!', successMessage, 'success');
+        
+        // Munculkan indikator loading
+        const dContent = document.getElementById('dashboard-sync-content');
+        if (dContent) dContent.style.display = 'none';
+        const dLoading = document.getElementById('dashboard-sync-loading');
+        if (dLoading) dLoading.style.display = 'flex';
 
-      fetchChunkedData('getPegawaiData', 'pegawai-loading', 'pegawai-progress-container', 'pegawai-progress-bar', 
-        (res) => { onPegawaiSuccess(res); pegawaiDone = true; checkAllDone(); }, 
-        (err) => { onFailure(err); pegawaiDone = true; checkAllDone(); }
-      );
+        const pContent = document.getElementById('pegawai-content');
+        if(pContent) pContent.style.display = 'none';
+        const pLoading = document.getElementById('pegawai-loading');
+        if(pLoading) {
+          pLoading.style.display = 'flex';
+          const pText = document.getElementById('pegawai-loading-text');
+          if(pText) pText.innerText = `Sedang mengambil ulang data NIP ${nipToProcess} dari server...`;
+          const pBar = document.getElementById('pegawai-progress-bar');
+          if(pBar) pBar.style.width = '100%';
+        }
 
-      fetchChunkedData('getPltPlhData', 'pltPlh-loading', 'pltPlh-progress-container', 'pltPlh-progress-bar', 
-        (res) => { onPltPlhSuccess(res); pltPlhDone = true; checkAllDone(); }, 
-        (err) => { onFailure(err); pltPlhDone = true; checkAllDone(); }
-      );
+        const pltContent = document.getElementById('pltPlh-content');
+        if(pltContent) pltContent.style.display = 'none';
+        const pltLoading = document.getElementById('pltPlh-loading');
+        if(pltLoading) {
+          pltLoading.style.display = 'flex';
+          const pltText = document.getElementById('pltPlh-loading-text');
+          if(pltText) pltText.innerText = `Sedang mengambil ulang data NIP ${nipToProcess} dari server...`;
+          const pltBar = document.getElementById('pltPlh-progress-bar');
+          if(pltBar) pltBar.style.width = '100%';
+        }
+
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res.status === 'success') {
+              if (res.dataPegawai) {
+                // Hapus yg lama jika ada (berjaga-jaga), lalu masukkan yg baru
+                globalPegawaiData = globalPegawaiData.filter(p => safeNipStr(p.nip) !== safeNipStr(res.dataPegawai.nip));
+                globalPegawaiData.push(res.dataPegawai);
+                if (typeof window.applyPegawaiFilters === 'function') {
+                   window.applyPegawaiFilters();
+                } else {
+                   globalFilteredPegawaiData = [...globalPegawaiData];
+                   if (typeof pegawaiPagination !== 'undefined' && pegawaiPagination !== null) {
+                      pegawaiPagination.setData(globalFilteredPegawaiData);
+                   }
+                }
+              }
+              if (res.dataPltPlh) {
+                globalPltPlhData = globalPltPlhData.filter(p => safeNipStr(p.nip) !== safeNipStr(res.dataPltPlh.nip));
+                globalPltPlhData.push(res.dataPltPlh);
+                if (typeof window.applyPltPlhFilters === 'function') {
+                   window.applyPltPlhFilters();
+                } else {
+                   globalFilteredPltPlhData = [...globalPltPlhData];
+                   if (typeof pltPlhPagination !== 'undefined' && pltPlhPagination !== null) {
+                      pltPlhPagination.setData(globalFilteredPltPlhData);
+                   }
+                }
+              }
+            } else {
+              console.error(res.message);
+            }
+            
+            // Sembunyikan loading
+            if(pContent) pContent.style.display = 'block';
+            if(pLoading) pLoading.style.display = 'none';
+            if(pltContent) pltContent.style.display = 'block';
+            if(pltLoading) pltLoading.style.display = 'none';
+            
+            recalculateDashboardGT();
+          })
+          .withFailureHandler((err) => {
+            console.error(err);
+            if(pContent) pContent.style.display = 'block';
+            if(pLoading) pLoading.style.display = 'none';
+            if(pltContent) pltContent.style.display = 'block';
+            if(pltLoading) pltLoading.style.display = 'none';
+            recalculateDashboardGT();
+          })
+          .getSinglePegawaiAndPltPlh(nipToProcess);
+      }
     }
 
     btnSimpanPengecualian.addEventListener('click', () => {
@@ -4589,7 +4651,7 @@
             modalPengecualian.style.display = 'none';
             loadPengecualianData();
             // Sinkronkan data utama dengan loading indicator
-            syncAfterPengecualian('Data pengecualian berhasil disimpan.');
+            syncAfterPengecualian('Data pengecualian berhasil disimpan.', true, payload.nip);
           } else {
             Swal.fire('Gagal', res.message, 'error');
             btnSimpanPengecualian.disabled = false;
@@ -4628,7 +4690,7 @@
               if (res.status === 'success') {
                 loadPengecualianData();
                 // Sinkronkan data utama dengan loading indicator
-                syncAfterPengecualian('Data berhasil dihapus.');
+                syncAfterPengecualian('Data berhasil dihapus.', false, nip);
               } else {
                 Swal.fire('Gagal', 'Gagal menghapus: ' + res.message, 'error');
               }

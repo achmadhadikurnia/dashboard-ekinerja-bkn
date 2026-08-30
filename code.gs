@@ -1630,3 +1630,119 @@ function getPltPlhData(startRow = 0, chunkSize = 0) {
 
   return { status: 'success', data: pltPlhData, total: lastRow - 1 };
 }
+
+/**
+ * Mengambil data SATU pegawai dari sheet "pegawai" dan "pegawai_plt_plh" berdasarkan NIP.
+ * Ini digunakan untuk optimasi saat menghapus data pengecualian (restore) agar tidak mengunduh semua baris.
+ */
+function getSinglePegawaiAndPltPlh(nip) {
+  if (!nip) return { status: 'error', message: 'NIP kosong.' };
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let result = { status: 'success', dataPegawai: null, dataPltPlh: null };
+
+  const daftarBulanStr = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des', 'tahunan'];
+
+  // 1. Cari di sheet "pegawai"
+  const sheetPegawai = ss.getSheetByName('pegawai');
+  if (sheetPegawai && sheetPegawai.getLastRow() > 1) {
+    const rawData = sheetPegawai.getDataRange().getDisplayValues();
+    const header = rawData[0];
+    const idxNip = header.indexOf('nip');
+    
+    if (idxNip !== -1) {
+      const idxNama = header.indexOf('nama');
+      let idxJabatan = header.indexOf('jabatan');
+      if (idxJabatan === -1) idxJabatan = header.indexOf('skp_jabatan');
+      if (idxJabatan === -1) idxJabatan = header.indexOf('jabatan_akhir');
+      if (idxJabatan === -1) idxJabatan = header.indexOf('nama_jabatan');
+
+      let idxUnitKerja = header.indexOf('unit_kerja');
+      if (idxUnitKerja === -1) idxUnitKerja = header.indexOf('skp_unor');
+      if (idxUnitKerja === -1) idxUnitKerja = header.indexOf('skp_unor_nama');
+      if (idxUnitKerja === -1) idxUnitKerja = header.indexOf('unor_nama');
+
+      let idxOpd = header.indexOf('skp_unor_induk');
+      let idxSkpStatus = header.indexOf('skp_status');
+      let idxJenisPegawai = header.indexOf('jenis_pegawai');
+      let idxPengecualian = header.indexOf('is_pengecualian');
+
+      const idxBulanArr = daftarBulanStr.map(b => header.indexOf(b));
+
+      for (let i = 1; i < rawData.length; i++) {
+        if (rawData[i][idxNip].toString().trim() === nip.toString().trim()) {
+          const row = rawData[i];
+          let bData = [];
+          idxBulanArr.forEach(idxB => {
+             const realVal = idxB !== -1 ? row[idxB].toString().trim() : "";
+             bData.push(realVal);
+          });
+          result.dataPegawai = {
+            nip: row[idxNip] ? row[idxNip].toString().trim() : "",
+            nama: row[idxNama] ? row[idxNama].toString().trim() : "",
+            jabatan: idxJabatan !== -1 && row[idxJabatan] ? row[idxJabatan].toString().trim() : "-",
+            unit_kerja: idxUnitKerja !== -1 && row[idxUnitKerja] ? row[idxUnitKerja].toString().trim() : "-",
+            opd: idxOpd !== -1 && row[idxOpd] ? row[idxOpd].toString().trim() : "-",
+            skp_status: idxSkpStatus !== -1 && row[idxSkpStatus] ? row[idxSkpStatus].toString().trim() : "-",
+            jenis_pegawai: idxJenisPegawai !== -1 && row[idxJenisPegawai] ? row[idxJenisPegawai].toString().trim() : "-",
+            is_pengecualian: idxPengecualian !== -1 ? row[idxPengecualian] : 0,
+            bulanan: bData
+          };
+          break;
+        }
+      }
+    }
+  }
+
+  // 2. Cari di sheet "pegawai_plt_plh"
+  const sheetPltPlh = ss.getSheetByName('pegawai_plt_plh');
+  if (sheetPltPlh && sheetPltPlh.getLastRow() > 1) {
+    const rawPlt = sheetPltPlh.getDataRange().getDisplayValues();
+    const headerPlt = rawPlt[0];
+    const pIdxNip = headerPlt.indexOf('nip');
+    
+    if (pIdxNip !== -1) {
+      const pIdxNama = headerPlt.indexOf('nama');
+      let pIdxJabatan = headerPlt.indexOf('jabatan');
+      if (pIdxJabatan === -1) pIdxJabatan = headerPlt.indexOf('skp_jabatan');
+
+      let pIdxUnitKerja = headerPlt.indexOf('unit_kerja');
+      if (pIdxUnitKerja === -1) pIdxUnitKerja = headerPlt.indexOf('skp_unor_nama');
+
+      let pIdxOpd = headerPlt.indexOf('skp_unor_induk');
+      if (pIdxOpd === -1) pIdxOpd = headerPlt.indexOf('opd');
+      let pIdxStatus = headerPlt.indexOf('status');
+      let pIdxAtasan = headerPlt.indexOf('atasan');
+      let pIdxJenisPegawai = headerPlt.indexOf('jenis_pegawai');
+      let pIdxPengecualian = headerPlt.indexOf('is_pengecualian');
+
+      const pIdxBulanArr = daftarBulanStr.map(b => headerPlt.indexOf(b));
+
+      for (let i = 1; i < rawPlt.length; i++) {
+        if (rawPlt[i][pIdxNip].toString().trim() === nip.toString().trim()) {
+          const row = rawPlt[i];
+          let bData = [];
+          pIdxBulanArr.forEach(idxB => {
+             const realVal = idxB !== -1 ? row[idxB].toString().trim() : "";
+             bData.push(realVal);
+          });
+          result.dataPltPlh = {
+            nip: row[pIdxNip] ? row[pIdxNip].toString().trim() : "",
+            nama: row[pIdxNama] ? row[pIdxNama].toString().trim() : "",
+            jabatan: pIdxJabatan !== -1 && row[pIdxJabatan] ? row[pIdxJabatan].toString().trim() : "",
+            unitKerja: pIdxUnitKerja !== -1 && row[pIdxUnitKerja] ? row[pIdxUnitKerja].toString().trim() : "",
+            opd: pIdxOpd !== -1 && row[pIdxOpd] ? row[pIdxOpd].toString().trim() : "",
+            status: pIdxStatus !== -1 && row[pIdxStatus] ? row[pIdxStatus].toString().trim() : "",
+            jenis_pegawai: pIdxJenisPegawai !== -1 && row[pIdxJenisPegawai] ? row[pIdxJenisPegawai].toString().trim() : "-",
+            atasan: pIdxAtasan !== -1 && row[pIdxAtasan] ? row[pIdxAtasan].toString().trim() : "",
+            is_pengecualian: pIdxPengecualian !== -1 ? row[pIdxPengecualian] : 0,
+            bulanan: bData
+          };
+          break;
+        }
+      }
+    }
+  }
+
+  return result;
+}
