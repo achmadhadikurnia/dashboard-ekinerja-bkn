@@ -4542,6 +4542,15 @@
         confirmButtonText: 'Ya, Hapus!'
       }).then((result) => {
         if (result.isConfirmed) {
+          Swal.fire({
+            title: 'Menghapus Data...',
+            text: 'Mohon tunggu sebentar.',
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+
           google.script.run
             .withSuccessHandler((res) => {
               if (res.status === 'success') {
