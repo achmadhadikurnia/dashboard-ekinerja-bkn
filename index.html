@@ -1288,6 +1288,7 @@
                   </select>
                   <select id="filterSkpStatus" class="search-box select-box">
                     <option value="semua">Semua Status SKP</option>
+                    <option value="-">Belum Menyusun</option>
                   </select>
                   <select id="filterBulan" class="search-box select-box">
                     <option value="semua">Semua Bulan</option>
@@ -1432,6 +1433,7 @@
                   </select>
                   <select id="filterPltPlhSkpStatus" class="search-box select-box">
                     <option value="semua">Semua Status SKP</option>
+                    <option value="-">Belum Menyusun</option>
                   </select>
                   <select id="filterPltPlhBulan" class="search-box select-box">
                     <option value="semua">Semua Bulan</option>
@@ -3260,7 +3262,8 @@
           const mNip = p.nip.toLowerCase().includes(searchVal);
           const mOpd = opdVal === 'semua' || p.opd === opdVal;
           const mJenis = jenisPegawaiVal === 'semua' || p.jenis_pegawai === jenisPegawaiVal;
-          const mSkpStatus = skpStatusVal === 'semua' || p.skp_status === skpStatusVal;
+          const mSkpStatus = skpStatusVal === 'semua' || 
+                             (skpStatusVal === '-' ? (!p.skp_status || p.skp_status.trim() === '' || p.skp_status === '-') : p.skp_status === skpStatusVal);
           return (mNama || mNip) && mOpd && mJenis && mSkpStatus;
         });
 
@@ -3804,7 +3807,8 @@
           const mNip = p.nip.toLowerCase().includes(searchVal);
           const mOpd = opdVal === 'semua' || p.opd === opdVal;
           const mJenis = jenisPegawaiVal === 'semua' || p.jenis_pegawai === jenisPegawaiVal;
-          const mSkpStatus = skpStatusVal === 'semua' || p.status === skpStatusVal;
+          const mSkpStatus = skpStatusVal === 'semua' || 
+                             (skpStatusVal === '-' ? (!p.status || p.status.trim() === '' || p.status === '-') : p.status === skpStatusVal);
           return (mNama || mNip) && mOpd && mJenis && mSkpStatus;
         });
 
