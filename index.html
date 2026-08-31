@@ -1065,7 +1065,7 @@
               <h1 id="headerTitle">Ekinerja BKN</h1>
               <p class="subtitle" style="margin-bottom: 0;">Dashboard Monitoring SKP & Penilaian Kinerja Pegawai</p>
             </div>
-            
+
             <div id="filterGuruContainer" style="display: flex; align-items: center; gap: 0.5rem;" title="Filter berdasarkan jabatan Guru">
               <div id="filterGuruLoading" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-muted); font-weight: 500;">
                 <div class="spinner" style="width: 14px; height: 14px; border-width: 2px; margin: 0;"></div>
@@ -5223,37 +5223,36 @@
                document.getElementById('uploadProgressBar').style.backgroundColor = 'var(--success)';
                document.getElementById('uploadPercentage').style.color = 'var(--success)';
 
-               let countdown = 3;
-               document.getElementById('uploadDetails').innerText = `Selesai! (Catatan: Jika data belum berubah, refresh halaman). Memperbarui dalam ${countdown}...`;
+               document.getElementById('uploadDetails').innerText = 'Selesai! Menyimpan ke database...';
 
-               let countdownInterval = setInterval(() => {
-                   countdown--;
-                   if (countdown <= 0) {
-                       clearInterval(countdownInterval);
-                       document.getElementById('fileUploadInput').value = '';
-                       batalUpload(); // Reset UI upload panel
+               Swal.fire({
+                 title: 'Upload Berhasil!',
+                 text: 'Data laporan excel telah berhasil diproses dan disimpan ke database.',
+                 icon: 'success',
+                 confirmButtonText: 'Tutup & Lihat Dashboard',
+                 allowOutsideClick: false
+               }).then(() => {
+                   document.getElementById('fileUploadInput').value = '';
+                   batalUpload(); // Reset UI upload panel
 
-                       // Pindah ke tab pertama (Dashboard)
-                       const btns = document.getElementsByClassName('nav-btn');
-                       if(btns.length > 0) switchTab('panelDashboard', btns[0]);
+                   // Pindah ke tab pertama (Dashboard)
+                   const btns = document.getElementsByClassName('nav-btn');
+                   if(btns.length > 0) switchTab('panelDashboard', btns[0]);
 
-                       // Tampilkan kembali layar loading
-                       document.getElementById('dashboard-content').style.display = 'none';
-                       const loadingEl = document.getElementById('loading');
-                       if(loadingEl) loadingEl.style.display = 'flex';
+                   // Tampilkan kembali layar loading
+                   document.getElementById('dashboard-content').style.display = 'none';
+                   const loadingEl = document.getElementById('loading');
+                   if(loadingEl) loadingEl.style.display = 'flex';
 
-                       const loadText = document.getElementById('loading-text');
-                       if(loadText) loadText.innerText = 'Memperbarui Dasbor...';
+                   const loadText = document.getElementById('loading-text');
+                   if(loadText) loadText.innerText = 'Memperbarui Dasbor...';
 
-                       // Ambil ulang data dasbor dan pegawai
-                       google.script.run
-                          .withSuccessHandler(onSuccess)
-                          .withFailureHandler(onFailure)
-                          .getDashboardData();
-                   } else {
-                       document.getElementById('uploadDetails').innerText = `Selesai! (Catatan: Jika data belum berubah, refresh halaman nanti). Memperbarui dalam ${countdown}...`;
-                   }
-               }, 1000);
+                   // Ambil ulang data dasbor dan pegawai
+                   google.script.run
+                      .withSuccessHandler(onSuccess)
+                      .withFailureHandler(onFailure)
+                      .getDashboardData();
+               });
             })
             .withFailureHandler(err => {
                clearInterval(syncInterval);
