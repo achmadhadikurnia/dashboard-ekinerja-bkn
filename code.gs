@@ -559,6 +559,14 @@ function _updateNilaiBulan(targetBulan) {
     if (idxId === -1) return { isUpdated: false, count: 0, err: `Kolom NIP/ID tidak ditemukan di sheet ${sheetName}` };
     if (posisiKolomBulan === -1) return { isUpdated: false, count: 0, err: `Kolom ${targetBulan} tidak ditemukan di sheet ${sheetName}` };
 
+    // -- PROTEKSI FORMAT TANGGAL --
+    const dateColIndices = [];
+    header.forEach((col, i) => {
+      if (col.includes('periode_') || col.includes('created_at')) {
+        dateColIndices.push(i);
+      }
+    });
+
     let updateCount = 0;
     for (let i = 1; i < dataTarget.length; i++) {
       const idTarget = dataTarget[i][idxId] ? dataTarget[i][idxId].toString().trim() : null;
@@ -571,6 +579,14 @@ function _updateNilaiBulan(targetBulan) {
           dataTarget[i][posisiKolomBulan] = "";
         }
       }
+
+      // Proteksi format tanggal sebelum disalin ulang
+      dateColIndices.forEach(colIdx => {
+        if (dataTarget[i][colIdx]) {
+          const valStr = dataTarget[i][colIdx].toString().trim();
+          if (!valStr.startsWith("'")) dataTarget[i][colIdx] = "'" + valStr;
+        }
+      });
     }
 
     sheetTarget.getRange(1, 1, dataTarget.length, dataTarget[0].length).setValues(dataTarget);
