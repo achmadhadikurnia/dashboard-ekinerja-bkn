@@ -352,7 +352,8 @@ function hapusPengecualian() {
     const sheetTarget = ss.getSheetByName(sheetName);
     if (!sheetTarget) return 0;
 
-    const dataTarget = sheetTarget.getDataRange().getValues();
+    // Gunakan getDisplayValues agar data aman dari konversi tipe otomatis bawaan getValues
+    const dataTarget = sheetTarget.getDataRange().getDisplayValues();
     if (dataTarget.length <= 1) return 0;
 
     const header = dataTarget[0].map(h => h.toString().trim().toLowerCase());
@@ -372,6 +373,14 @@ function hapusPengecualian() {
     });
     dataTarget[0][idxPengecualian] = 'is_pengecualian';
 
+    // -- PROTEKSI FORMAT TANGGAL --
+    const dateColIndices = [];
+    header.forEach((col, i) => {
+      if (col.includes('periode_') || col.includes('created_at')) {
+        dateColIndices.push(i);
+      }
+    });
+
     let updatedCount = 0;
 
     for (let i = 1; i < dataTarget.length; i++) {
@@ -380,6 +389,14 @@ function hapusPengecualian() {
       const isBlacklisted = blacklistNip.has(nipStr) ? 1 : 0;
 
       dataTarget[i][idxPengecualian] = isBlacklisted;
+
+      // Proteksi format tanggal sebelum disalin ulang
+      dateColIndices.forEach(colIdx => {
+        if (dataTarget[i][colIdx]) {
+          const valStr = dataTarget[i][colIdx].toString().trim();
+          if (!valStr.startsWith("'")) dataTarget[i][colIdx] = "'" + valStr;
+        }
+      });
 
       if (isBlacklisted === 1) {
         updatedCount++;
