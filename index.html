@@ -1035,17 +1035,6 @@
           <div class="breadcrumb" id="breadcrumb">Dashboard</div>
         </div>
         <div class="header-right" style="display: flex; align-items: center;">
-          <div style="display: flex; align-items: center; gap: 0.5rem; margin-right: 1.25rem;" title="Filter berdasarkan jabatan Guru">
-            <div id="filterGuruLoading" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-muted); font-weight: 500;">
-              <div class="spinner" style="width: 14px; height: 14px; border-width: 2px; margin: 0;"></div>
-              <span>Memuat...</span>
-            </div>
-            <select id="filterGuruUtama" onchange="applyGuruFilter()" style="display: none; padding: 0.35rem 0.5rem; font-size: 0.875rem; font-weight: 500; border-radius: 6px; border: 1px solid var(--border); background-color: var(--surface); color: var(--text-primary); cursor: pointer; outline: none; min-width: 140px;">
-              <option value="semua">Semua Pegawai</option>
-              <option value="tanpa_guru">Tanpa Guru</option>
-              <option value="hanya_guru">Hanya Guru</option>
-            </select>
-          </div>
           <button class="theme-toggle" onclick="toggleTheme()" id="themeToggleBtn" title="Toggle Dark/Light Mode">
             <svg id="themeIconLight" style="display: none;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
             <svg id="themeIconDark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
@@ -1070,10 +1059,24 @@
 
         <div id="dashboard-content" style="display: none;" class="content-container">
 
-          <div style="margin-bottom: 2rem;">
-            <p class="subtitle" id="headerInstansi" style="margin-bottom: 0.25rem; color: var(--accent); font-weight: 600; font-size: 1rem; display: none;"></p>
-            <h1 id="headerTitle">Ekinerja BKN</h1>
-            <p class="subtitle" style="margin-bottom: 0;">Dashboard Monitoring SKP & Penilaian Kinerja Pegawai</p>
+          <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <p class="subtitle" id="headerInstansi" style="margin-bottom: 0.25rem; color: var(--accent); font-weight: 600; font-size: 1rem; display: none;"></p>
+              <h1 id="headerTitle">Ekinerja BKN</h1>
+              <p class="subtitle" style="margin-bottom: 0;">Dashboard Monitoring SKP & Penilaian Kinerja Pegawai</p>
+            </div>
+            
+            <div id="filterGuruContainer" style="display: flex; align-items: center; gap: 0.5rem;" title="Filter berdasarkan jabatan Guru">
+              <div id="filterGuruLoading" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-muted); font-weight: 500;">
+                <div class="spinner" style="width: 14px; height: 14px; border-width: 2px; margin: 0;"></div>
+                <span>Memuat...</span>
+              </div>
+              <select id="filterGuruUtama" onchange="applyGuruFilter()" style="display: none; padding: 0.35rem 0.5rem; font-size: 0.875rem; font-weight: 500; border-radius: 6px; border: 1px solid var(--border); background-color: var(--surface); color: var(--text-primary); cursor: pointer; outline: none; min-width: 140px;">
+                <option value="semua">Semua Pegawai</option>
+                <option value="tanpa_guru">Tanpa Guru</option>
+                <option value="hanya_guru">Hanya Guru</option>
+              </select>
+            </div>
           </div>
 
           <!-- Panel Dashboard -->
@@ -2154,6 +2157,16 @@
 
         // Highlight clicked button
         btnElement.classList.add('active');
+
+        // Toggle Guru Filter visibility (only show on Dashboard)
+        const filterGuruContainer = document.getElementById('filterGuruContainer');
+        if (filterGuruContainer) {
+          if (panelId === 'panelDashboard') {
+            filterGuruContainer.style.display = 'flex';
+          } else {
+            filterGuruContainer.style.display = 'none';
+          }
+        }
       }
 
       function logout(force = false) {
