@@ -10,7 +10,9 @@ Dokumen ini mendefinisikan standar operasional (SOP) bagi Agen AI ketika penggun
 ## Langkah-langkah (SOP)
 
 ### 1. Konfirmasi Versi Rilis
-Jika pengguna belum memberikan nomor versi (contoh: `v1.0.0`, `v1.1`, dsb.) bersamaan dengan perintah `/release`, **berhenti dan tanyakan terlebih dahulu** versi rilis apa yang ingin dibuat.
+Jika pengguna belum memberikan nomor versi (contoh: `v1.0.0`, `v1.1`, dsb.) bersamaan dengan perintah `/release`, Anda **HARUS**:
+1. Mengecek versi rilis terbaru di repositori dengan perintah: `git tag --sort=-v:refname`
+2. Sajikan rekomendasi pilihan versi selanjutnya (misal: *patch* atau *minor update*) **melalui pesan teks biasa di chat**. Jangan langsung memunculkan *popup* agar pengguna bisa membaca dan mereview pilihan tersebut terlebih dahulu. Tunggu pengguna membalas pilihan versi yang mereka inginkan sebelum melanjutkan ke langkah berikutnya.
 
 ### 2. Persiapkan Folder Utama (Releases)
 Pastikan folder utama `releases` sudah ada di dalam *root* proyek. Jika belum ada, buatlah menggunakan perintah PowerShell (contoh: `New-Item -ItemType Directory -Force -Path "releases"`).
