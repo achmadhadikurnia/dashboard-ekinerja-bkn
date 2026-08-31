@@ -191,12 +191,12 @@ function generateMasterPegawai() {
 
       // ATURAN 1b: Penandaan NIP yang ada di daftar pengecualian dilakukan di bagian output
 
-      const tglPeriodeAkhirBaru = row[idxPeriodeAkhir] ? new Date(row[idxPeriodeAkhir]).getTime() : 0;
+      const tglPeriodeAkhirBaru = row[idxPeriodeAkhir] ? parseDateToTimestamp(row[idxPeriodeAkhir]) : 0;
 
       // ATURAN 2: Jika NIP sudah ada di memori (kasus Mutasi / Dobel SKP)
       if (masterPegawaiMap[nipStr]) {
         const rowLama = masterPegawaiMap[nipStr];
-        const tglPeriodeAkhirLama = rowLama[idxPeriodeAkhir] ? new Date(rowLama[idxPeriodeAkhir]).getTime() : 0;
+        const tglPeriodeAkhirLama = rowLama[idxPeriodeAkhir] ? parseDateToTimestamp(rowLama[idxPeriodeAkhir]) : 0;
 
         // Bandingkan tanggalnya. Jika periode_akhir yang baru dibaca LEBIH BARU, maka timpa data lama
         if (tglPeriodeAkhirBaru > tglPeriodeAkhirLama) {
@@ -247,6 +247,15 @@ function generateMasterPegawai() {
   daftarBulan.forEach(b => headerOutput.push(b)); // Tambahkan nama bulan di ujung kanan
   headerOutput.push('is_pengecualian'); // Tambahkan flag pengecualian
 
+  // -- PROTEKSI FORMAT TANGGAL --
+  const dateColIndices = [];
+  headerOutput.forEach((col, idx) => {
+    const colName = col.toString().toLowerCase();
+    if (colName.includes('periode_') || colName.includes('created_at')) {
+      dateColIndices.push(idx);
+    }
+  });
+
   outputData.push(headerOutput);
 
   // 2. Masukkan semua isi data pegawai yang sudah disaring (tanpa dobel)
@@ -265,6 +274,14 @@ function generateMasterPegawai() {
 
     // Tambahkan flag is_pengecualian
     barisPegawai.push(blacklistNip.has(nip) ? 1 : 0);
+
+    // Proteksi Format Tanggal: Tambahkan kutip (') agar murni teks
+    dateColIndices.forEach(idx => {
+      if (barisPegawai[idx]) {
+        const valStr = barisPegawai[idx].toString().trim();
+        if (!valStr.startsWith("'")) barisPegawai[idx] = "'" + valStr;
+      }
+    });
 
     outputData.push(barisPegawai);
   });
@@ -1283,7 +1300,7 @@ function getPegawaiFromSkp(nip) {
 
     if (nipStr === nip.toString().trim()) {
       const tglPeriodeAkhir = (idxPeriodeAkhir !== -1 && row[idxPeriodeAkhir])
-        ? new Date(row[idxPeriodeAkhir]).getTime()
+        ? parseDateToTimestamp(row[idxPeriodeAkhir])
         : 0;
 
       if (!bestRow || tglPeriodeAkhir > maxTime) {
@@ -1518,11 +1535,11 @@ function generateDataPltPlh() {
     if (nipStr && isPlt !== 0 && isPlt !== '0' && isPlt !== '') {
       // NIP yang ada di daftar pengecualian ditandai di bagian output
 
-      const tglPeriodeAkhirBaru = row[idxPeriodeAkhir] ? new Date(row[idxPeriodeAkhir]).getTime() : 0;
+      const tglPeriodeAkhirBaru = row[idxPeriodeAkhir] ? parseDateToTimestamp(row[idxPeriodeAkhir]) : 0;
 
       if (masterPltPlhMap[nipStr]) {
         const rowLama = masterPltPlhMap[nipStr];
-        const tglPeriodeAkhirLama = rowLama[idxPeriodeAkhir] ? new Date(rowLama[idxPeriodeAkhir]).getTime() : 0;
+        const tglPeriodeAkhirLama = rowLama[idxPeriodeAkhir] ? parseDateToTimestamp(rowLama[idxPeriodeAkhir]) : 0;
 
         if (tglPeriodeAkhirBaru > tglPeriodeAkhirLama) {
           masterPltPlhMap[nipStr] = row;
@@ -1570,6 +1587,15 @@ function generateDataPltPlh() {
   daftarBulan.forEach(b => headerOutput.push(b));
   headerOutput.push('is_pengecualian');
 
+  // -- PROTEKSI FORMAT TANGGAL --
+  const dateColIndices = [];
+  headerOutput.forEach((col, idx) => {
+    const colName = col.toString().toLowerCase();
+    if (colName.includes('periode_') || colName.includes('created_at')) {
+      dateColIndices.push(idx);
+    }
+  });
+
   outputData.push(headerOutput);
 
   const daftarNip = Object.keys(masterPltPlhMap);
@@ -1585,6 +1611,14 @@ function generateDataPltPlh() {
     });
 
     barisPegawai.push(blacklistNip.has(nip) ? 1 : 0);
+
+    // Proteksi Format Tanggal: Tambahkan kutip (') agar murni teks
+    dateColIndices.forEach(idx => {
+      if (barisPegawai[idx]) {
+        const valStr = barisPegawai[idx].toString().trim();
+        if (!valStr.startsWith("'")) barisPegawai[idx] = "'" + valStr;
+      }
+    });
 
     outputData.push(barisPegawai);
   });
@@ -1803,4 +1837,43 @@ function getSinglePegawaiAndPltPlh(nip) {
   }
 
   return result;
+}
+
+/**
+ * Helper: Membaca string tanggal (DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD, atau Excel Serial)
+ * dan mengembalikannya dalam bentuk epoch timestamp (milidetik).
+ */
+function parseDateToTimestamp(dateStr) {
+  if (!dateStr) return 0;
+  dateStr = dateStr.toString().trim();
+
+  // Excel serial date format
+  if (/^\d+$/.test(dateStr)) {
+    const serial = parseInt(dateStr, 10);
+    if (serial > 25000) {
+      return new Date((serial - 25569) * 86400 * 1000).getTime();
+    }
+  }
+
+  // Native JS date parse
+  let d = new Date(dateStr);
+  if (!isNaN(d.getTime())) return d.getTime();
+
+  // Custom DD/MM/YYYY or DD-MM-YYYY fallback
+  let parts = dateStr.split(/[\/\-]/);
+  if (parts.length === 3) {
+    let day = parseInt(parts[0], 10);
+    let month = parseInt(parts[1], 10);
+    let year = parseInt(parts[2], 10);
+    
+    // Jika DD dan YYYY terbalik (misal YYYY/MM/DD tp gagal di parse native)
+    if (year < 100) {
+      year = parseInt(parts[0], 10);
+      day = parseInt(parts[2], 10);
+    }
+    
+    d = new Date(year, month - 1, day);
+    if (!isNaN(d.getTime())) return d.getTime();
+  }
+  return 0;
 }
