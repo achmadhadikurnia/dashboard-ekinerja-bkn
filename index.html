@@ -5064,6 +5064,20 @@
           if (isMaster) {
              targetBulan = 'skp';
           } else if (isPenilaian) {
+             // Pengecekan Client-Side: Tolak upload nilai bulanan jika Master Data (pegawai) kosong
+             if (globalDashboardData && globalDashboardData.grandTotal && globalDashboardData.grandTotal.totalPegawai === 0) {
+               document.getElementById('uploadParsingLoading').style.display = 'none';
+               document.getElementById('uploadInputContainer').style.display = 'block';
+               Swal.fire({
+                 title: 'Data Pegawai Kosong',
+                 html: 'Anda tidak dapat mengunggah Laporan Bulanan / Penilaian sebelum mengunggah <b>Laporan SKP Penyusunan</b>.<br><br>Silakan unggah file <i>Laporan SKP Penyusunan</i> terlebih dahulu.',
+                 icon: 'warning'
+               });
+               document.getElementById('fileUploadInput').value = '';
+               document.getElementById('fileUploadName').innerText = '';
+               return;
+             }
+
              const a3Lower = a3.toLowerCase();
              if (a3Lower.includes('januari')) targetBulan = 'jan';
              else if (a3Lower.includes('februari')) targetBulan = 'feb';

@@ -262,7 +262,7 @@ function generateMasterPegawai() {
       }
       barisPegawai.push(val);
     });
-    
+
     // Tambahkan flag is_pengecualian
     barisPegawai.push(blacklistNip.has(nip) ? 1 : 0);
 
@@ -361,9 +361,9 @@ function hapusPengecualian() {
       const nip = dataTarget[i][idx];
       const nipStr = nip ? nip.toString().trim() : "";
       const isBlacklisted = blacklistNip.has(nipStr) ? 1 : 0;
-      
+
       dataTarget[i][idxPengecualian] = isBlacklisted;
-      
+
       if (isBlacklisted === 1) {
         updatedCount++;
       }
@@ -546,7 +546,7 @@ function _updateNilaiBulan(targetBulan) {
   // 2 & 3 & 4. Update Sheet Pegawai
   const resPegawai = updateSheetTarget('pegawai');
   if (!resPegawai.isUpdated) {
-    _alert(`Error: ${resPegawai.err}. Jalankan menu ke-1 (Ambil Data Pegawai) dulu.`);
+    _alert(`Gagal: ${resPegawai.err}. Pastikan Anda sudah mengunggah 'Laporan SKP Penyusunan' terlebih dahulu, atau lakukan Sinkronisasi Data Pegawai di pengaturan.`);
     return;
   }
   let totalUpdate = resPegawai.count;
@@ -620,12 +620,12 @@ function _generateLaporanOPD(showUi = true) {
 
   for (let i = 1; i < dataPegawai.length; i++) {
     const row = dataPegawai[i];
-    
+
     // Skip data pengecualian
     if (idxPengecualian !== -1 && (row[idxPengecualian] == 1 || row[idxPengecualian] == '1')) {
       continue;
     }
-    
+
     const namaOpd = row[idxOpd] ? row[idxOpd].toString().trim() : null;
     const statusSkp = row[idxStatus] ? row[idxStatus].toString().trim().toLowerCase() : "";
 
@@ -723,7 +723,7 @@ function doGet(e) {
  */
 function getDashboardData() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  
+
   const grandTotal = {
     totalPegawai: 0,
     skpDisetujui: 0,
@@ -733,13 +733,13 @@ function getDashboardData() {
   let rows = [];
   let opdMap = {};
   let trenNilai = {};
-  let metrikJenis = { 
-    pns: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 }, 
-    cpns: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 }, 
-    pppk: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 }, 
+  let metrikJenis = {
+    pns: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 },
+    cpns: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 },
+    pppk: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 },
     pppk_paruh_waktu: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 },
     non_asn: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 },
-    lainnya: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 } 
+    lainnya: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 }
   };
 
   const sheetPegawai = ss.getSheetByName('pegawai');
@@ -747,7 +747,7 @@ function getDashboardData() {
     const dataPegawai = sheetPegawai.getDataRange().getDisplayValues();
     if (dataPegawai.length > 1) {
       grandTotal.totalPegawai = dataPegawai.length - 1;
-      
+
       const headerPegawai = dataPegawai[0];
       const idxJenis = headerPegawai.indexOf('jenis_pegawai');
       const idxStatus = headerPegawai.indexOf('skp_status');
@@ -759,7 +759,7 @@ function getDashboardData() {
 
       for (let i = 1; i < dataPegawai.length; i++) {
         const row = dataPegawai[i];
-        
+
         // Lewati jika pegawai ini dikecualikan
         const isPengecualian = (idxPengecualian !== -1 && row[idxPengecualian]) ? row[idxPengecualian].toString().trim() : "0";
         if (isPengecualian === "1" || isPengecualian === 1) {
@@ -996,7 +996,7 @@ function getPegawaiData(startRow = 0, chunkSize = 0) {
 
   let fetchStart = 2 + startRow;
   let fetchNum = chunkSize > 0 ? chunkSize : (lastRow - 1);
-  
+
   if (fetchStart <= lastRow) {
     if (fetchStart + fetchNum - 1 > lastRow) fetchNum = lastRow - fetchStart + 1;
 
@@ -1061,7 +1061,7 @@ function getPengecualianData(startRow = 0, chunkSize = 0) {
   const result = [];
   if (fetchStart <= lastRow) {
     if (fetchStart + fetchNum - 1 > lastRow) fetchNum = lastRow - fetchStart + 1;
-    
+
     const data = sheet.getRange(fetchStart, 1, fetchNum, lastCol).getValues();
 
     for (let i = 0; i < data.length; i++) {
@@ -1091,7 +1091,7 @@ function _updatePengecualianFlagInSheet(sheetName, nip, flagValue) {
   const headers = data[0].map(h => h.toString().toLowerCase().trim().replace(/\./g, ''));
   const idxNip = headers.indexOf('nip');
   let idxPengecualian = headers.indexOf('is_pengecualian');
-  
+
   if (idxNip === -1) return;
 
   // Jika kolom is_pengecualian belum ada, kita bisa asumsikan akan ditambahkan oleh generateMasterPegawai,
@@ -1371,32 +1371,32 @@ function updateCredentials(token, newUsername, newPassword) {
   if (!newUsername || !newPassword) {
     return { status: 'error', message: 'Username dan Password baru tidak boleh kosong!' };
   }
-  
+
   if (!token) return { status: 'error', message: 'Anda tidak memiliki akses!' };
-  
+
   try {
     const decoded = Utilities.newBlob(Utilities.base64Decode(token)).getDataAsString();
     const [user, pass] = decoded.split(':');
-    
+
     // Verifikasi kredensial lama menggunakan fungsi yang sudah ada
     const loginCheck = verifyLogin(user, pass);
     if (loginCheck.status !== 'success') {
       return { status: 'error', message: 'Sesi anda telah kadaluarsa atau kredensial lama tidak valid!' };
     }
-    
+
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheetPengaturan = ss.getSheetByName('pengaturan');
-    
+
     if (!sheetPengaturan) {
       return { status: 'error', message: 'Sheet pengaturan tidak ditemukan!' };
     }
-    
+
     // Update di Sheet
     sheetPengaturan.getRange('B2').setValue(newUsername.trim());
     sheetPengaturan.getRange('B3').setValue(newPassword.trim());
-    
+
     return { status: 'success', message: 'Username dan Password berhasil diperbarui!' };
-    
+
   } catch (e) {
     return { status: 'error', message: 'Gagal memverifikasi akses: ' + e.toString() };
   }
@@ -1573,7 +1573,7 @@ function generateDataPltPlh() {
       }
       barisPegawai.push(val);
     });
-    
+
     barisPegawai.push(blacklistNip.has(nip) ? 1 : 0);
 
     outputData.push(barisPegawai);
@@ -1697,7 +1697,7 @@ function getSinglePegawaiAndPltPlh(nip) {
     const rawData = sheetPegawai.getDataRange().getDisplayValues();
     const header = rawData[0];
     const idxNip = header.indexOf('nip');
-    
+
     if (idxNip !== -1) {
       const idxNama = header.indexOf('nama');
       let idxJabatan = header.indexOf('jabatan');
@@ -1748,7 +1748,7 @@ function getSinglePegawaiAndPltPlh(nip) {
     const rawPlt = sheetPltPlh.getDataRange().getDisplayValues();
     const headerPlt = rawPlt[0];
     const pIdxNip = headerPlt.indexOf('nip');
-    
+
     if (pIdxNip !== -1) {
       const pIdxNama = headerPlt.indexOf('nama');
       let pIdxJabatan = headerPlt.indexOf('jabatan');
