@@ -564,6 +564,14 @@ function _updateNilaiBulan(targetBulan) {
 }
 
 /**
+ * Fungsi wrapper untuk dipanggil dari Frontend UI (tombol Sinkronisasi OPD).
+ */
+function generateLaporanOPDManual() {
+  _generateLaporanOPD(false);
+  return { status: 'success', message: 'Laporan OPD berhasil disinkronkan!' };
+}
+
+/**
  * Tahap Terakhir: Membuat rekapitulasi jumlah pegawai dan jumlah laporan per OPD.
  * Akan membuat atau menimpa sheet "opd".
  */
