@@ -626,7 +626,8 @@ function _generateLaporanOPD(showUi = true) {
       continue;
     }
 
-    const namaOpd = row[idxOpd] ? row[idxOpd].toString().trim() : null;
+    let namaOpd = row[idxOpd] ? row[idxOpd].toString().trim() : "-";
+    if (namaOpd === "") namaOpd = "-";
     const statusSkp = row[idxStatus] ? row[idxStatus].toString().trim().toLowerCase() : "";
 
     if (namaOpd) {
@@ -801,7 +802,8 @@ function getDashboardData() {
         }
 
         // -- Kalkulasi OPD --
-        const namaOpd = (idxOpd !== -1 && row[idxOpd]) ? row[idxOpd].toString().trim() : "-";
+        let namaOpd = (idxOpd !== -1 && row[idxOpd]) ? row[idxOpd].toString().trim() : "-";
+        if (namaOpd === "") namaOpd = "-";
         if (!opdMap[namaOpd]) {
           opdMap[namaOpd] = { total: 0, skpDisetujui: 0, bulanan: [0,0,0,0,0,0,0,0,0,0,0,0,0] };
         }
