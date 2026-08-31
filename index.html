@@ -5027,7 +5027,7 @@
 
             if (typeof XLSX === 'undefined') {
                document.getElementById('uploadParsingLoading').style.display = 'none';
-               document.getElementById('uploadInputContainer').style.display = 'block';
+               document.getElementById('uploadInputContainer').style.display = 'flex';
                Swal.fire('Error Sistem', 'Library pemroses Excel gagal dimuat. Pastikan koneksi internet Anda stabil, lalu refresh halaman ini.', 'error');
                event.target.value = '';
                return;
@@ -5050,7 +5050,7 @@
             const validYear = globalDashboardData.metadata.validTahunLisensi;
             if (validYear > 0 && tahunLaporan !== validYear) {
               document.getElementById('uploadParsingLoading').style.display = 'none';
-              document.getElementById('uploadInputContainer').style.display = 'block';
+              document.getElementById('uploadInputContainer').style.display = 'flex';
               Swal.fire({
                 title: 'Lisensi Tidak Sesuai',
                 html: `Sistem mendeteksi file ini berisi laporan tahun <b>${tahunLaporan}</b>.<br><br>Lisensi aplikasi ini dikunci khusus untuk laporan tahun <b>${validYear}</b>.`,
@@ -5080,7 +5080,7 @@
              // Pengecekan Client-Side: Tolak upload nilai bulanan jika Master Data (pegawai) kosong
              if (globalDashboardData && globalDashboardData.grandTotal && globalDashboardData.grandTotal.totalPegawai === 0) {
                document.getElementById('uploadParsingLoading').style.display = 'none';
-               document.getElementById('uploadInputContainer').style.display = 'block';
+               document.getElementById('uploadInputContainer').style.display = 'flex';
                Swal.fire({
                  title: 'Data Pegawai Kosong',
                  html: 'Anda tidak dapat mengunggah Laporan Bulanan / Penilaian sebelum mengunggah <b>Laporan SKP Penyusunan</b>.<br><br>Silakan unggah file <i>Laporan SKP Penyusunan</i> terlebih dahulu.',
@@ -5107,14 +5107,14 @@
              else if (a3Lower.includes('tahunan')) targetBulan = 'tahunan';
              else {
                 document.getElementById('uploadParsingLoading').style.display = 'none';
-                document.getElementById('uploadInputContainer').style.display = 'block';
+                document.getElementById('uploadInputContainer').style.display = 'flex';
                 Swal.fire('Error Metadata', 'Gagal mendeteksi Periode Bulan dari Laporan Penilaian (Sel A3: "' + a3 + '").', 'error');
                 event.target.value = '';
                 return;
              }
           } else {
              document.getElementById('uploadParsingLoading').style.display = 'none';
-             document.getElementById('uploadInputContainer').style.display = 'block';
+             document.getElementById('uploadInputContainer').style.display = 'flex';
              Swal.fire('Error Metadata', 'Format laporan tidak dikenali pada sel A1. Pastikan Anda mengunduh dari E-Kinerja BKN.', 'error');
              event.target.value = '';
              return;
@@ -5133,7 +5133,7 @@
 
           if(headerRowIdx === -1) {
              document.getElementById('uploadParsingLoading').style.display = 'none';
-             document.getElementById('uploadInputContainer').style.display = 'block';
+             document.getElementById('uploadInputContainer').style.display = 'flex';
              Swal.fire('Format Salah', 'Tidak menemukan baris header (kolom NIP) di 20 baris pertama.', 'error');
              event.target.value = '';
              return;
@@ -5145,7 +5145,7 @@
 
           if(currentUploadData.length <= 1) {
              document.getElementById('uploadParsingLoading').style.display = 'none';
-             document.getElementById('uploadInputContainer').style.display = 'block';
+             document.getElementById('uploadInputContainer').style.display = 'flex';
              Swal.fire('Data Kosong', 'Tidak ada data pegawai yang ditemukan di laporan ini.', 'warning');
              event.target.value = '';
              return;
@@ -5164,7 +5164,7 @@
 
           } catch (error) {
              document.getElementById('uploadParsingLoading').style.display = 'none';
-             document.getElementById('uploadInputContainer').style.display = 'block';
+             document.getElementById('uploadInputContainer').style.display = 'flex';
              console.error("Error saat memproses Excel:", error);
              Swal.fire('Error Membaca File', 'Terjadi kesalahan saat membaca file. Pastikan file bukan hasil corrupt atau formatnya valid. (' + error.message + ')', 'error');
              event.target.value = '';
@@ -5179,7 +5179,7 @@
       document.getElementById('fileUploadName').innerText = '';
       document.getElementById('uploadConfirmationContainer').style.display = 'none';
       document.getElementById('uploadStatusContainer').style.display = 'none';
-      document.getElementById('fileUploadInput').parentElement.style.display = 'block';
+      document.getElementById('fileUploadInput').parentElement.style.display = 'flex';
       currentUploadData = [];
       currentUploadBulan = '';
       currentUploadHeaderIdx = -1;
