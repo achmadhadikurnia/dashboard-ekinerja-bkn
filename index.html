@@ -1082,7 +1082,7 @@
                   </div>
                   <div class="card-info">
                     <div class="card-title">Total Pegawai</div>
-                    <div class="card-value val-blue" id="val-total-pegawai">0</div>
+                    <div class="card-value val-blue" id="val-total-pegawai"><span class="loading-pulse">Menghitung...</span></div>
                   </div>
                 </div>
               </div>
@@ -1093,7 +1093,7 @@
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                   </div>
                   <div class="card-info">
-                    <div class="card-title">PNS</div>
+                    <div class="card-title"><span id="label-cpns" style="cursor: help; border-bottom: 1px dashed var(--text-secondary);" title="Jumlah CPNS: Menghitung...">CPNS</span> + <span id="label-pns" style="cursor: help; border-bottom: 1px dashed var(--text-secondary);" title="Jumlah PNS: Menghitung...">PNS</span></div>
                     <div class="card-value val-blue" id="val-pns"><span class="loading-pulse">Menghitung...</span></div>
                   </div>
                 </div>
@@ -1133,7 +1133,7 @@
                   </div>
                   <div class="card-info">
                     <div class="card-title">SKP Disetujui</div>
-                    <div class="card-value val-green" id="val-skp-disetujui">0</div>
+                    <div class="card-value val-green" id="val-skp-disetujui"><span class="loading-pulse">Menghitung...</span></div>
                   </div>
                 </div>
               </div>
@@ -1145,7 +1145,7 @@
                   </div>
                   <div class="card-info">
                     <div class="card-title">Persentase Persetujuan</div>
-                    <div class="card-value val-purple" id="val-persentase">0%</div>
+                    <div class="card-value val-purple" id="val-persentase"><span class="loading-pulse">Menghitung...</span></div>
                   </div>
                 </div>
               </div>
@@ -1157,7 +1157,7 @@
                   </div>
                   <div class="card-info">
                     <div class="card-title">SKP Tahunan Dinilai</div>
-                    <div class="card-value val-green" id="val-tahunan-dinilai">0</div>
+                    <div class="card-value val-green" id="val-tahunan-dinilai"><span class="loading-pulse">Menghitung...</span></div>
                   </div>
                 </div>
               </div>
@@ -1169,7 +1169,7 @@
                   </div>
                   <div class="card-info">
                     <div class="card-title">Persentase Penilaian Tahunan</div>
-                    <div class="card-value val-purple" id="val-persentase-tahunan">0%</div>
+                    <div class="card-value val-purple" id="val-persentase-tahunan"><span class="loading-pulse">Menghitung...</span></div>
                   </div>
                 </div>
               </div>
@@ -2407,7 +2407,7 @@
     }
     let dataLoadingStatus = { pegawai: false, pltPlh: false, pengecualian: false };
     let isAllDataLoaded = false;
-    
+
     function checkAllDataLoaded() {
       if (dataLoadingStatus.pegawai && dataLoadingStatus.pltPlh && dataLoadingStatus.pengecualian) {
         isAllDataLoaded = true;
@@ -2422,10 +2422,10 @@
 
         const uploadBtn = document.getElementById('btnSelectUploadFile');
         if (uploadBtn) uploadBtn.disabled = false;
-        
+
         const rekonBtns = document.querySelectorAll('.sync-month-btn');
         rekonBtns.forEach(btn => btn.disabled = false);
-        
+
         const pengBtns = [
           'btnAddPengecualian', 'btnDownloadPdfPengecualian'
         ];
@@ -2528,8 +2528,11 @@
            totalPengecualian: (typeof globalPengecualianData !== 'undefined' && globalPengecualianData.length > 0) ? globalPengecualianData.length : (globalDashboardData ? globalDashboardData.grandTotal.totalPengecualian : 0),
            metrikJenis: {
                pns: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 },
+               cpns: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 },
                pppk: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 },
-               pppk_paruh_waktu: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 }
+               pppk_paruh_waktu: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 },
+               non_asn: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 },
+               lainnya: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 }
            }
        };
 
@@ -2582,6 +2585,12 @@
                target = newGt.metrikJenis.pppk;
            } else if (jenis === 'pns') {
                target = newGt.metrikJenis.pns;
+           } else if (jenis === 'cpns') {
+               target = newGt.metrikJenis.cpns;
+           } else if (jenis === 'non_asn' || jenis === 'non asn') {
+               target = newGt.metrikJenis.non_asn;
+           } else {
+               target = newGt.metrikJenis.lainnya;
            }
 
            if (target) {
@@ -2687,16 +2696,34 @@
           </div>`;
         };
 
+        if (!metrikJenis.cpns) metrikJenis.cpns = { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 };
+        if (!metrikJenis.non_asn) metrikJenis.non_asn = { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 };
+        if (!metrikJenis.lainnya) metrikJenis.lainnya = { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 };
+
         const totalMetrik = {
-          total: metrikJenis.pns.total + metrikJenis.pppk.total + metrikJenis.pppk_paruh_waktu.total,
-          draft: metrikJenis.pns.draft + metrikJenis.pppk.draft + metrikJenis.pppk_paruh_waktu.draft,
-          pengajuan: metrikJenis.pns.pengajuan + metrikJenis.pppk.pengajuan + metrikJenis.pppk_paruh_waktu.pengajuan,
-          persetujuan: metrikJenis.pns.persetujuan + metrikJenis.pppk.persetujuan + metrikJenis.pppk_paruh_waktu.persetujuan,
-          belum: metrikJenis.pns.belum + metrikJenis.pppk.belum + metrikJenis.pppk_paruh_waktu.belum
+          total: metrikJenis.pns.total + metrikJenis.cpns.total + metrikJenis.pppk.total + metrikJenis.pppk_paruh_waktu.total + metrikJenis.non_asn.total + metrikJenis.lainnya.total,
+          draft: metrikJenis.pns.draft + metrikJenis.cpns.draft + metrikJenis.pppk.draft + metrikJenis.pppk_paruh_waktu.draft + metrikJenis.non_asn.draft + metrikJenis.lainnya.draft,
+          pengajuan: metrikJenis.pns.pengajuan + metrikJenis.cpns.pengajuan + metrikJenis.pppk.pengajuan + metrikJenis.pppk_paruh_waktu.pengajuan + metrikJenis.non_asn.pengajuan + metrikJenis.lainnya.pengajuan,
+          persetujuan: metrikJenis.pns.persetujuan + metrikJenis.cpns.persetujuan + metrikJenis.pppk.persetujuan + metrikJenis.pppk_paruh_waktu.persetujuan + metrikJenis.non_asn.persetujuan + metrikJenis.lainnya.persetujuan,
+          belum: metrikJenis.pns.belum + metrikJenis.cpns.belum + metrikJenis.pppk.belum + metrikJenis.pppk_paruh_waktu.belum + metrikJenis.non_asn.belum + metrikJenis.lainnya.belum
         };
 
         document.getElementById('val-total-pegawai').innerHTML = formatNumber(gt.totalPegawai) + getSubtitleHtml(totalMetrik);
-        document.getElementById('val-pns').innerHTML = formatNumber(metrikJenis.pns.total) + getSubtitleHtml(metrikJenis.pns);
+
+        const gabunganPnsCpns = {
+          total: metrikJenis.pns.total + metrikJenis.cpns.total,
+          draft: metrikJenis.pns.draft + metrikJenis.cpns.draft,
+          pengajuan: metrikJenis.pns.pengajuan + metrikJenis.cpns.pengajuan,
+          persetujuan: metrikJenis.pns.persetujuan + metrikJenis.cpns.persetujuan,
+          belum: metrikJenis.pns.belum + metrikJenis.cpns.belum
+        };
+        document.getElementById('val-pns').innerHTML = formatNumber(gabunganPnsCpns.total) + getSubtitleHtml(gabunganPnsCpns);
+
+        const labelCpns = document.getElementById('label-cpns');
+        if (labelCpns) labelCpns.title = `Jumlah CPNS: ${formatNumber(metrikJenis.cpns.total)}`;
+        const labelPns = document.getElementById('label-pns');
+        if (labelPns) labelPns.title = `Jumlah PNS: ${formatNumber(metrikJenis.pns.total)}`;
+
         document.getElementById('val-pppk').innerHTML = formatNumber(metrikJenis.pppk.total) + getSubtitleHtml(metrikJenis.pppk);
         document.getElementById('val-pppk-paruh-waktu').innerHTML = formatNumber(metrikJenis.pppk_paruh_waktu.total) + getSubtitleHtml(metrikJenis.pppk_paruh_waktu);
 
@@ -2709,7 +2736,7 @@
                 <thead>
                   <tr>
                     <th style="text-align: left;">Jenis Pegawai</th>
-                    <th style="text-align: center;">Belum</th>
+                    <th style="text-align: center;">Belum Menyusun</th>
                     <th style="text-align: center;">Draft</th>
                     <th style="text-align: center;">Pengajuan</th>
                     <th style="text-align: center;">Persetujuan</th>
@@ -2741,6 +2768,32 @@
                     <td style="text-align: center; color: var(--success);">${formatNumber(metrikJenis.pppk_paruh_waktu.persetujuan)}</td>
                     <td style="text-align: center;">${formatNumber(metrikJenis.pppk_paruh_waktu.total)}</td>
                   </tr>
+                  <tr>
+                    <td style="text-align: left; font-weight: 500;">CPNS</td>
+                    <td style="text-align: center; color: var(--danger);">${formatNumber(metrikJenis.cpns.belum)}</td>
+                    <td style="text-align: center; color: var(--text-secondary);">${formatNumber(metrikJenis.cpns.draft)}</td>
+                    <td style="text-align: center; color: var(--warning);">${formatNumber(metrikJenis.cpns.pengajuan)}</td>
+                    <td style="text-align: center; color: var(--success);">${formatNumber(metrikJenis.cpns.persetujuan)}</td>
+                    <td style="text-align: center;">${formatNumber(metrikJenis.cpns.total)}</td>
+                  </tr>
+                  <tr>
+                    <td style="text-align: left; font-weight: 500;">NON ASN</td>
+                    <td style="text-align: center; color: var(--danger);">${formatNumber(metrikJenis.non_asn.belum)}</td>
+                    <td style="text-align: center; color: var(--text-secondary);">${formatNumber(metrikJenis.non_asn.draft)}</td>
+                    <td style="text-align: center; color: var(--warning);">${formatNumber(metrikJenis.non_asn.pengajuan)}</td>
+                    <td style="text-align: center; color: var(--success);">${formatNumber(metrikJenis.non_asn.persetujuan)}</td>
+                    <td style="text-align: center;">${formatNumber(metrikJenis.non_asn.total)}</td>
+                  </tr>
+                  ${metrikJenis.lainnya.total > 0 ? `
+                  <tr>
+                    <td style="text-align: left; font-weight: 500;">Tidak Diketahui</td>
+                    <td style="text-align: center; color: var(--danger);">${formatNumber(metrikJenis.lainnya.belum)}</td>
+                    <td style="text-align: center; color: var(--text-secondary);">${formatNumber(metrikJenis.lainnya.draft)}</td>
+                    <td style="text-align: center; color: var(--warning);">${formatNumber(metrikJenis.lainnya.pengajuan)}</td>
+                    <td style="text-align: center; color: var(--success);">${formatNumber(metrikJenis.lainnya.persetujuan)}</td>
+                    <td style="text-align: center;">${formatNumber(metrikJenis.lainnya.total)}</td>
+                  </tr>
+                  ` : ''}
                   <tr style="background-color: rgba(255, 255, 255, 0.03);">
                     <td style="text-align: left; font-weight: 700;">TOTAL</td>
                     <td style="text-align: center; font-weight: 700; color: var(--danger);">${formatNumber(totalMetrik.belum)}</td>
@@ -2894,7 +2947,7 @@
         let totalPersetujuan = gt.totalPegawai;
         let totalBelumPersetujuan = 0;
         if (gt.metrikJenis) {
-           totalPersetujuan = gt.metrikJenis.pns.persetujuan + gt.metrikJenis.pppk.persetujuan + gt.metrikJenis.pppk_paruh_waktu.persetujuan;
+           totalPersetujuan = gt.metrikJenis.pns.persetujuan + gt.metrikJenis.cpns.persetujuan + gt.metrikJenis.pppk.persetujuan + gt.metrikJenis.pppk_paruh_waktu.persetujuan + gt.metrikJenis.non_asn.persetujuan + (gt.metrikJenis.lainnya ? gt.metrikJenis.lainnya.persetujuan : 0);
            totalBelumPersetujuan = gt.totalPegawai - totalPersetujuan;
         }
 
@@ -3262,7 +3315,7 @@
           const mNip = p.nip.toLowerCase().includes(searchVal);
           const mOpd = opdVal === 'semua' || p.opd === opdVal;
           const mJenis = jenisPegawaiVal === 'semua' || p.jenis_pegawai === jenisPegawaiVal;
-          const mSkpStatus = skpStatusVal === 'semua' || 
+          const mSkpStatus = skpStatusVal === 'semua' ||
                              (skpStatusVal === '-' ? (!p.skp_status || p.skp_status.trim() === '' || p.skp_status === '-') : p.skp_status === skpStatusVal);
           return (mNama || mNip) && mOpd && mJenis && mSkpStatus;
         });
@@ -3807,7 +3860,7 @@
           const mNip = p.nip.toLowerCase().includes(searchVal);
           const mOpd = opdVal === 'semua' || p.opd === opdVal;
           const mJenis = jenisPegawaiVal === 'semua' || p.jenis_pegawai === jenisPegawaiVal;
-          const mSkpStatus = skpStatusVal === 'semua' || 
+          const mSkpStatus = skpStatusVal === 'semua' ||
                              (skpStatusVal === '-' ? (!p.status || p.status.trim() === '' || p.status === '-') : p.status === skpStatusVal);
           return (mNama || mNip) && mOpd && mJenis && mSkpStatus;
         });

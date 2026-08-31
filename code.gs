@@ -735,8 +735,11 @@ function getDashboardData() {
   let trenNilai = {};
   let metrikJenis = { 
     pns: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 }, 
+    cpns: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 }, 
     pppk: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 }, 
-    pppk_paruh_waktu: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 } 
+    pppk_paruh_waktu: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 },
+    non_asn: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 },
+    lainnya: { total: 0, draft: 0, pengajuan: 0, persetujuan: 0, belum: 0 } 
   };
 
   const sheetPegawai = ss.getSheetByName('pegawai');
@@ -772,10 +775,16 @@ function getDashboardData() {
           let target = null;
           if (jp === 'pns') {
             target = metrikJenis.pns;
+          } else if (jp === 'cpns') {
+            target = metrikJenis.cpns;
           } else if (jp === 'pppk_paruh_waktu') {
             target = metrikJenis.pppk_paruh_waktu;
           } else if (jp === 'pppk') {
             target = metrikJenis.pppk;
+          } else if (jp === 'non_asn' || jp === 'non asn') {
+            target = metrikJenis.non_asn;
+          } else {
+            target = metrikJenis.lainnya;
           }
 
           if (target) {
