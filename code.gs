@@ -1364,6 +1364,44 @@ function verifyLogin(username, password) {
 }
 
 /**
+ * Memperbarui Username dan Password di sheet Pengaturan.
+ */
+function updateCredentials(token, newUsername, newPassword) {
+  if (!newUsername || !newPassword) {
+    return { status: 'error', message: 'Username dan Password baru tidak boleh kosong!' };
+  }
+  
+  if (!token) return { status: 'error', message: 'Anda tidak memiliki akses!' };
+  
+  try {
+    const decoded = Utilities.newBlob(Utilities.base64Decode(token)).getDataAsString();
+    const [user, pass] = decoded.split(':');
+    
+    // Verifikasi kredensial lama menggunakan fungsi yang sudah ada
+    const loginCheck = verifyLogin(user, pass);
+    if (loginCheck.status !== 'success') {
+      return { status: 'error', message: 'Sesi anda telah kadaluarsa atau kredensial lama tidak valid!' };
+    }
+    
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheetPengaturan = ss.getSheetByName('pengaturan');
+    
+    if (!sheetPengaturan) {
+      return { status: 'error', message: 'Sheet pengaturan tidak ditemukan!' };
+    }
+    
+    // Update di Sheet
+    sheetPengaturan.getRange('B2').setValue(newUsername.trim());
+    sheetPengaturan.getRange('B3').setValue(newPassword.trim());
+    
+    return { status: 'success', message: 'Username dan Password berhasil diperbarui!' };
+    
+  } catch (e) {
+    return { status: 'error', message: 'Gagal memverifikasi akses: ' + e.toString() };
+  }
+}
+
+/**
  * Reset seluruh data database (semua sheet kecuali pengaturan)
  * Khusus sheet pengecualian, baris pertama (header) dipertahankan.
  */

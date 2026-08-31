@@ -324,8 +324,14 @@
       flex: 1;
       padding: 2rem 2rem 1rem 2rem;
       overflow-y: auto;
+      overflow-x: hidden;
       display: grid;
       grid-template-rows: 1fr auto;
+      min-width: 0;
+    }
+
+    .content-wrapper {
+      min-width: 0;
     }
 
     .content-container {
@@ -996,7 +1002,11 @@
         </button>
         <button id="navUpload" class="nav-item nav-btn" style="display: none;" onclick="switchTab('panelUpload', this); updateBreadcrumb('Upload Laporan'); closeSidebarMobile();">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-          <span>Upload Laporan</span>
+          <span>Upload</span>
+        </button>
+        <button id="navPengaturan" class="nav-item nav-btn" style="display: none;" onclick="switchTab('panelPengaturan', this); updateBreadcrumb('Pengaturan Akun'); closeSidebarMobile();">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          <span>Pengaturan</span>
         </button>
       </nav>
 
@@ -1559,7 +1569,7 @@
                     <option value="Cuti">Cuti</option>
                     <option value="Lainnya">Lainnya</option>
                   </select>
-                  <button id="btnDownloadPdfPengecualian" class="btn btn-secondary" disabled title="Download PDF">
+                  <button id="btnDownloadPdfPengecualian" class="btn btn-secondary" title="Download PDF">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                   </button>
                   <button id="btnAddPengecualian" class="btn btn-primary" disabled>
@@ -1626,7 +1636,7 @@
 
               <div id="uploadInputContainer" style="background-color: var(--bg-secondary); padding: 2.5rem 1.5rem; border-radius: 12px; border: 2px dashed var(--border); text-align: center; margin-bottom: 1.5rem; transition: border-color 0.2s;">
                 <input type="file" id="fileUploadInput" accept=".xlsx, .xls, .csv" style="display: none;" onchange="handleFileSelect(event)">
-                <button id="btnSelectUploadFile" class="btn btn-primary" onclick="document.getElementById('fileUploadInput').click()" style="padding: 0.75rem 2rem; font-size: 1rem;" disabled>
+                <button id="btnSelectUploadFile" class="btn btn-primary" onclick="document.getElementById('fileUploadInput').click()" disabled style="padding: 0.75rem 2rem; font-size: 1rem; cursor: not-allowed; opacity: 0.6;">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
                   Pilih File Laporan Excel
                 </button>
@@ -1678,6 +1688,54 @@
               </div>
             </div>
           </div> <!-- End panelUpload -->
+
+          <!-- Pengaturan Akun Panel -->
+          <div id="panelPengaturan" class="nav-panel">
+            <div class="card">
+              <h2 class="section-title">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                Pengaturan Akun Admin
+              </h2>
+
+              <div style="margin-top: 1.5rem; max-width: 500px;">
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.6;">
+                  Ubah Username dan Password yang digunakan untuk mengakses panel kontrol admin Dashboard E-Kinerja.
+                </p>
+
+                <div style="margin-bottom: 1.25rem;">
+                  <label for="newUsername" style="display: block; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 500;">Username Baru</label>
+                  <input type="text" id="newUsername" placeholder="Masukkan username baru" disabled style="width: 100%; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border); background-color: var(--surface); color: var(--text-primary); font-family: inherit; cursor: not-allowed;">
+                </div>
+
+                <div style="margin-bottom: 1.25rem;">
+                  <label for="newPassword" style="display: block; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 500;">Password Baru</label>
+                  <div style="position: relative; display: flex; align-items: center;">
+                    <input type="password" id="newPassword" placeholder="Masukkan password baru" disabled style="width: 100%; padding: 0.75rem 2.5rem 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border); background-color: var(--surface); color: var(--text-primary); font-family: inherit; cursor: not-allowed;">
+                    <button type="button" onclick="togglePasswordVisibility('newPassword', this)" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: var(--text-secondary); display: flex; padding: 4px;">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div style="margin-bottom: 2rem;">
+                  <label for="confirmPassword" style="display: block; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 500;">Konfirmasi Password Baru</label>
+                  <div style="position: relative; display: flex; align-items: center;">
+                    <input type="password" id="confirmPassword" placeholder="Ketik ulang password baru" disabled style="width: 100%; padding: 0.75rem 2.5rem 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border); background-color: var(--surface); color: var(--text-primary); font-family: inherit; cursor: not-allowed;">
+                    <button type="button" onclick="togglePasswordVisibility('confirmPassword', this)" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: var(--text-secondary); display: flex; padding: 4px;">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end;">
+                  <button id="btnSimpanPengaturan" class="btn btn-primary" onclick="submitUpdateCredentials()" disabled style="opacity: 0.5; cursor: not-allowed;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    <span>Simpan</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <!-- Panel Rekon -->
           <div id="panelRekon" class="nav-panel">
@@ -1969,14 +2027,21 @@
         });
       }
 
-      function promptLogin() {
+      function promptLogin(defaultUser = '') {
         Swal.fire({
           title: '<span style="color: #1e293b; font-weight: 600;">Login Admin</span>',
           background: '#ffffff',
           html: `
             <div style="margin-top: 10px;">
-              <input id="swal-input-user" class="swal2-input" placeholder="Username" style="background: #ffffff !important; color: #1e293b !important; border: 1px solid #94a3b8 !important; max-width: 80%;">
-              <input id="swal-input-pass" type="password" class="swal2-input" placeholder="Password" style="background: #ffffff !important; color: #1e293b !important; border: 1px solid #94a3b8 !important; max-width: 80%; margin-top: 15px;">
+              <div style="position: relative; width: 80%; margin: 0 auto; display: flex; align-items: center;">
+                <input id="swal-input-user" class="swal2-input" placeholder="Username" style="background: #ffffff !important; color: #1e293b !important; border: 1px solid #94a3b8 !important; margin: 0; width: 100%; box-sizing: border-box;">
+              </div>
+              <div style="position: relative; width: 80%; margin: 15px auto 0 auto; display: flex; align-items: center;">
+                <input id="swal-input-pass" type="password" class="swal2-input" placeholder="Password" style="background: #ffffff !important; color: #1e293b !important; border: 1px solid #94a3b8 !important; margin: 0; width: 100%; box-sizing: border-box; padding-right: 2.5rem;">
+                <button type="button" onclick="togglePasswordVisibility('swal-input-pass', this)" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: #94a3b8; display: flex; padding: 4px; z-index: 10;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </button>
+              </div>
             </div>
           `,
           confirmButtonText: 'Login',
@@ -1986,6 +2051,15 @@
           cancelButtonColor: '#94a3b8',
           reverseButtons: true,
           focusConfirm: false,
+          didOpen: () => {
+            if (defaultUser) {
+              const userInput = document.getElementById('swal-input-user');
+              userInput.value = defaultUser;
+              document.getElementById('swal-input-pass').focus();
+            } else {
+              document.getElementById('swal-input-user').focus();
+            }
+          },
           preConfirm: () => {
             const user = document.getElementById('swal-input-user').value;
             const pass = document.getElementById('swal-input-pass').value;
@@ -2004,11 +2078,15 @@
                   applyLoginState();
                   Swal.fire('Berhasil', 'Login sukses!', 'success');
                 } else {
-                  Swal.fire('Gagal', res.message, 'error');
+                  Swal.fire('Gagal', res.message, 'error').then(() => {
+                    promptLogin(result.value.user);
+                  });
                 }
               })
               .withFailureHandler((err) => {
-                Swal.fire('Error', err.message, 'error');
+                Swal.fire('Error', err.message, 'error').then(() => {
+                  promptLogin(result.value.user);
+                });
               })
               .verifyLogin(result.value.user, result.value.pass);
           }
@@ -2021,6 +2099,7 @@
         const btnPengecualian = document.getElementById('navPengecualian');
         const btnRekon = document.getElementById('navRekon');
         const btnUpload = document.getElementById('navUpload');
+        const btnPengaturan = document.getElementById('navPengaturan');
         const btnLogin = document.getElementById('btnLogin');
         const btnLogout = document.getElementById('btnLogout');
 
@@ -2030,14 +2109,26 @@
           if (btnPengecualian) btnPengecualian.style.display = 'flex';
           if (btnRekon) btnRekon.style.display = 'flex';
           if (btnUpload) btnUpload.style.display = 'flex';
+          if (btnPengaturan) btnPengaturan.style.display = 'flex';
           if (btnLogin) btnLogin.style.display = 'none';
           if (btnLogout) btnLogout.style.display = 'flex';
+
+          try {
+            const token = localStorage.getItem('authToken');
+            const decoded = atob(token);
+            const user = decoded.split(':')[0];
+            const usernameInput = document.getElementById('newUsername');
+            if (usernameInput) usernameInput.value = user;
+          } catch(e) {
+            console.error('Error decoding token', e);
+          }
         } else {
           if (btnPegawai) btnPegawai.style.display = 'none';
           if (btnPltPlh) btnPltPlh.style.display = 'none';
           if (btnPengecualian) btnPengecualian.style.display = 'none';
           if (btnRekon) btnRekon.style.display = 'none';
           if (btnUpload) btnUpload.style.display = 'none';
+          if (btnPengaturan) btnPengaturan.style.display = 'none';
           if (btnLogin) btnLogin.style.display = 'flex';
           if (btnLogout) btnLogout.style.display = 'none';
         }
@@ -2063,7 +2154,17 @@
         btnElement.classList.add('active');
       }
 
-      function logout() {
+      function logout(force = false) {
+        if (force) {
+          localStorage.removeItem('authToken');
+          applyLoginState();
+          const dashboardBtn = document.querySelector('.navbar .nav-btn:first-child');
+          if (dashboardBtn) {
+            _doSwitchTab('panelDashboard', dashboardBtn);
+          }
+          return;
+        }
+
         Swal.fire({
           title: 'Konfirmasi',
           text: 'Anda yakin ingin keluar?',
@@ -2421,13 +2522,17 @@
         });
 
         const uploadBtn = document.getElementById('btnSelectUploadFile');
-        if (uploadBtn) uploadBtn.disabled = false;
+        if (uploadBtn) {
+          uploadBtn.disabled = false;
+          uploadBtn.style.cursor = 'pointer';
+          uploadBtn.style.opacity = '1';
+        }
 
         const rekonBtns = document.querySelectorAll('.sync-month-btn');
         rekonBtns.forEach(btn => btn.disabled = false);
 
         const pengBtns = [
-          'btnAddPengecualian', 'btnDownloadPdfPengecualian'
+          'btnAddPengecualian'
         ];
         pengBtns.forEach(id => {
           const btn = document.getElementById(id);
@@ -2443,6 +2548,22 @@
           btn.disabled = false;
           btn.style.cursor = 'pointer';
           btn.style.opacity = '1';
+        });
+
+        const btnSimpanPengaturan = document.getElementById('btnSimpanPengaturan');
+        if (btnSimpanPengaturan) {
+          btnSimpanPengaturan.disabled = false;
+          btnSimpanPengaturan.style.opacity = '1';
+          btnSimpanPengaturan.style.cursor = 'pointer';
+        }
+
+        const akunInputs = ['newUsername', 'newPassword', 'confirmPassword'];
+        akunInputs.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.disabled = false;
+            el.style.cursor = 'text';
+          }
         });
       }
     }
@@ -3238,6 +3359,7 @@
       const searchInput = document.getElementById('searchPegawai');
       const filterBulan = document.getElementById('filterBulan');
       const filterStatus = document.getElementById('filterStatus');
+      const filterSkpStatus = document.getElementById('filterSkpStatus');
       const filterPredikat = document.getElementById('filterPredikat');
 
       const filterOpd = document.getElementById('filterOpd');
@@ -3430,8 +3552,6 @@
       };
       window.applyPegawaiFilters = applyFilters;
 
-      applyFilters();
-
       searchInput.addEventListener('input', applyFilters);
       filterOpd.addEventListener('change', applyFilters);
       filterJenisPegawai.addEventListener('change', applyFilters);
@@ -3439,6 +3559,8 @@
       filterStatus.addEventListener('change', applyFilters);
       filterPredikat.addEventListener('change', applyFilters);
       filterSkpStatus.addEventListener('change', applyFilters);
+
+      applyFilters(); // Trigger render pertama kali
 
     function buildPegawaiPdf(dataToExport, activeOpdVal, activeBulanVal, activeStatusVal, textOpd, textBulan, textStatus) {
       const { jsPDF } = window.jspdf;
@@ -4183,8 +4305,7 @@
       document.getElementById('pengecualian-content').style.display = 'none';
 
       const btns = [
-        document.getElementById('btnAddPengecualian'),
-        document.getElementById('btnDownloadPdfPengecualian')
+        document.getElementById('btnAddPengecualian')
       ];
 
       btns.forEach(btn => {
@@ -4793,6 +4914,78 @@
         }
       });
     };
+
+      function togglePasswordVisibility(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (input) {
+          if (input.type === 'password') {
+            input.type = 'text';
+            btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+          } else {
+            input.type = 'password';
+            btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+          }
+        }
+      }
+
+    /* LOGIC PENGATURAN AKUN */
+      function submitUpdateCredentials() {
+        const usernameInput = document.getElementById('newUsername').value;
+        const passwordInput = document.getElementById('newPassword').value;
+        const confirmInput = document.getElementById('confirmPassword').value;
+
+        if (!usernameInput || !passwordInput || !confirmInput) {
+          Swal.fire({ icon: 'warning', title: 'Data Belum Lengkap', text: 'Mohon lengkapi semua kolom terlebih dahulu.' });
+          return;
+        }
+
+        if (passwordInput !== confirmInput) {
+          Swal.fire({ icon: 'error', title: 'Password Tidak Cocok', text: 'Konfirmasi password harus sama dengan password baru.' });
+          return;
+        }
+
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          Swal.fire({ icon: 'error', title: 'Akses Ditolak', text: 'Anda harus login untuk menggunakan fitur ini.' });
+          return;
+        }
+
+        Swal.fire({
+          title: 'Menyimpan Perubahan...',
+          html: 'Mohon tunggu sebentar',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res.status === 'success') {
+              Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: res.message + ' Silakan login kembali dengan kredensial baru Anda.'
+              }).then(() => {
+                // Bersihkan form
+                document.getElementById('newUsername').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+
+                // Pindah ke dashboard dan logout
+                const btnDashboard = document.querySelector('.nav-btn[onclick*="panelDashboard"]');
+                if (btnDashboard) btnDashboard.click();
+                logout(true);
+              });
+            } else {
+              Swal.fire({ icon: 'error', title: 'Gagal', text: res.message });
+            }
+          })
+          .withFailureHandler(function(error) {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Terjadi kesalahan sistem: ' + error });
+          })
+          .updateCredentials(token, usernameInput, passwordInput);
+      }
 
     // ==========================================
     // LOGIKA UPLOAD LAPORAN EXCEL / CSV
