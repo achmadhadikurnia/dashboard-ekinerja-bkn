@@ -928,7 +928,8 @@ function getDashboardData() {
       metadata: {
         title: reportTitle,
         instansi: reportInstansi,
-        licenseWarning: licenseWarning
+        licenseWarning: licenseWarning,
+        validTahunLisensi: _getValidTahunLisensi()
       }
     }
   };

@@ -836,11 +836,13 @@
     .spinner {
       width: 40px;
       height: 40px;
-      border: 3px solid var(--border);
-      border-top-color: var(--accent);
+      border: 4px solid var(--border);
+      border-top: 4px solid var(--accent);
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin-bottom: 1rem;
+      display: inline-block;
+      box-sizing: border-box;
     }
 
     .progress-container {
@@ -5029,6 +5031,23 @@
           const yearMatch = a1.match(/20\d{2}/);
           let tahunLaporan = new Date().getFullYear();
           if(yearMatch) tahunLaporan = parseInt(yearMatch[0]);
+
+          // Pengecekan lisensi dari frontend
+          if (globalDashboardData && globalDashboardData.metadata && typeof globalDashboardData.metadata.validTahunLisensi !== 'undefined') {
+            const validYear = globalDashboardData.metadata.validTahunLisensi;
+            if (validYear > 0 && tahunLaporan !== validYear) {
+              document.getElementById('uploadParsingLoading').style.display = 'none';
+              document.getElementById('uploadInputContainer').style.display = 'block';
+              Swal.fire({
+                title: 'Lisensi Tidak Sesuai',
+                html: `Sistem mendeteksi file ini berisi laporan tahun <b>${tahunLaporan}</b>.<br><br>Lisensi aplikasi ini dikunci khusus untuk laporan tahun <b>${validYear}</b>.`,
+                icon: 'error'
+              });
+              document.getElementById('fileUploadInput').value = '';
+              document.getElementById('fileUploadName').innerText = '';
+              return;
+            }
+          }
 
           let targetBulan = '';
           const a1Lower = a1.toLowerCase();
