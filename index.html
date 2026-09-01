@@ -3388,11 +3388,13 @@
       const skpStatusSet = new Set();
       const jenisPegawaiSet = new Set();
       globalPegawaiData.forEach(p => {
-         if (p.opd && p.opd !== '-') opdSet.add(p.opd);
+         const opdRaw = (p.opd && p.opd.trim() !== '') ? p.opd : '-';
+         opdSet.add(opdRaw);
          if (p.skp_status && p.skp_status !== '-') skpStatusSet.add(p.skp_status);
          if (p.jenis_pegawai && p.jenis_pegawai !== '-') jenisPegawaiSet.add(p.jenis_pegawai);
       });
 
+      filterOpd.innerHTML = '<option value="semua">Semua OPD</option>';
       Array.from(opdSet).sort().forEach(opd => {
          const opt = document.createElement('option');
          opt.value = opd;
@@ -3400,6 +3402,7 @@
          filterOpd.appendChild(opt);
       });
 
+      filterSkpStatus.innerHTML = '<option value="semua">Semua Status SKP</option>\n                    <option value="-">Belum Menyusun</option>';
       Array.from(skpStatusSet).sort().forEach(status => {
          const opt = document.createElement('option');
          opt.value = status;
@@ -3407,6 +3410,7 @@
          filterSkpStatus.appendChild(opt);
       });
 
+      filterJenisPegawai.innerHTML = '<option value="semua">Semua Jenis Pegawai</option>';
       Array.from(jenisPegawaiSet).sort().forEach(jp => {
          const opt = document.createElement('option');
          opt.value = jp;
@@ -3453,7 +3457,8 @@
 
           const mNama = p.nama.toLowerCase().includes(searchVal);
           const mNip = p.nip.toLowerCase().includes(searchVal);
-          const mOpd = opdVal === 'semua' || p.opd === opdVal;
+          const opdRaw = (p.opd && p.opd.trim() !== '') ? p.opd : '-';
+          const mOpd = opdVal === 'semua' || opdRaw === opdVal;
           const mJenis = jenisPegawaiVal === 'semua' || p.jenis_pegawai === jenisPegawaiVal;
           const mSkpStatus = skpStatusVal === 'semua' ||
                              (skpStatusVal === '-' ? (!p.skp_status || p.skp_status.trim() === '' || p.skp_status === '-') : p.skp_status === skpStatusVal);
@@ -3938,11 +3943,13 @@
       const jenisPegawaiSet = new Set();
 
       globalPltPlhData.forEach(p => {
-         if (p.opd && p.opd !== '-') opdSet.add(p.opd);
+         const opdRaw = (p.opd && p.opd.trim() !== '') ? p.opd : '-';
+         opdSet.add(opdRaw);
          if (p.status && p.status !== '-') skpStatusSet.add(p.status);
          if (p.jenis_pegawai && p.jenis_pegawai !== '-') jenisPegawaiSet.add(p.jenis_pegawai);
       });
 
+      filterOpd.innerHTML = '<option value="semua">Semua OPD</option>';
       Array.from(opdSet).sort().forEach(opd => {
          const opt = document.createElement('option');
          opt.value = opd;
@@ -3950,6 +3957,7 @@
          filterOpd.appendChild(opt);
       });
 
+      filterSkpStatus.innerHTML = '<option value="semua">Semua Status SKP</option>\n                    <option value="-">Belum Menyusun</option>';
       Array.from(skpStatusSet).sort().forEach(status => {
          const opt = document.createElement('option');
          opt.value = status;
@@ -3957,6 +3965,7 @@
          filterSkpStatus.appendChild(opt);
       });
 
+      filterJenisPegawai.innerHTML = '<option value="semua">Semua Jenis Pegawai</option>';
       Array.from(jenisPegawaiSet).sort().forEach(jp => {
          const opt = document.createElement('option');
          opt.value = jp;
@@ -3998,7 +4007,8 @@
         let displayData = globalPltPlhData.filter(p => {
           const mNama = p.nama.toLowerCase().includes(searchVal);
           const mNip = p.nip.toLowerCase().includes(searchVal);
-          const mOpd = opdVal === 'semua' || p.opd === opdVal;
+          const opdRaw = (p.opd && p.opd.trim() !== '') ? p.opd : '-';
+          const mOpd = opdVal === 'semua' || opdRaw === opdVal;
           const mJenis = jenisPegawaiVal === 'semua' || p.jenis_pegawai === jenisPegawaiVal;
           const mSkpStatus = skpStatusVal === 'semua' ||
                              (skpStatusVal === '-' ? (!p.status || p.status.trim() === '' || p.status === '-') : p.status === skpStatusVal);
